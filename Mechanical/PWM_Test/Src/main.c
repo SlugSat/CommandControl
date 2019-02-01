@@ -43,7 +43,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "PWM_Library.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +53,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -74,7 +73,6 @@ static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
 
 /* USER CODE BEGIN PFP */
-void Set_Duty_Cycle(uint16_t compare_value);
 
 /* USER CODE END PFP */
 
@@ -124,19 +122,16 @@ int main(void)
 	// starts PWM signal generation
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 	
-	//compare value
-	uint16_t comp = 0;
 	
   while (1)
   {
     /* USER CODE END WHILE */
-		HAL_Delay(500);
-		Set_Duty_Cycle(comp+=10);
-		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+		HAL_Delay(1000);
+		//Set_Counter_Period(comp);
+		Set_Frequency(&htim4, 5000);
+		HAL_Delay(1000);
+		Set_Duty_Cycle(&htim4, 75);
 
-		if (comp == 1000) {
-			comp = 0;
-		}
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -221,7 +216,7 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 200;
+  sConfigOC.Pulse = 500;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -249,20 +244,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void Set_Duty_Cycle(uint16_t compare_value)
-{
-	TIM_OC_InitTypeDef sConfigOC = {0};
-	
-	sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = compare_value;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
+
 
 /* USER CODE END 4 */
 

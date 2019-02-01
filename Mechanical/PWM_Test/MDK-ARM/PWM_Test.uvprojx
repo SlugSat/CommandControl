@@ -407,6 +407,16 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>PWM_Library.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\PWM_Library.h</FilePath>
+            </File>
+            <File>
+              <FileName>PWM_Library.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\PWM_Library.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

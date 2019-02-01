@@ -3,6 +3,7 @@
 "pwm_test\main.o"
 "pwm_test\stm32f1xx_it.o"
 "pwm_test\stm32f1xx_hal_msp.o"
+"pwm_test\pwm_library.o"
 "pwm_test\stm32f1xx_hal_gpio_ex.o"
 "pwm_test\stm32f1xx_hal_tim.o"
 "pwm_test\stm32f1xx_hal_tim_ex.o"
