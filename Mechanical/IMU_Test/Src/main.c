@@ -231,6 +231,8 @@ typedef enum
 #define IMU_ADDRESS_DEF (0x29 << 1)
 #define IMU_ADDRESS_ALT (0x28 << 1)
 #define IMU_SLAVE_ADDR (0x40)
+#define TRUE 1
+#define FALSE 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -249,13 +251,18 @@ I2C_HandleTypeDef hi2c1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
+
 /* USER CODE BEGIN PFP */
-uint8_t BIST(void);
+uint8_t built_in_self_test(void);
+void write_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t dat);
+uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg);
+void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint8_t rxData;
 /* USER CODE END 0 */
 
 /**
@@ -300,11 +307,11 @@ int main(void)
 	uint8_t txData[2] = {SYS_TRIGGER_ADDR, SELFTEST_RESULT_ADDR}; 
 	uint8_t rxData = 0;
 	
-	uint8_t bistData = 0;
-	
-	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &txData[1], 1, 10);
-	HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &rxData,    1, 10);
+	//HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &txData[1], 1, 10);
+	//HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &rxData,    1, 10);
 		
+	//IMU_Reg_t hi = SELFTEST_RESULT_ADDR;
+	rxData = read_byte(&hi2c1, (IMU_Reg_t *) &txData[1]);
 		
 	rxData &= 0x0F;
 	if (rxData == 0x0F)
@@ -323,11 +330,8 @@ int main(void)
   while (1)
   {
 		HAL_Delay(1);
-		bistData = BIST();
-	//	uint8_t i = 0;
-		
-		bistData &= 0x07; //(0x01 << (i++ % 3));
-		if (bistData == 0x07)
+	
+		if (built_in_self_test())
 		{
 			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 		}
@@ -390,7 +394,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.ClockSpeed = 400000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -433,31 +437,88 @@ static void MX_GPIO_Init(void)
 
 }
 
+// =================================================================================
 /* USER CODE BEGIN 4 */
 
-uint8_t BIST(void)
+uint8_t built_in_self_test(void)
 {
+	IMU_Reg_t reg = OPR_MODE_ADDR;
 	IMU_Op_Mode_t mode = OPERATION_MODE_CONFIG;
-	uint8_t setConfig[2] = {OPR_MODE_ADDR, mode};
 	
-	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setConfig[0], 2, 10);
+	// set mode to CONFIG_MODE
+	write_byte(&hi2c1, reg, mode);
 	
-	IMU_Reg_t sysTrigReg = SYS_TRIGGER_ADDR;
-	uint8_t setSelfTestTrig[2] = {sysTrigReg, 0x1};
 	
-	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setSelfTestTrig[0], 2, 10);
+	// set self test bit in system trigger register
+	reg = SYS_TRIGGER_ADDR;
+	write_byte(&hi2c1, reg, 0x01);
 	
-	sysTrigReg = SELFTEST_RESULT_ADDR;
-	uint8_t getSelfTestResult[1] = {sysTrigReg};
-	uint8_t readTest = 0;
+	// read from self test register to get result
+	reg = SELFTEST_RESULT_ADDR;
+	uint8_t readTest =  read_byte(&hi2c1, &reg);
 	
-	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &getSelfTestResult[0], 1, 10);
-	HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &readTest,   1, 10);
-	
-	HAL_Delay(30);
-	return readTest;	
+	// check if test worked
+	if (readTest == 0x0F) {
+		return TRUE;
+	}
+	return FALSE;	
 }
 
+void write_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t dat) 
+{
+	// tx data array with register address to write to and data to write
+	uint8_t tx_data[2] = {(uint8_t)reg, dat};
+
+	// transmit the register address and data
+	HAL_I2C_Master_Transmit(hi2c, IMU_ADDRESS_ALT, tx_data, sizeof(tx_data), 10);	HAL_Delay(30);
+	return;
+}
+
+uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg) 
+{
+	// transmit register address to read from
+	uint8_t rx_data = 0;
+	HAL_I2C_Master_Transmit(hi2c, IMU_ADDRESS_ALT, (uint8_t *) reg, sizeof(uint8_t), 10);
+	
+	//HAL_Delay(400);
+	
+/*	HAL_I2C_StateTypeDef state = HAL_I2C_GetState(hi2c);
+	while (HAL_I2C_IsDeviceReady(hi2c, IMU_ADDRESS_ALT, 1, 10) != HAL_OK || state == HAL_I2C_STATE_BUSY) 
+	{
+		 state = HAL_I2C_GetState(hi2c);
+	} */
+	
+	
+	
+	
+	// read data from register
+	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, &rx_data, sizeof(rx_data), 10);
+	
+	
+		reg[0] = SYS_ERR_ADDR;
+		uint8_t readTest = 0;// read_byte(&hi2c1, &reg);
+		
+		HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, (uint8_t *) &reg, 1, 10);
+		HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &readTest,    1, 10);
+	
+	
+	
+
+return rx_data;
+}
+
+void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data)
+{
+	
+	// transmit register address to read from
+	HAL_I2C_Master_Transmit(hi2c, IMU_ADDRESS_ALT, (uint8_t*)&reg, sizeof(uint8_t), 10);
+	
+	// read data from registers
+	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, rx_data, sizeof(rx_data), 10);
+	return;
+}
+
+// =================================================================================
 /* USER CODE END 4 */
 
 /**
