@@ -324,8 +324,9 @@ int main(void)
   {
 		HAL_Delay(1);
 		bistData = BIST();
+	//	uint8_t i = 0;
 		
-		bistData &= 0x07;
+		bistData &= 0x07; //(0x01 << (i++ % 3));
 		if (bistData == 0x07)
 		{
 			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
@@ -441,11 +442,18 @@ uint8_t BIST(void)
 	
 	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setConfig[0], 2, 10);
 	
-	uint8_t setSelfTest[2] = {SYS_TRIGGER_ADDR, 0x01};
+	IMU_Reg_t sysTrigReg = SYS_TRIGGER_ADDR;
+	uint8_t setSelfTestTrig[2] = {sysTrigReg, 0x1};
+	
+	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setSelfTestTrig[0], 2, 10);
+	
+	sysTrigReg = SELFTEST_RESULT_ADDR;
+	uint8_t getSelfTestResult[1] = {sysTrigReg};
 	uint8_t readTest = 0;
 	
-	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setSelfTest[0], 2, 10);
+	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &getSelfTestResult[0], 1, 10);
 	HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &readTest,   1, 10);
+	
 	HAL_Delay(30);
 	return readTest;	
 }
