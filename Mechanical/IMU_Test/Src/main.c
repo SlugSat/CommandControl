@@ -51,121 +51,121 @@
 typedef enum
 {
 	/* Page id register definition */
-	BNO055_PAGE_ID_ADDR                                     = 0x07,
+	PAGE_ID_ADDR                                     = 0x07,
 
 	/* PAGE0 REGISTER DEFINITION START*/
-	BNO055_CHIP_ID_ADDR                                     = 0x00,
-	BNO055_ACCEL_REV_ID_ADDR                                = 0x01,
-	BNO055_MAG_REV_ID_ADDR                                  = 0x02,
-	BNO055_GYRO_REV_ID_ADDR                                 = 0x03,
-	BNO055_SW_REV_ID_LSB_ADDR                               = 0x04,
-	BNO055_SW_REV_ID_MSB_ADDR                               = 0x05,
-	BNO055_BL_REV_ID_ADDR                                   = 0X06,
+	CHIP_ID_ADDR                                     = 0x00,
+	ACCEL_REV_ID_ADDR                                = 0x01,
+	MAG_REV_ID_ADDR                                  = 0x02,
+	GYRO_REV_ID_ADDR                                 = 0x03,
+	SW_REV_ID_LSB_ADDR                               = 0x04,
+	SW_REV_ID_MSB_ADDR                               = 0x05,
+	BL_REV_ID_ADDR                                   = 0X06,
 
 	/* Accel data register */
-	BNO055_ACCEL_DATA_X_LSB_ADDR                            = 0x08,
-	BNO055_ACCEL_DATA_X_MSB_ADDR                            = 0x09,
-	BNO055_ACCEL_DATA_Y_LSB_ADDR                            = 0x0A,
-	BNO055_ACCEL_DATA_Y_MSB_ADDR                            = 0x0B,
-	BNO055_ACCEL_DATA_Z_LSB_ADDR                            = 0x0C,
-	BNO055_ACCEL_DATA_Z_MSB_ADDR                            = 0x0D,
+	ACCEL_DATA_X_LSB_ADDR                            = 0x08,
+	ACCEL_DATA_X_MSB_ADDR                            = 0x09,
+	ACCEL_DATA_Y_LSB_ADDR                            = 0x0A,
+	ACCEL_DATA_Y_MSB_ADDR                            = 0x0B,
+	ACCEL_DATA_Z_LSB_ADDR                            = 0x0C,
+	ACCEL_DATA_Z_MSB_ADDR                            = 0x0D,
 
 	/* Mag data register */
-	BNO055_MAG_DATA_X_LSB_ADDR                              = 0x0E,
-	BNO055_MAG_DATA_X_MSB_ADDR                              = 0x0F,
-	BNO055_MAG_DATA_Y_LSB_ADDR                              = 0x10,
-	BNO055_MAG_DATA_Y_MSB_ADDR                              = 0x11,
-	BNO055_MAG_DATA_Z_LSB_ADDR                              = 0x12,
-	BNO055_MAG_DATA_Z_MSB_ADDR                              = 0x13,
+	MAG_DATA_X_LSB_ADDR                              = 0x0E,
+	MAG_DATA_X_MSB_ADDR                              = 0x0F,
+	MAG_DATA_Y_LSB_ADDR                              = 0x10,
+	MAG_DATA_Y_MSB_ADDR                              = 0x11,
+	MAG_DATA_Z_LSB_ADDR                              = 0x12,
+	MAG_DATA_Z_MSB_ADDR                              = 0x13,
 
 	/* Gyro data registers */
-	BNO055_GYRO_DATA_X_LSB_ADDR                             = 0x14,
-	BNO055_GYRO_DATA_X_MSB_ADDR                             = 0x15,
-	BNO055_GYRO_DATA_Y_LSB_ADDR                             = 0x16,
-	BNO055_GYRO_DATA_Y_MSB_ADDR                             = 0x17,
-	BNO055_GYRO_DATA_Z_LSB_ADDR                             = 0x18,
-	BNO055_GYRO_DATA_Z_MSB_ADDR                             = 0x19,
+	GYRO_DATA_X_LSB_ADDR                             = 0x14,
+	GYRO_DATA_X_MSB_ADDR                             = 0x15,
+	GYRO_DATA_Y_LSB_ADDR                             = 0x16,
+	GYRO_DATA_Y_MSB_ADDR                             = 0x17,
+	GYRO_DATA_Z_LSB_ADDR                             = 0x18,
+	GYRO_DATA_Z_MSB_ADDR                             = 0x19,
 
 	/* Euler data registers */
-	BNO055_EULER_H_LSB_ADDR                                 = 0x1A,
-	BNO055_EULER_H_MSB_ADDR                                 = 0x1B,
-	BNO055_EULER_R_LSB_ADDR                                 = 0x1C,
-	BNO055_EULER_R_MSB_ADDR                                 = 0x1D,
-	BNO055_EULER_P_LSB_ADDR                                 = 0x1E,
-	BNO055_EULER_P_MSB_ADDR                                 = 0x1F,
+	EULER_H_LSB_ADDR                                 = 0x1A,
+	EULER_H_MSB_ADDR                                 = 0x1B,
+	EULER_R_LSB_ADDR                                 = 0x1C,
+	EULER_R_MSB_ADDR                                 = 0x1D,
+	EULER_P_LSB_ADDR                                 = 0x1E,
+	EULER_P_MSB_ADDR                                 = 0x1F,
 
 	/* Quaternion data registers */
-	BNO055_QUATERNION_DATA_W_LSB_ADDR                       = 0x20,
-	BNO055_QUATERNION_DATA_W_MSB_ADDR                       = 0x21,
-	BNO055_QUATERNION_DATA_X_LSB_ADDR                       = 0x22,
-	BNO055_QUATERNION_DATA_X_MSB_ADDR                       = 0x23,
-	BNO055_QUATERNION_DATA_Y_LSB_ADDR                       = 0x24,
-	BNO055_QUATERNION_DATA_Y_MSB_ADDR                       = 0x25,
-	BNO055_QUATERNION_DATA_Z_LSB_ADDR                       = 0x26,
-	BNO055_QUATERNION_DATA_Z_MSB_ADDR                       = 0x27,
+	QUATERNION_DATA_W_LSB_ADDR                       = 0x20,
+	QUATERNION_DATA_W_MSB_ADDR                       = 0x21,
+	QUATERNION_DATA_X_LSB_ADDR                       = 0x22,
+	QUATERNION_DATA_X_MSB_ADDR                       = 0x23,
+	QUATERNION_DATA_Y_LSB_ADDR                       = 0x24,
+	QUATERNION_DATA_Y_MSB_ADDR                       = 0x25,
+	QUATERNION_DATA_Z_LSB_ADDR                       = 0x26,
+	QUATERNION_DATA_Z_MSB_ADDR                       = 0x27,
 
 	/* Linear acceleration data registers */
-	BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR                     = 0x28,
-	BNO055_LINEAR_ACCEL_DATA_X_MSB_ADDR                     = 0x29,
-	BNO055_LINEAR_ACCEL_DATA_Y_LSB_ADDR                     = 0x2A,
-	BNO055_LINEAR_ACCEL_DATA_Y_MSB_ADDR                     = 0x2B,
-	BNO055_LINEAR_ACCEL_DATA_Z_LSB_ADDR                     = 0x2C,
-	BNO055_LINEAR_ACCEL_DATA_Z_MSB_ADDR                     = 0x2D,
+	LINEAR_ACCEL_DATA_X_LSB_ADDR                     = 0x28,
+	LINEAR_ACCEL_DATA_X_MSB_ADDR                     = 0x29,
+	LINEAR_ACCEL_DATA_Y_LSB_ADDR                     = 0x2A,
+	LINEAR_ACCEL_DATA_Y_MSB_ADDR                     = 0x2B,
+	LINEAR_ACCEL_DATA_Z_LSB_ADDR                     = 0x2C,
+	LINEAR_ACCEL_DATA_Z_MSB_ADDR                     = 0x2D,
 
 	/* Gravity data registers */
-	BNO055_GRAVITY_DATA_X_LSB_ADDR                          = 0x2E,
-	BNO055_GRAVITY_DATA_X_MSB_ADDR                          = 0x2F,
-	BNO055_GRAVITY_DATA_Y_LSB_ADDR                          = 0x30,
-	BNO055_GRAVITY_DATA_Y_MSB_ADDR                          = 0x31,
-	BNO055_GRAVITY_DATA_Z_LSB_ADDR                          = 0x32,
-	BNO055_GRAVITY_DATA_Z_MSB_ADDR                          = 0x33,
+	GRAVITY_DATA_X_LSB_ADDR                          = 0x2E,
+	GRAVITY_DATA_X_MSB_ADDR                          = 0x2F,
+	GRAVITY_DATA_Y_LSB_ADDR                          = 0x30,
+	GRAVITY_DATA_Y_MSB_ADDR                          = 0x31,
+	GRAVITY_DATA_Z_LSB_ADDR                          = 0x32,
+	GRAVITY_DATA_Z_MSB_ADDR                          = 0x33,
 
 	/* Temperature data register */
-	BNO055_TEMP_ADDR                                        = 0x34,
+	TEMP_ADDR                                        = 0x34,
 
 	/* Status registers */
-	BNO055_CALIB_STAT_ADDR                                  = 0x35,
-	BNO055_SELFTEST_RESULT_ADDR                             = 0x36,
-	BNO055_INTR_STAT_ADDR                                   = 0x37,
+	CALIB_STAT_ADDR                                  = 0x35,
+	SELFTEST_RESULT_ADDR                             = 0x36,
+	INTR_STAT_ADDR                                   = 0x37,
 
-	BNO055_SYS_CLK_STAT_ADDR                                = 0x38,
-	BNO055_SYS_STAT_ADDR                                    = 0x39,
-	BNO055_SYS_ERR_ADDR                                     = 0x3A,
+	SYS_CLK_STAT_ADDR                                = 0x38,
+	SYS_STAT_ADDR                                    = 0x39,
+	SYS_ERR_ADDR                                     = 0x3A,
 
 	/* Unit selection register */
-	BNO055_UNIT_SEL_ADDR                                    = 0x3B,
-	BNO055_DATA_SELECT_ADDR                                 = 0x3C,
+	UNIT_SEL_ADDR                                    = 0x3B,
+	DATA_SELECT_ADDR                                 = 0x3C,
 
 	/* Mode registers */
-	BNO055_OPR_MODE_ADDR                                    = 0x3D,
-	BNO055_PWR_MODE_ADDR                                    = 0x3E,
+	OPR_MODE_ADDR                                    = 0x3D,
+	PWR_MODE_ADDR                                    = 0x3E,
 
-	BNO055_SYS_TRIGGER_ADDR                                 = 0x3F,
-	BNO055_TEMP_SOURCE_ADDR                                 = 0x40,
+	SYS_TRIGGER_ADDR                                 = 0x3F,
+	TEMP_SOURCE_ADDR                                 = 0x40,
 
 	/* Axis remap registers */
-	BNO055_AXIS_MAP_CONFIG_ADDR                             = 0x41,
-	BNO055_AXIS_MAP_SIGN_ADDR                               = 0x42,
+	AXIS_MAP_CONFIG_ADDR                             = 0x41,
+	AXIS_MAP_SIGN_ADDR                               = 0x42,
 
 	/* SIC registers */
-	BNO055_SIC_MATRIX_0_LSB_ADDR                            = 0x43,
-	BNO055_SIC_MATRIX_0_MSB_ADDR                            = 0x44,
-	BNO055_SIC_MATRIX_1_LSB_ADDR                            = 0x45,
-	BNO055_SIC_MATRIX_1_MSB_ADDR                            = 0x46,
-	BNO055_SIC_MATRIX_2_LSB_ADDR                            = 0x47,
-	BNO055_SIC_MATRIX_2_MSB_ADDR                            = 0x48,
-	BNO055_SIC_MATRIX_3_LSB_ADDR                            = 0x49,
-	BNO055_SIC_MATRIX_3_MSB_ADDR                            = 0x4A,
-	BNO055_SIC_MATRIX_4_LSB_ADDR                            = 0x4B,
-	BNO055_SIC_MATRIX_4_MSB_ADDR                            = 0x4C,
-	BNO055_SIC_MATRIX_5_LSB_ADDR                            = 0x4D,
-	BNO055_SIC_MATRIX_5_MSB_ADDR                            = 0x4E,
-	BNO055_SIC_MATRIX_6_LSB_ADDR                            = 0x4F,
-	BNO055_SIC_MATRIX_6_MSB_ADDR                            = 0x50,
-	BNO055_SIC_MATRIX_7_LSB_ADDR                            = 0x51,
-	BNO055_SIC_MATRIX_7_MSB_ADDR                            = 0x52,
-	BNO055_SIC_MATRIX_8_LSB_ADDR                            = 0x53,
-	BNO055_SIC_MATRIX_8_MSB_ADDR                            = 0x54,
+	SIC_MATRIX_0_LSB_ADDR                            = 0x43,
+	SIC_MATRIX_0_MSB_ADDR                            = 0x44,
+	SIC_MATRIX_1_LSB_ADDR                            = 0x45,
+	SIC_MATRIX_1_MSB_ADDR                            = 0x46,
+	SIC_MATRIX_2_LSB_ADDR                            = 0x47,
+	SIC_MATRIX_2_MSB_ADDR                            = 0x48,
+	SIC_MATRIX_3_LSB_ADDR                            = 0x49,
+	SIC_MATRIX_3_MSB_ADDR                            = 0x4A,
+	SIC_MATRIX_4_LSB_ADDR                            = 0x4B,
+	SIC_MATRIX_4_MSB_ADDR                            = 0x4C,
+	SIC_MATRIX_5_LSB_ADDR                            = 0x4D,
+	SIC_MATRIX_5_MSB_ADDR                            = 0x4E,
+	SIC_MATRIX_6_LSB_ADDR                            = 0x4F,
+	SIC_MATRIX_6_MSB_ADDR                            = 0x50,
+	SIC_MATRIX_7_LSB_ADDR                            = 0x51,
+	SIC_MATRIX_7_MSB_ADDR                            = 0x52,
+	SIC_MATRIX_8_LSB_ADDR                            = 0x53,
+	SIC_MATRIX_8_MSB_ADDR                            = 0x54,
 
 	/* Accelerometer Offset registers */
 	ACCEL_OFFSET_X_LSB_ADDR                                 = 0x55,
@@ -230,6 +230,7 @@ typedef enum
 /* USER CODE BEGIN PD */
 #define IMU_ADDRESS_DEF (0x29 << 1)
 #define IMU_ADDRESS_ALT (0x28 << 1)
+#define IMU_SLAVE_ADDR (0x40)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -249,7 +250,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint8_t BIST(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -288,16 +289,49 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-	if (HAL_I2C_IsDeviceReady(&hi2c1, 0x50, 2, 10) == HAL_OK)
+	if (HAL_I2C_IsDeviceReady(&hi2c1, IMU_ADDRESS_ALT, 2, 10) == HAL_OK)
 	{
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
+	HAL_Delay(500);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	HAL_Delay(500);
+	
+	uint8_t txData[2] = {SYS_TRIGGER_ADDR, SELFTEST_RESULT_ADDR}; 
+	uint8_t rxData = 0;
+	
+	uint8_t bistData = 0;
+	
+	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &txData[1], 1, 10);
+	HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &rxData,    1, 10);
+		
+		
+	rxData &= 0x0F;
+	if (rxData == 0x0F)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn on
+	}
+	
+	HAL_Delay(500);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
+	HAL_Delay(500);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		HAL_Delay(1);
+		bistData = BIST();
+		
+		bistData &= 0x07;
+		if (bistData == 0x07)
+		{
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+		}
+		
+		HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -399,6 +433,22 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint8_t BIST(void)
+{
+	IMU_Op_Mode_t mode = OPERATION_MODE_CONFIG;
+	uint8_t setConfig[2] = {OPR_MODE_ADDR, mode};
+	
+	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setConfig[0], 2, 10);
+	
+	uint8_t setSelfTest[2] = {SYS_TRIGGER_ADDR, 0x01};
+	uint8_t readTest = 0;
+	
+	HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, &setSelfTest[0], 2, 10);
+	HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &readTest,   1, 10);
+	HAL_Delay(30);
+	return readTest;	
+}
 
 /* USER CODE END 4 */
 
