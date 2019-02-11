@@ -42,7 +42,7 @@ typedef struct events
 void Initialize_Functions(system_function *functions);
 
 /* Sets the power mode of each of the systems */
-void Set_Functions(system_function *function, uint8_t state);
+void Set_PowerModes(system_function *function, uint8_t state);
 
 /* Set the power mode for mechanical */
 void Set_Mechanical(system_function *function, uint8_t state);

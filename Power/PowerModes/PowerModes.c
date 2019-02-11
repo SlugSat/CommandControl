@@ -16,7 +16,7 @@ void Initialize_Functions(system_function *functions)
 }
 
 /* Sets the power mode of each of the systems */
-void Set_Functions(system_function *function, uint8_t state)
+void Set_PowerModes(system_function *function, uint8_t state)
 {
 	Set_Mechanical(function, state);
 	Set_LinearTransponder(function, state);

@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 			/* In StartUp mode */
 			case (StartUp): 
 				printf("\nEntering StartUp mode\n");
-				Set_Functions(&functions, StartUp);
+				Set_PowerModes(&functions, StartUp);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(StartUp);
@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 			/* In Shutdown mode */
 			case (Shutdown): 
 				printf("\nEntering Shutdown mode\n");
-				Set_Functions(&functions, Shutdown);
+				Set_PowerModes(&functions, Shutdown);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(Shutdown);
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 			/* In Normal mode */
 			case (Normal): 
 				printf("\nEntering Normal mode\n");
-				Set_Functions(&functions, Normal);
+				Set_PowerModes(&functions, Normal);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(Normal);
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 			/* In PowerSave mode */	
 			case (PowerSave): 
 				printf("\nEntering PowerSave mode\n");
-				Set_Functions(&functions, PowerSave);
+				Set_PowerModes(&functions, PowerSave);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(PowerSave);
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 			/* In TelemetryOnly mode */
 			case (TelemetryOnly): 
 				printf("\nEntering TelemetryOnly mode\n");
-				Set_Functions(&functions, TelemetryOnly);
+				Set_PowerModes(&functions, TelemetryOnly);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(TelemetryOnly);
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 			/* In Eclipse mode */
 			case (Eclipse): 
 				printf("\nEntering Eclipse mode\n");
-				Set_Functions(&functions, Eclipse);
+				Set_PowerModes(&functions, Eclipse);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(Eclipse);
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 			/* In ScienceOnly mode */
 			case (ScienceOnly): 
 				printf("\nEntering ScienceOnly mode\n");
-				Set_Functions(&functions, ScienceOnly);
+				Set_PowerModes(&functions, ScienceOnly);
 				Print_System_Settings(&functions);	// Used for testing and debugging
 				// Set the pins high for each rail that should be one here //
 				state = Transition(ScienceOnly);
