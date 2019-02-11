@@ -22,6 +22,7 @@ int main(int argc, char **argv)
 				printf("\nEntering StartUp mode\n");
 				Set_Functions(&functions, StartUp);
 				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
 				state = Transition(StartUp);
 				break;
 			/* In Shutdown mode */
@@ -29,6 +30,7 @@ int main(int argc, char **argv)
 				printf("\nEntering Shutdown mode\n");
 				Set_Functions(&functions, Shutdown);
 				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
 				state = Transition(Shutdown);
 				break;
 			/* In Normal mode */
@@ -36,6 +38,7 @@ int main(int argc, char **argv)
 				printf("\nEntering Normal mode\n");
 				Set_Functions(&functions, Normal);
 				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
 				state = Transition(Normal);
 				break;
 			/* In PowerSave mode */	
@@ -43,6 +46,7 @@ int main(int argc, char **argv)
 				printf("\nEntering PowerSave mode\n");
 				Set_Functions(&functions, PowerSave);
 				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
 				state = Transition(PowerSave);
 				break;
 			/* In TelemetryOnly mode */
@@ -50,6 +54,7 @@ int main(int argc, char **argv)
 				printf("\nEntering TelemetryOnly mode\n");
 				Set_Functions(&functions, TelemetryOnly);
 				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
 				state = Transition(TelemetryOnly);
 				break;
 			/* In Eclipse mode */
@@ -57,7 +62,16 @@ int main(int argc, char **argv)
 				printf("\nEntering Eclipse mode\n");
 				Set_Functions(&functions, Eclipse);
 				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
 				state = Transition(Eclipse);
+				break;
+			/* In ScienceOnly mode */
+			case (ScienceOnly): 
+				printf("\nEntering ScienceOnly mode\n");
+				Set_Functions(&functions, ScienceOnly);
+				Print_System_Settings(&functions);	// Used for testing and debugging
+				// Set the pins high for each rail that should be one here //
+				state = Transition(ScienceOnly);
 				break;
 			/* An error occurred */
 			default:

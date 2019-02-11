@@ -37,7 +37,7 @@ void Set_Mechanical(system_function *function, uint8_t state)
 	{
 		function->MechanicalSys = LimitedPower;
 	}
-	else // if (state == Shutdown)
+	else // if (state == Shutdown || state == ScienceOnly)
 	{
 		function->MechanicalSys = NoPower;
 	}
@@ -56,13 +56,13 @@ void Set_LinearTransponder(system_function *function, uint8_t state)
 	{
 		function->LinearTransponderSys = LimitedPower;
 	}
-	else // if (state == StartUp || state == shutdown || state == PowerSave || state == TelemetryOnly)
+	else // if (state == StartUp || state == shutdown || state == PowerSave || state == TelemetryOnly || state == ScienceOnly)
 	{
 		function->LinearTransponderSys = NoPower;
 	}
 	
 	// Set the LinearTransponderMCU power mode
-	if (state == StartUp || state == Normal || state == PowerSave || state == TelemetryOnly || state == Eclipse)
+	if (state == StartUp || state == Normal || state == PowerSave || state == TelemetryOnly || state == Eclipse || state == ScienceOnly)
 	{
 		function->LinearTransponderMCU = Power;
 	}
@@ -91,13 +91,13 @@ void Set_Telemetry(system_function *function, uint8_t state)
 	{
 		function->TelemetrySys = LimitedPower;
 	}
-	else // if (state == StartUp || state == Shutdown)
+	else // if (state == StartUp || state == Shutdown || state == ScienceOnly)
 	{
 		function->TelemetrySys = NoPower;
 	}
 	
 	// Set TelemetryMCU power mode
-	if (state == StartUp || state == Normal || state == PowerSave || state == TelemetryOnly || state == Eclipse)
+	if (state == StartUp || state == Normal || state == PowerSave || state == TelemetryOnly || state == Eclipse || state == ScienceOnly)
 	{
 		function->TelemetryMCU = Power;
 	}
@@ -116,7 +116,7 @@ void Set_Telemetry(system_function *function, uint8_t state)
 void Set_SciencePayload(system_function *function, uint8_t state)
 {
 	// Set SciencePayloadSys power mode
-	if (state == Normal)
+	if (state == Normal || state == ScienceOnly)
 	{
 		function->SciencePayloadSys = Power;
 	}
@@ -130,7 +130,7 @@ void Set_SciencePayload(system_function *function, uint8_t state)
 	}
 	
 	// Set SciencePayloadMCU power mode
-	if (state == StartUp || state == Normal || state == Eclipse)
+	if (state == StartUp || state == Normal || state == Eclipse || state == ScienceOnly)
 	{
 		function->SciencePayloadMCU = Power;
 	}
@@ -176,6 +176,10 @@ uint8_t Transition(uint8_t event)
 		return Eclipse;
 	}
 	else if (event == Eclipse)
+	{
+		return ScienceOnly;
+	}
+	else if (event == ScienceOnly)
 	{
 		return 255; // Finish
 	}

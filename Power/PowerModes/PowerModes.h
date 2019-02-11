@@ -14,7 +14,7 @@
 #define ON (1)
 
 /* Define states and system function variables */
-enum State {StartUp, Shutdown, Normal, PowerSave, TelemetryOnly, Eclipse};
+enum State {StartUp, Shutdown, Normal, PowerSave, TelemetryOnly, Eclipse, ScienceOnly};
 
 enum PowerLevel {Power, LimitedPower, NoPower};
 
