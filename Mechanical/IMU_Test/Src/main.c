@@ -253,7 +253,17 @@ static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 
 /* USER CODE BEGIN PFP */
+// broken at the moment due to timing issues
 uint8_t built_in_self_test(void);
+
+// Change IMU mode
+void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode);
+
+// Get Raw Sensor Data
+void get_mag_data(I2C_HandleTypeDef *hi2c, int16_t *data);
+void get_gyr_data(I2C_HandleTypeDef *hi2c, int16_t *data);
+
+// I2C Communication Methods
 void write_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t dat);
 uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg);
 void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data);
@@ -323,20 +333,39 @@ int main(void)
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
 	HAL_Delay(500);
 	
+	IMU_Reg_t reg = OPR_MODE_ADDR;
+	rxData = read_byte(&hi2c1, &reg);
+	if (rxData == 0x00) {
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn ON
+	}
+	
+	HAL_Delay(250);
+
+	set_mode(&hi2c1, OPERATION_MODE_MAGGYRO);
+	
+	HAL_Delay(100);
+		
+	rxData = read_byte(&hi2c1, &reg);
+	if (rxData == 0x06) {
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
+	}
+		
+	
+	int16_t mag_vector[3] = {0};
+	int16_t gyr_vector[3] = {0};
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		HAL_Delay(1);
-	
-		if (built_in_self_test())
-		{
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-		}
 		
-		HAL_Delay(500);
+		get_mag_data(&hi2c1, mag_vector);
+				
+		get_gyr_data(&hi2c1, gyr_vector);
+
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -464,6 +493,51 @@ uint8_t built_in_self_test(void)
 	return FALSE;	
 }
 
+// set mode
+void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode)
+{
+	IMU_Reg_t reg = OPR_MODE_ADDR;
+		
+	// set mode to CONFIG_MODE
+	write_byte(hi2c, reg, op_mode);
+	
+	return;
+}
+
+// Get Raw Sensor Data
+// get magnetometer data
+void get_mag_data(I2C_HandleTypeDef *hi2c, int16_t *data)
+{
+	IMU_Reg_t reg = MAG_DATA_X_LSB_ADDR;
+	
+	uint8_t rx_data[6] = {0};
+	
+	read_bytes(hi2c, reg, rx_data);
+	
+	data[0] = ((int16_t)rx_data[1] << 8) | (int16_t)rx_data[0];
+	data[1] = ((int16_t)rx_data[3] << 8) | (int16_t)rx_data[2];
+	data[2] = ((int16_t)rx_data[5] << 8) | (int16_t)rx_data[4];
+
+	return;
+}
+
+// get gyroscope data
+void get_gyr_data(I2C_HandleTypeDef *hi2c, int16_t *data)
+{
+	IMU_Reg_t reg = GYRO_DATA_X_LSB_ADDR;
+	
+	uint8_t rx_data[6] = {0};
+	
+	read_bytes(hi2c, reg, rx_data);
+	
+	data[0] = ((int16_t)rx_data[1] << 8) | (int16_t)rx_data[0];
+	data[1] = ((int16_t)rx_data[3] << 8) | (int16_t)rx_data[2];
+	data[2] = ((int16_t)rx_data[5] << 8) | (int16_t)rx_data[4];
+
+	return;
+}
+
+// I2C Communication Methods
 void write_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t dat) 
 {
 	// tx data array with register address to write to and data to write
@@ -473,7 +547,7 @@ void write_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t dat)
 	HAL_I2C_Master_Transmit(hi2c, IMU_ADDRESS_ALT, tx_data, sizeof(tx_data), 10);	HAL_Delay(30);
 	return;
 }
-
+ 
 uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg) 
 {
 	// transmit register address to read from
@@ -482,39 +556,21 @@ uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg)
 	
 	//HAL_Delay(400);
 	
-/*	HAL_I2C_StateTypeDef state = HAL_I2C_GetState(hi2c);
-	while (HAL_I2C_IsDeviceReady(hi2c, IMU_ADDRESS_ALT, 1, 10) != HAL_OK || state == HAL_I2C_STATE_BUSY) 
-	{
-		 state = HAL_I2C_GetState(hi2c);
-	} */
-	
-	
-	
-	
 	// read data from register
 	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, &rx_data, sizeof(rx_data), 10);
 	
-	
-		reg[0] = SYS_ERR_ADDR;
-		uint8_t readTest = 0;// read_byte(&hi2c1, &reg);
-		
-		HAL_I2C_Master_Transmit(&hi2c1, IMU_ADDRESS_ALT, (uint8_t *) &reg, 1, 10);
-		HAL_I2C_Master_Receive( &hi2c1, IMU_ADDRESS_ALT, &readTest,    1, 10);
-	
-	
-	
-
-return rx_data;
+	return rx_data;
 }
+
 
 void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data)
 {
-	
 	// transmit register address to read from
 	HAL_I2C_Master_Transmit(hi2c, IMU_ADDRESS_ALT, (uint8_t*)&reg, sizeof(uint8_t), 10);
 	
 	// read data from registers
-	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, rx_data, sizeof(rx_data), 10);
+	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, rx_data, 6, 10);
+	HAL_Delay(1);
 	return;
 }
 
