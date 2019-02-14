@@ -14,7 +14,7 @@
 #define ON (1)
 
 /* Define states and system function variables */
-typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, ScienceOnly};
+typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, ScienceOnly} States;
 
 enum PowerLevel {Power, LimitedPower, NoPower};
 
@@ -32,7 +32,7 @@ typedef struct system_function
 
 typedef struct events
 {
-	uint8_t event1;
+	uint8_t die;
 } events;
 
 
