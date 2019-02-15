@@ -3,11 +3,22 @@
 
 #include "main.h"
 
+// =================================================================
+// pre-processor defines
+// =================================================================
+
+// true and false defines
 #define TRUE 1
 #define FALSE 0
 
+// slave addresses for the BNO055 IMU
 #define IMU_ADDRESS_DEF (0x29 << 1)
-#define IMU_ADDRESS_ALT (0x28 << 1)
+#define IMU_ADDRESS_ALT (0x28 << 1) // recognizable address by STM32
+
+// size definitions
+#define RAW_DATA_LEN 6
+// =================================================================
+
 
 typedef enum
 {
@@ -185,24 +196,74 @@ typedef enum
 	OPERATION_MODE_NDOF                                     = 0x0C
 } IMU_Op_Mode_t;
 
+// =================================================================
+// Configuration and Initialization Methods
+// =================================================================
+
 // broken at the moment due to timing issues
 uint8_t built_in_self_test(I2C_HandleTypeDef *hi2c);
+
+// initialization method that checks self test register before
+// changing to a sensor mode provided by user
+void IMU_init(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t sensor_mode);
 
 // Change IMU mode
 void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode);
 
-// Get Raw Sensor Data
+// =================================================================
+
+
+// =================================================================
+// Accessors of sensor data methods
+// =================================================================
+
+// gets magnetometer data where data is a float array of size 3
+// that represents the magnetic fields unit vector [micro-teslas]
 void get_mag_data(I2C_HandleTypeDef *hi2c, float *data);
+
+// gets gyroscope data where data is a float array of size 3
+// that represents the unit vector []
 void get_gyr_data(I2C_HandleTypeDef *hi2c, float *data);
+
+// gets accelerometer data where data is a float array of size 3
+// that represents the unit vector [m/s^2]
 void get_acc_data(I2C_HandleTypeDef *hi2c, float *data);
 
-// Calibration Functions
+// =================================================================
+
+
+// =================================================================
+// Calibration methods
+// =================================================================
+
+// Accessors for offsets of sensors
 void get_gyr_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
+void get_mag_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
+
+// Mutators for offsets of sensors
+void set_gyr_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
+void set_mag_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
+
+// Accessor for calibration status
+void get_calib_state(I2C_HandleTypeDef *hi2c, int16_t *data);
+
+// =================================================================
 
 
+// =================================================================
 // I2C Communication Methods
+// =================================================================
+
+// Writes single byte to the specified register
 void write_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t dat);
+
+// Reads single byte from the specified register
 uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg);
-void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data);
+
+// Reads multiple bytes starting from the specified register up to
+// the registor of address (register_addr + len)
+void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data, uint16_t len);
+
+// =================================================================
 
 #endif

@@ -116,45 +116,7 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-	if (HAL_I2C_IsDeviceReady(&hi2c1, IMU_ADDRESS_ALT, 2, 10) == HAL_OK)
-	{
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	}
-	HAL_Delay(500);
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	HAL_Delay(500);
-	
-	uint8_t txData[2] = {SYS_TRIGGER_ADDR, SELFTEST_RESULT_ADDR}; 
-	uint8_t rxData = 0;
-		
-	rxData = read_byte(&hi2c1, (IMU_Reg_t *) &txData[1]);
-		
-	rxData &= 0x0F;
-	if (rxData == 0x0F)
-	{
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn on
-	}
-	
-	HAL_Delay(500);
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
-	HAL_Delay(500);
-	
-	IMU_Reg_t reg = OPR_MODE_ADDR;
-	rxData = read_byte(&hi2c1, &reg);
-	if (rxData == 0x00) {
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn ON
-	}
-	
-	HAL_Delay(250);
-
-	set_mode(&hi2c1, OPERATION_MODE_MAGGYRO);
-	
-	HAL_Delay(100);
-		
-	rxData = read_byte(&hi2c1, &reg);
-	if (rxData == 0x06) {
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
-	}
+	IMU_init(&hi2c1, OPERATION_MODE_MAGGYRO);
 	
 	float mag_vector[3] = {0};
 	float gyr_vector[3] = {0};

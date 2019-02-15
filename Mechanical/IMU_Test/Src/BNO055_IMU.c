@@ -24,6 +24,50 @@ uint8_t built_in_self_test(I2C_HandleTypeDef *hi2c)
 	return FALSE;	
 }
 
+void IMU_init(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t sensor_mode)
+{
+		if (HAL_I2C_IsDeviceReady(hi2c, IMU_ADDRESS_ALT, 2, 10) == HAL_OK)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	}
+	
+	HAL_Delay(500);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	HAL_Delay(500);
+	
+	uint8_t txData[2] = {SYS_TRIGGER_ADDR, SELFTEST_RESULT_ADDR}; 
+	uint8_t rxData = 0;
+		
+	rxData = read_byte(hi2c, (IMU_Reg_t *) &txData[1]);
+		
+	rxData &= 0x0F;
+	if (rxData == 0x0F)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn on
+	}
+	
+	HAL_Delay(500);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
+	HAL_Delay(500);
+	
+	IMU_Reg_t reg = OPR_MODE_ADDR;
+	rxData = read_byte(hi2c, &reg);
+	if (rxData == 0x00) {
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn ON
+	}
+	
+	HAL_Delay(250);
+
+	set_mode(hi2c, sensor_mode);
+	
+	HAL_Delay(100);
+		
+	rxData = read_byte(hi2c, &reg);
+	if (rxData == 0x06) {
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Turn off
+	}
+}
+
 // set mode
 void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode)
 {
@@ -35,7 +79,7 @@ void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode)
 	return;
 }
 
-// Get Raw Sensor Data
+// Get Sensor Data
 // get magnetometer data (microteslas)
 void get_mag_data(I2C_HandleTypeDef *hi2c, float *data)
 {
@@ -44,7 +88,7 @@ void get_mag_data(I2C_HandleTypeDef *hi2c, float *data)
 	uint8_t rx_data[6] = {0};
 	int16_t raw_data[3] = {0};
 	
-	read_bytes(hi2c, reg, rx_data);
+	read_bytes(hi2c, reg, rx_data, RAW_DATA_LEN);
 	
 	raw_data[0] = ((int16_t)rx_data[1] << 8) | (int16_t)rx_data[0];
 	raw_data[1] = ((int16_t)rx_data[3] << 8) | (int16_t)rx_data[2];
@@ -66,7 +110,7 @@ void get_gyr_data(I2C_HandleTypeDef *hi2c, float *data)
 	uint8_t rx_data[6] = {0};
 	int16_t raw_data[3] = {0};
 	
-	read_bytes(hi2c, reg, rx_data);
+	read_bytes(hi2c, reg, rx_data, RAW_DATA_LEN);
 	
 	raw_data[0] = ((int16_t)rx_data[1] << 8) | (int16_t)rx_data[0];
 	raw_data[1] = ((int16_t)rx_data[3] << 8) | (int16_t)rx_data[2];
@@ -88,7 +132,7 @@ void get_acc_data(I2C_HandleTypeDef *hi2c, float *data)
 	uint8_t rx_data[6] = {0};
 	int16_t raw_data[3] = {0};
 	
-	read_bytes(hi2c, reg, rx_data);
+	read_bytes(hi2c, reg, rx_data, RAW_DATA_LEN);
 	
 	raw_data[0] = ((int16_t)rx_data[1] << 8) | (int16_t)rx_data[0];
 	raw_data[1] = ((int16_t)rx_data[3] << 8) | (int16_t)rx_data[2];
@@ -132,13 +176,19 @@ uint8_t read_byte(I2C_HandleTypeDef *hi2c, IMU_Reg_t *reg)
 //=================================================================
 
 
-void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data)
+//=================================================================
+//													READ BYTES
+//-----------------------------------------------------------------
+// 			reads multiple bytes starting from specified register
+//=================================================================
+void read_bytes(I2C_HandleTypeDef *hi2c, IMU_Reg_t reg, uint8_t *rx_data, uint16_t len)
 {
 	// transmit register address to read from
 	HAL_I2C_Master_Transmit(hi2c, IMU_ADDRESS_ALT, (uint8_t*)&reg, sizeof(uint8_t), 10);
 	
 	// read data from registers
-	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, rx_data, 6, 10);
+	HAL_I2C_Master_Receive(hi2c, IMU_ADDRESS_ALT, rx_data, len, 10);
 	HAL_Delay(1);
 	return;
 }
+//=================================================================
