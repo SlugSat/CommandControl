@@ -1,4 +1,5 @@
 #include "PowerModes.h"
+//#include "transitions.h"
 
 /* Set the intial power modes of each system */
 void Initialize_Functions(system_function *functions)
@@ -157,31 +158,31 @@ uint8_t Transition(uint8_t event)
 	
 	if (event == Detumble)
 	{
-		return Kill;
+		return Detumble_Transition();
 	}
 	else if (event == Kill)
 	{
-		return Normal;
+		return Kill;
 	}
 	else if (event == Normal)
 	{
-		return UltraLowPower;
+		return Normal_Transition();
 	}
 	else if (event == UltraLowPower)
 	{
-		return LowPower;
+		return UltraLowPower_Transition();
 	}
 	else if (event == LowPower)
 	{
-		return Eclipse;
+		return LowPower_Transition();
 	}
 	else if (event == Eclipse)
 	{
-		return ScienceOnly;
+		return Eclipse_Transition();
 	}
 	else if (event == ScienceOnly)
 	{
-		return 255; // Finish
+		return ScienceOnly_Transition(); 
 	}
 	return 255;
 }

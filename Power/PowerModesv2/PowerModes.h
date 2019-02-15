@@ -1,7 +1,6 @@
 #ifndef POWERMODES_H
 #define POWERMODES_H
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -10,11 +9,19 @@
 #include <errno.h>
 #include <assert.h>
 
-#define OFF (0)
-#define ON (1)
 
 /* Define states and system function variables */
 typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, ScienceOnly} States;
+
+#define OFF (0)
+#define ON (1)
+
+#define FALSE (0)
+#define TRUE  (1)
+
+#define ULTRA_LOW_BATT (15)
+#define LOW_BATT	   (50)
+
 
 enum PowerLevel {Power, LimitedPower, NoPower};
 
@@ -61,5 +68,25 @@ uint8_t Transition(uint8_t event);
 
 /* Used for debugging and testing the system. Print out all of te current power modes. */
 void Print_System_Settings(system_function *function);
+
+
+/* State transition for Detumble */
+uint8_t Detumble_Transition(void);
+
+/* State transition for Eclipse */
+uint8_t Eclipse_Transition(void);
+
+/* State transition for Normal */
+uint8_t Normal_Transition(void);
+
+/* State transition for LowPower */
+uint8_t LowPower_Transition(void);
+
+/* State transition for UltraLowPower */
+uint8_t UltraLowPower_Transition(void);
+
+/* State transition for ScienceOnly */
+uint8_t ScienceOnly_Transition(void);
+
 
 #endif
