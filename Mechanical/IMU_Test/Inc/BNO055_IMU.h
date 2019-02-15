@@ -16,10 +16,14 @@
 #define IMU_ADDRESS_ALT (0x28 << 1) // recognizable address by STM32
 
 // size definitions
-#define RAW_DATA_LEN 6
+#define RCV_DATA_LEN 6
+#define RAW_DATA_LEN 3
 // =================================================================
 
 
+// =================================================================
+// type definitions for registers and special bytes
+// =================================================================
 typedef enum
 {
 	/* Page id register definition */
@@ -195,6 +199,8 @@ typedef enum
 	OPERATION_MODE_NDOF_FMC_OFF                             = 0x0B,
 	OPERATION_MODE_NDOF                                     = 0x0C
 } IMU_Op_Mode_t;
+// =================================================================
+
 
 // =================================================================
 // Configuration and Initialization Methods
@@ -237,15 +243,18 @@ void get_acc_data(I2C_HandleTypeDef *hi2c, float *data);
 // =================================================================
 
 // Accessors for offsets of sensors
+void get_MG_offsets(I2C_HandleTypeDef *hi2c, int16_t *gyr_offset, int16_t *mag_offset);
 void get_gyr_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
 void get_mag_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
 
 // Mutators for offsets of sensors
+void set_MG_offsets(I2C_HandleTypeDef *hi2c, int16_t *gyr_offset, int16_t *mag_offset);
 void set_gyr_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
 void set_mag_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
 
 // Accessor for calibration status
-void get_calib_state(I2C_HandleTypeDef *hi2c, int16_t *data);
+uint8_t is_calibrated(I2C_HandleTypeDef *hi2c);
+void get_calib_status(I2C_HandleTypeDef *hi2c, uint8_t *sys, uint8_t *gyro, uint8_t *mag);
 
 // =================================================================
 
