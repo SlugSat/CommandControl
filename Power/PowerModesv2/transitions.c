@@ -90,6 +90,7 @@ uint8_t Eclipse_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -132,6 +133,7 @@ uint8_t Normal_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -174,6 +176,7 @@ uint8_t LowPower_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -216,6 +219,7 @@ uint8_t UltraLowPower_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -251,6 +255,7 @@ uint8_t ScienceOnly_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
