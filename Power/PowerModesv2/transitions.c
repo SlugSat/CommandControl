@@ -11,6 +11,29 @@ uint8_t scienceEvent = 0;
 uint8_t solarVector = 0; 
 #endif
 
+
+uint8_t set_stable(uint8_t change)
+{
+	stable = change;
+}
+uint8_t set_die(uint8_t change)
+{
+	die = change;
+}
+uint8_t set_science(uint8_t change)
+{
+	batteryLevel = change;
+}
+uint8_t set_solar(uint8_t change)
+{
+	scienceEvent = change;
+}
+uint8_t set_power(uint8_t change)
+{
+	solarVector = change;
+}
+
+
 /* State transition for Detumble */
 uint8_t Detumble_Transition(void)
 {

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <pthread.h>
 
 
 /* Define states and system function variables */
@@ -88,5 +89,14 @@ uint8_t UltraLowPower_Transition(void);
 /* State transition for ScienceOnly */
 uint8_t ScienceOnly_Transition(void);
 
+/* Set variables in transitions.c file */
+uint8_t set_stable(uint8_t change);
+uint8_t set_die(uint8_t change);
+uint8_t set_science(uint8_t change);
+uint8_t set_solar(uint8_t change);
+uint8_t set_power(uint8_t change);
+
+/* Thread calls which variables to change */
+void *change_variables(void *);
 
 #endif

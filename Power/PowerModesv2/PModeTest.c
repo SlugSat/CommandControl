@@ -2,7 +2,8 @@
 
 #define DEBUG (1)
 
-int main(int argc, char **argv)
+
+void *StateMachine(void *hi)
 {
 	/* Initialize Variables */
 	States state;
@@ -10,10 +11,10 @@ int main(int argc, char **argv)
 
 	/* Initialize the starting state of each of the systems that need power */
 	Initialize_Functions(&functions);
-	
+
 	/* Set Initial state */
 	state = Detumble;
-	
+
 	/* Enter the state machine */
 	while(1)
 	{
@@ -78,8 +79,40 @@ int main(int argc, char **argv)
 			/* An error occurred */
 			default:
 				fprintf(stderr, "\nInvalid state in the state machine reached...\nExiting\n");
-				return -1;
 		}
 	}
+	return NULL;
+}
+	
+int main(int argc, char **argv)
+{
+	
+	pthread_t thread_id[2];
+	
+	if (pthread_create(&thread_id[0], NULL , &StateMachine, NULL) != 0)
+	{
+		fprintf(stderr, "Thread not able to be created\n");
+		exit(1);
+	}
+	
+	if (pthread_create(&thread_id[1], NULL , &change_variables, NULL) != 0)
+	{
+		fprintf(stderr, "Thread not able to be created\n");
+		exit(1);
+	}
+	
+	// Wait for all of threads to finish processing before continuing
+	for (int i = 0; i < 2; i++)
+	{
+		char *val;
+		if (pthread_join(thread_id[i], (void **)&val) != 0)
+		{
+			fprintf(stderr, "Thread join error\n");
+			exit(1);
+		}
+	}
+	
+	
+	
 	return 0;
 }
