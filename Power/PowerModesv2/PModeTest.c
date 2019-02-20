@@ -3,7 +3,7 @@
 #define DEBUG (1)
 
 
-void *StateMachine(void *hi)
+void *StateMachine(void *nil)
 {
 	/* Initialize Variables */
 	States state;

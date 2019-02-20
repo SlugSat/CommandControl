@@ -11,34 +11,48 @@ uint8_t scienceEvent = 0;
 uint8_t solarVector = 0; 
 #endif
 
+/* Print out each global variable */
+void Print_Globals(void)
+{
+	printf("Stable: %u\t", stable);
+	printf("Kill: %u\t", stable);
+	printf("Solar Vector: %u\t", solarVector);
+	printf("Science Event: %u\t", scienceEvent);
+	printf("Battery level: %u\n", batteryLevel);
+}
 
-uint8_t set_stable(uint8_t change)
+/* Set the stable global variable */
+uint8_t Set_Stable(uint8_t change)
 {
 	stable = change;
 }
-uint8_t set_die(uint8_t change)
+/* Set the die global variable */
+uint8_t Set_Die(uint8_t change)
 {
 	die = change;
 }
-uint8_t set_science(uint8_t change)
-{
-	batteryLevel = change;
-}
-uint8_t set_solar(uint8_t change)
+/* Set the batteryLevel global variable */
+uint8_t Set_ScienceEvent(uint8_t change)
 {
 	scienceEvent = change;
 }
-uint8_t set_power(uint8_t change)
+/* Set the scienceEvent global variable */
+uint8_t Set_SolarVector(uint8_t change)
 {
 	solarVector = change;
 }
-
+/* Set the solarVector global variable */
+uint8_t Set_BatteryLevel(uint8_t change)
+{
+	batteryLevel = change;
+}
 
 /* State transition for Detumble */
 uint8_t Detumble_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{

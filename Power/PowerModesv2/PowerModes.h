@@ -89,14 +89,18 @@ uint8_t UltraLowPower_Transition(void);
 /* State transition for ScienceOnly */
 uint8_t ScienceOnly_Transition(void);
 
+/* Print each of the global variables */
+void Print_Globals(void);
+
 /* Set variables in transitions.c file */
-uint8_t set_stable(uint8_t change);
-uint8_t set_die(uint8_t change);
-uint8_t set_science(uint8_t change);
-uint8_t set_solar(uint8_t change);
-uint8_t set_power(uint8_t change);
+uint8_t Set_Stable(uint8_t change);
+uint8_t Set_Die(uint8_t change);
+uint8_t Set_ScienceEvent(uint8_t change);
+uint8_t Set_SolarVector(uint8_t change);
+uint8_t Set_BatteryLevel(uint8_t change);
 
 /* Thread calls which variables to change */
 void *change_variables(void *);
+
 
 #endif
