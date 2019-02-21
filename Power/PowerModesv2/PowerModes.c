@@ -9,6 +9,10 @@ void *change_variables(void *nil)
 		Set_Stable(temp);
 		
 		temp = rand() % 2;
+		//printf("Setting die  to: %u\n", temp);
+		Set_Die(temp);
+
+		temp = rand() % 2;
 		//printf("Setting science to: %u\n", temp);
 		Set_ScienceEvent(temp);
 		

@@ -15,7 +15,7 @@ uint8_t solarVector = 0;
 void Print_Globals(void)
 {
 	printf("Stable: %u\t", stable);
-	printf("Kill: %u\t", stable);
+	printf("Die: %u\t", stable);
 	printf("Solar Vector: %u\t", solarVector);
 	printf("Science Event: %u\t", scienceEvent);
 	printf("Battery level: %u\n", batteryLevel);
