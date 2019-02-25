@@ -67,7 +67,9 @@
 I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
-
+	// variables to store the offsets
+uint8_t gyro_offset[RCV_DATA_LEN] = {0};
+uint8_t magnet_offset[RCV_DATA_LEN] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,12 +118,22 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-	IMU_init(&hi2c1, OPERATION_MODE_MAGGYRO);
+	// initialize and calibrate
+	IMU_init(&hi2c1, OPERATION_MODE_MAGGYRO);	
+	HAL_Delay(10);
+	
+	// switch to config to save offsets
+	set_mode(&hi2c1, OPERATION_MODE_CONFIG);
+	HAL_Delay(10);
+	get_mag_offsets(&hi2c1, magnet_offset);
+	get_gyr_offsets(&hi2c1, gyro_offset);
+	
+	// switch back to sensor mode
+	set_mode(&hi2c1, OPERATION_MODE_MAGGYRO);
 	
 	float mag_vector[3] = {0};
 	float gyr_vector[3] = {0};
 	float acc_vector[3] = {0};
-	int16_t calib_data = {0};
 	
   /* USER CODE END 2 */
 

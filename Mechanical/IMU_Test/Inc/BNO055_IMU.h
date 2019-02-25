@@ -214,6 +214,8 @@ uint8_t built_in_self_test(I2C_HandleTypeDef *hi2c);
 void IMU_init(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t sensor_mode);
 
 // Change IMU mode
+// NOTE: must be first in config mode before changing to sensor
+//			 output mode
 void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode);
 
 // =================================================================
@@ -224,15 +226,15 @@ void set_mode(I2C_HandleTypeDef *hi2c, IMU_Op_Mode_t op_mode);
 // =================================================================
 
 // gets magnetometer data where data is a float array of size 3
-// that represents the magnetic fields unit vector [micro-teslas]
+// that represents the magnetic fields vector [micro-teslas]
 void get_mag_data(I2C_HandleTypeDef *hi2c, float *data);
 
 // gets gyroscope data where data is a float array of size 3
-// that represents the unit vector []
+// that represents the rotation vector []
 void get_gyr_data(I2C_HandleTypeDef *hi2c, float *data);
 
 // gets accelerometer data where data is a float array of size 3
-// that represents the unit vector [m/s^2]
+// that represents the acceleration vector [m/s^2]
 void get_acc_data(I2C_HandleTypeDef *hi2c, float *data);
 
 // =================================================================
@@ -240,21 +242,22 @@ void get_acc_data(I2C_HandleTypeDef *hi2c, float *data);
 
 // =================================================================
 // Calibration methods
+// NOTE: must be in config mode to read/set offset registers
 // =================================================================
 
 // Accessors for offsets of sensors
-void get_MG_offsets(I2C_HandleTypeDef *hi2c, int16_t *gyr_offset, int16_t *mag_offset);
-void get_gyr_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
-void get_mag_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
+void get_MG_offsets(I2C_HandleTypeDef *hi2c, uint8_t *gyr_offset, uint8_t *mag_offset);
+void get_gyr_offsets(I2C_HandleTypeDef *hi2c, uint8_t *data);
+void get_mag_offsets(I2C_HandleTypeDef *hi2c, uint8_t *data);
 
 // Mutators for offsets of sensors
-void set_MG_offsets(I2C_HandleTypeDef *hi2c, int16_t *gyr_offset, int16_t *mag_offset);
-void set_gyr_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
-void set_mag_offsets(I2C_HandleTypeDef *hi2c, int16_t *data);
+void set_MG_offsets(I2C_HandleTypeDef *hi2c, uint8_t *gyr_offset, int16_t *mag_offset);
+void set_gyr_offsets(I2C_HandleTypeDef *hi2c, uint8_t *data);
+void set_mag_offsets(I2C_HandleTypeDef *hi2c, uint8_t *data);
 
 // Accessor for calibration status
 uint8_t is_calibrated(I2C_HandleTypeDef *hi2c);
-void get_calib_status(I2C_HandleTypeDef *hi2c, uint8_t *sys, uint8_t *gyro, uint8_t *mag);
+void get_calib_status(I2C_HandleTypeDef *hi2c, uint8_t *sys, uint8_t *gyro, uint8_t *acc, uint8_t *mag);
 
 // =================================================================
 
