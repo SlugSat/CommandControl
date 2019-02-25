@@ -11,11 +11,48 @@ uint8_t scienceEvent = 0;
 uint8_t solarVector = 0; 
 #endif
 
+/* Print out each global variable */
+void Print_Globals(void)
+{
+	printf("Stable: %u\t", stable);
+	printf("Die: %u\t", stable);
+	printf("Solar Vector: %u\t", solarVector);
+	printf("Science Event: %u\t", scienceEvent);
+	printf("Battery level: %u\n", batteryLevel);
+}
+
+/* Set the stable global variable */
+uint8_t Set_Stable(uint8_t change)
+{
+	stable = change;
+}
+/* Set the die global variable */
+uint8_t Set_Die(uint8_t change)
+{
+	die = change;
+}
+/* Set the batteryLevel global variable */
+uint8_t Set_ScienceEvent(uint8_t change)
+{
+	scienceEvent = change;
+}
+/* Set the scienceEvent global variable */
+uint8_t Set_SolarVector(uint8_t change)
+{
+	solarVector = change;
+}
+/* Set the solarVector global variable */
+uint8_t Set_BatteryLevel(uint8_t change)
+{
+	batteryLevel = change;
+}
+
 /* State transition for Detumble */
 uint8_t Detumble_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -53,6 +90,7 @@ uint8_t Eclipse_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -95,6 +133,7 @@ uint8_t Normal_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -137,6 +176,7 @@ uint8_t LowPower_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -179,6 +219,7 @@ uint8_t UltraLowPower_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{
@@ -214,6 +255,7 @@ uint8_t ScienceOnly_Transition(void)
 {
 	while(1)
 	{
+		Print_Globals();
 		// Grab mutex
 		if (die == FALSE)
 		{

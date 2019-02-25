@@ -1,5 +1,32 @@
 #include "PowerModes.h"
-//#include "transitions.h"
+
+void *change_variables(void *nil)
+{
+	while(1)
+	{
+		uint8_t temp = rand() % 2;
+		//printf("Setting stable to: %u\n", temp);
+		Set_Stable(temp);
+		
+		temp = rand() % 2;
+		//printf("Setting die  to: %u\n", temp);
+		Set_Die(temp);
+
+		temp = rand() % 2;
+		//printf("Setting science to: %u\n", temp);
+		Set_ScienceEvent(temp);
+		
+		temp = rand() % 101;
+		//printf("Setting power to: %u\n", temp);
+		Set_BatteryLevel(temp);
+		
+		temp = rand() % 2;
+		//printf("Setting solar to: %u\n", temp);
+		Set_SolarVector(temp);
+		for(int i = 0; i < 1000000000; i++);		
+	}
+	return NULL;	
+}
 
 /* Set the intial power modes of each system */
 void Initialize_Functions(system_function *functions)
