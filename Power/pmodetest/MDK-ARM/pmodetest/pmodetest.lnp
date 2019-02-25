@@ -1,0 +1,23 @@
+--cpu Cortex-M3
+"pmodetest\startup_stm32l152xe.o"
+"pmodetest\main.o"
+"pmodetest\stm32l1xx_it.o"
+"pmodetest\stm32l1xx_hal_msp.o"
+"pmodetest\stm32l1xx_hal_tim.o"
+"pmodetest\stm32l1xx_hal_tim_ex.o"
+"pmodetest\stm32l1xx_hal.o"
+"pmodetest\stm32l1xx_hal_rcc.o"
+"pmodetest\stm32l1xx_hal_rcc_ex.o"
+"pmodetest\stm32l1xx_hal_flash.o"
+"pmodetest\stm32l1xx_hal_flash_ex.o"
+"pmodetest\stm32l1xx_hal_flash_ramfunc.o"
+"pmodetest\stm32l1xx_hal_gpio.o"
+"pmodetest\stm32l1xx_hal_dma.o"
+"pmodetest\stm32l1xx_hal_pwr.o"
+"pmodetest\stm32l1xx_hal_pwr_ex.o"
+"pmodetest\stm32l1xx_hal_cortex.o"
+"pmodetest\system_stm32l1xx.o"
+--library_type=microlib --strict --scatter "pmodetest\pmodetest.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "pmodetest.map" -o pmodetest\pmodetest.axf
