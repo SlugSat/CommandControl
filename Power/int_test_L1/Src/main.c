@@ -40,6 +40,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "PowerModes.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -53,7 +54,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define DEBUG (0)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,7 +65,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t globalTest = 0;
+States globalTest = Detumble;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,13 +109,96 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+	
+	/* Initialize Variables */
+	States state;
+	system_function functions;
 
+	/* Initialize the starting state of each of the systems that need power */
+	Initialize_Functions(&functions);
+
+	/* Set Initial state */
+	state = Detumble;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	/* Enter the state machine */
+		while(1)
+		{
+			globalTest = state;
+			switch (state)
+			{
+				/* In Detumble mode */
+				case (Detumble): 
+					globalTest = state;
+					//if (DEBUG) printf("\nEntering Detumble mode\n");
+					Set_PowerModes(&functions, Detumble);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(Detumble);
+					break;
+				/* In Kill mode */
+				case (Kill): 
+					//if (DEBUG) printf("\nEntering Kill mode\n");
+					Set_PowerModes(&functions, Kill);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(Kill);
+					break;
+				/* In Normal mode */
+				case (Normal): 
+					//if (DEBUG) printf("\nEntering Normal mode\n");
+					Set_PowerModes(&functions, Normal);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(Normal);
+					break;
+				/* In UltraLowPower mode */	
+				case (UltraLowPower): 
+					//if (DEBUG) printf("\nEntering UltraLowPower mode\n");
+					Set_PowerModes(&functions, UltraLowPower);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(UltraLowPower);
+					break;
+				/* In LowPower mode */
+				case (LowPower): 
+					//if (DEBUG) printf("\nEntering LowPower mode\n");
+					Set_PowerModes(&functions, LowPower);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(LowPower);
+					break;
+				/* In Eclipse mode */
+				case (Eclipse): 
+					//if (DEBUG) printf("\nEntering Eclipse mode\n");
+					Set_PowerModes(&functions, Eclipse);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(Eclipse);
+					break;
+				/* In ScienceOnly mode */
+				case (ScienceOnly): 
+					//if (DEBUG) printf("\nEntering ScienceOnly mode\n");
+					Set_PowerModes(&functions, ScienceOnly);
+					//Print_System_Settings(&functions);	// Used for testing and debugging
+					// Set the pins high for each rail that should be one here //
+					state = Transition(ScienceOnly);
+					break;
+				/* An error occurred */
+				default:
+					//fprintf(stderr, "\nInvalid state in the state machine reached...\nExiting\n");
+					continue;
+			}
+		}
+		
+		
+		
+		
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -231,7 +315,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 		
 		if (GPIO_PIN == GPIO_PIN_13)
 		{
-			globalTest = 1;
+			change_variables(NULL);
+			//globalTest = 1;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		/*else if (GPIO_PIN == GPIO_PIN_8)
@@ -251,7 +336,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 		}*/
 		else if (GPIO_PIN == GPIO_PIN_4)
 		{
-			globalTest = 5;
+			//globalTest = 5;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		else 

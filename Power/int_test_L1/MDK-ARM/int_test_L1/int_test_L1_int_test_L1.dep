@@ -1,6 +1,6 @@
 Dependencies for Project 'int_test_L1', Target 'int_test_L1': (DO NOT MODIFY !)
 F (startup_stm32l152xe.s)(0x5C6F0393)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork --pd "__MICROLIB SETA 1"-I.\RTE\_int_test_L1-IE:\Keil\Core\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\Keil\Core\ARM\PACK\Keil\STM32L1xx_DFP\1.2.0\Device\Include--pd "__UVISION_VERSION SETA 527" --pd "_RTE_ SETA 1" --pd "STM32L152xE SETA 1"--list startup_stm32l152xe.lst --xref -o int_test_l1\startup_stm32l152xe.o --depend int_test_l1\startup_stm32l152xe.d)
-F (../Src/main.c)(0x5C7443BA)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32L1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_int_test_L1-IE:\Keil\Core\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\Keil\Core\ARM\PACK\Keil\STM32L1xx_DFP\1.2.0\Device\Include-D__UVISION_VERSION="527" -D_RTE_ -DSTM32L152xE -DUSE_HAL_DRIVER -DSTM32L152xE-o int_test_l1\main.o --omf_browse int_test_l1\main.crf --depend int_test_l1\main.d)
+F (../Src/main.c)(0x5C744FC7)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32L1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_int_test_L1-IE:\Keil\Core\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\Keil\Core\ARM\PACK\Keil\STM32L1xx_DFP\1.2.0\Device\Include-D__UVISION_VERSION="527" -D_RTE_ -DSTM32L152xE -DUSE_HAL_DRIVER -DSTM32L152xE-o int_test_l1\main.o --omf_browse int_test_l1\main.crf --depend int_test_l1\main.d)
 I (../Inc/main.h)(0x5C6F0391)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal.h)(0x5C450844)
 I (../Inc/stm32l1xx_hal_conf.h)(0x5C6F0391)
@@ -26,6 +26,11 @@ I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ex.h)(0x5C450844)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ramfunc.h)(0x5C450844)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr.h)(0x5C450844)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr_ex.h)(0x5C450844)
+I (../Inc/PowerModes.h)(0x5C744EF1)
+I (E:\Keil\Core\ARM\ARMCC\include\stdlib.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\string.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\errno.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\assert.h)(0x599FAE2A)
 F (../Src/stm32l1xx_it.c)(0x5C744382)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32L1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_int_test_L1-IE:\Keil\Core\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\Keil\Core\ARM\PACK\Keil\STM32L1xx_DFP\1.2.0\Device\Include-D__UVISION_VERSION="527" -D_RTE_ -DSTM32L152xE -DUSE_HAL_DRIVER -DSTM32L152xE-o int_test_l1\stm32l1xx_it.o --omf_browse int_test_l1\stm32l1xx_it.crf --depend int_test_l1\stm32l1xx_it.d)
 I (../Inc/main.h)(0x5C6F0391)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal.h)(0x5C450844)
@@ -429,3 +434,20 @@ I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ex.h)(0x5C450844)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ramfunc.h)(0x5C450844)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr.h)(0x5C450844)
 I (../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr_ex.h)(0x5C450844)
+F (..\Src\PowerModes.c)(0x5C74501B)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32L1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_int_test_L1-IE:\Keil\Core\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\Keil\Core\ARM\PACK\Keil\STM32L1xx_DFP\1.2.0\Device\Include-D__UVISION_VERSION="527" -D_RTE_ -DSTM32L152xE -DUSE_HAL_DRIVER -DSTM32L152xE-o int_test_l1\powermodes.o --omf_browse int_test_l1\powermodes.crf --depend int_test_l1\powermodes.d)
+I (../Inc/PowerModes.h)(0x5C744EF1)
+I (E:\Keil\Core\ARM\ARMCC\include\stdlib.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\stdio.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\stdint.h)(0x599FAE2E)
+I (E:\Keil\Core\ARM\ARMCC\include\string.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\errno.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\assert.h)(0x599FAE2A)
+F (..\Src\transitions.c)(0x5C744DBE)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc -I ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32L1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_int_test_L1-IE:\Keil\Core\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\Keil\Core\ARM\PACK\Keil\STM32L1xx_DFP\1.2.0\Device\Include-D__UVISION_VERSION="527" -D_RTE_ -DSTM32L152xE -DUSE_HAL_DRIVER -DSTM32L152xE-o int_test_l1\transitions.o --omf_browse int_test_l1\transitions.crf --depend int_test_l1\transitions.d)
+I (../Inc/PowerModes.h)(0x5C744EF1)
+I (E:\Keil\Core\ARM\ARMCC\include\stdlib.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\stdio.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\stdint.h)(0x599FAE2E)
+I (E:\Keil\Core\ARM\ARMCC\include\string.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\errno.h)(0x599FAE2C)
+I (E:\Keil\Core\ARM\ARMCC\include\assert.h)(0x599FAE2A)
+F (..\Inc\PowerModes.h)(0x5C744EF1)()

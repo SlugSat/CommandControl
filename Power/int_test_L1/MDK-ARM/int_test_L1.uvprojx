@@ -490,6 +490,26 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>New Group</GroupName>
+          <Files>
+            <File>
+              <FileName>PowerModes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\PowerModes.c</FilePath>
+            </File>
+            <File>
+              <FileName>transitions.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\transitions.c</FilePath>
+            </File>
+            <File>
+              <FileName>PowerModes.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\PowerModes.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>

@@ -25,3 +25,8 @@ int_test_l1\main.o: ../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ex.h
 int_test_l1\main.o: ../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ramfunc.h
 int_test_l1\main.o: ../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr.h
 int_test_l1\main.o: ../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr_ex.h
+int_test_l1\main.o: ../Inc/PowerModes.h
+int_test_l1\main.o: E:\Keil\Core\ARM\ARMCC\Bin\..\include\stdlib.h
+int_test_l1\main.o: E:\Keil\Core\ARM\ARMCC\Bin\..\include\string.h
+int_test_l1\main.o: E:\Keil\Core\ARM\ARMCC\Bin\..\include\errno.h
+int_test_l1\main.o: E:\Keil\Core\ARM\ARMCC\Bin\..\include\assert.h

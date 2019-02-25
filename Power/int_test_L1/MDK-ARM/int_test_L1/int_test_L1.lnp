@@ -17,6 +17,8 @@
 "int_test_l1\stm32l1xx_hal_pwr_ex.o"
 "int_test_l1\stm32l1xx_hal_cortex.o"
 "int_test_l1\system_stm32l1xx.o"
+"int_test_l1\powermodes.o"
+"int_test_l1\transitions.o"
 --library_type=microlib --strict --scatter "int_test_L1\int_test_L1.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
