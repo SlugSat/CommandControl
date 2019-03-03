@@ -1,4 +1,10 @@
 # Someone who knows more about gitignore files please make this better
 
-# Ignore C object files
+# GENERAL: 
 *.o
+
+
+
+
+# Power Subfolder
+pmodes
