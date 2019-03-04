@@ -38,15 +38,9 @@ typedef struct time_of_day
 	uint8_t year; // year since 1900
 } time_of_day;
 
-typedef struct sci_data
-{
-	uint16_t time;
-	uint8_t data;
-} sci_data;
-
 
 /********** Defined macros **********/
-#define MAX_PACK_SIZE (256)
+#define MAX_PACK_SIZE (1024)
 #define SUCCESS (1)
 #define FAIL (0)
 
@@ -83,16 +77,16 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 uint8_t Decode_Sat_Packet(uint8_t *packet);
 
 /* Create a packet responding to the stats request from ground station */
-uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status);
+uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day SatTime);
 
 /* Create a packet containing science payload data */
-uint8_t Create_ScienceData(uint8_t *retPacket, sci_data *data, uint16_t dataLength);
+uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLength, time_of_day SatTime);
 
 /* Acknowledgement of certain messages or responses */
-uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue);
+uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_day SatTime);
 
 /* Create a packet with the current CubeSat's location (Keplerian Elements) */
-uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepElem2, uint8_t KepElem3);
+uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepElem2, uint8_t KepElem3, time_of_day SatTime);
 
 
 #endif // PROTO_H
