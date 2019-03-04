@@ -12,19 +12,19 @@ uint8_t Decode_Ground_Packet(uint8_t *packet)
 	// First decode the opcode
 	switch (command)
 	{
-		case (0x2):
+		case (SAT_STATUS):
 			printf("Got a request for the status of the CubeSat\n");
 			// Handle the request here
 			break;
-		case (0x4):
+		case (SCI_DATA):
 			printf("Got a request for science data\n");
 			// Handle the request here
 			break;
-		case (0x5):
+		case (SAT_LOCATION):
 			printf("Got a request for the CubeSat's location\n");
 			// Handle the request here
 			break;
-		case (0x7):
+		case (SAT_ACK):
 			printf("Got a request for the CubeSat's location\n");
 			// Handle the request here
 			break;
@@ -90,13 +90,11 @@ uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_
 /* Create a request for the status of the CubeSat */ 
 uint8_t Create_Request_Status(uint8_t *retPacket)
 {
-	uint8_t packet[1];
-	
 	// 1st byte is 0010 0000, where the bottom 4 bits could be used for optional messages in the future
-	packet[0] = 0x20;
+	uint8_t packet = 0x20;
 	
 	// Return the packet to be used outside this function
-	retPacket[0] = packet[0];
+	retPacket[0] = packet;
 	
 	return SUCCESS;
 }
@@ -177,7 +175,7 @@ uint8_t Decode_Sat_Packet(uint8_t *packet)
 			printf("Got a command to log a science event\n");
 			// Handle the request here
 			break;
-		case (0x2):
+		case (SAT_STATUS):
 			printf("Got a request for the status of the CubeSat\n");
 			// Handle the request here
 			break;
@@ -185,11 +183,11 @@ uint8_t Decode_Sat_Packet(uint8_t *packet)
 			printf("Got a command to update the CubeSat's location with Keplerian elements\n");
 			// Handle the request here
 			break;
-		case (0x4):
+		case (SCI_DATA):
 			printf("Got a request for science data\n");
 			// Handle the request here
 			break;
-		case (0x5):
+		case (SAT_LOCATION):
 			printf("Got a request for the CubeSat's location\n");
 			// Handle the request here
 			break;
@@ -220,7 +218,7 @@ uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day S
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | 0x02;
+	packet[2] = packet[2] | SAT_STATUS;
 	
 	packet[3] = status;
 	
@@ -249,7 +247,7 @@ uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLeng
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | 0x04;
+	packet[2] = packet[2] | SCI_DATA;
 	
 	// Store the science payload data
 	// The data input to this function is 3 bye value in the format of science payload data
@@ -287,7 +285,7 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_da
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | 0x07;
+	packet[2] = packet[2] | SAT_ACK;
 	
 	// Store the hash of the command being acknowledged
 	packet[3] = hashValue;
@@ -317,7 +315,7 @@ uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepEle
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | 0x05;
+	packet[2] = packet[2] | SAT_LOCATION;
 	
 	// Store the Keplerian elements
 	packet[3] = KepElem1;
