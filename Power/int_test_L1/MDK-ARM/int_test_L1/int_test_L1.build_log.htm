@@ -21,32 +21,60 @@ Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.5.0
 Dialog DLL:      TCM.DLL V1.36.1.0
  
 <h2>Project:</h2>
-E:\UCSC\School Work\Winter 19\SlugSat\int_test_L1\MDK-ARM\int_test_L1.uvprojx
+E:\UCSC\School Work\Winter 19\SlugSat\github\CommandControl\Power\int_test_L1\MDK-ARM\int_test_L1.uvprojx
 Project File Date:  02/25/2019
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'E:\Keil\Core\ARM\ARMCC\Bin'
 Build target 'int_test_L1'
+compiling transitions.c...
+..\Src\transitions.c(28): warning:  #940-D: missing return statement at end of non-void function "Set_Stable" 
+  }
+..\Src\transitions.c(33): warning:  #940-D: missing return statement at end of non-void function "Set_Die" 
+  }
+..\Src\transitions.c(38): warning:  #940-D: missing return statement at end of non-void function "Set_ScienceEvent" 
+  }
+..\Src\transitions.c(43): warning:  #940-D: missing return statement at end of non-void function "Set_SolarVector" 
+  }
+..\Src\transitions.c(48): warning:  #940-D: missing return statement at end of non-void function "Set_BatteryLevel" 
+  }
+..\Src\transitions.c(85): warning:  #111-D: statement is unreachable
+  	return 255; //Error
+..\Src\transitions.c(127): warning:  #111-D: statement is unreachable
+  	return 255; //Error
+..\Src\transitions.c(170): warning:  #111-D: statement is unreachable
+  	return 255; //Error
+..\Src\transitions.c(213): warning:  #111-D: statement is unreachable
+  	return 255; //Error
+..\Src\transitions.c(249): warning:  #111-D: statement is unreachable
+  	return 255; //Error
+..\Src\transitions.c(293): warning:  #111-D: statement is unreachable
+  	return 255; //Error
+..\Src\transitions.c: 11 warnings, 0 errors
 compiling PowerModes.c...
-..\Src\PowerModes.c(188): warning:  #188-D: enumerated type mixed with another type
+..\Src\PowerModes.c(194): warning:  #188-D: enumerated type mixed with another type
   		return Detumble_Transition();
-..\Src\PowerModes.c(196): warning:  #188-D: enumerated type mixed with another type
+..\Src\PowerModes.c(202): warning:  #188-D: enumerated type mixed with another type
   		return Normal_Transition();
-..\Src\PowerModes.c(200): warning:  #188-D: enumerated type mixed with another type
+..\Src\PowerModes.c(206): warning:  #188-D: enumerated type mixed with another type
   		return UltraLowPower_Transition();
-..\Src\PowerModes.c(204): warning:  #188-D: enumerated type mixed with another type
+..\Src\PowerModes.c(210): warning:  #188-D: enumerated type mixed with another type
   		return LowPower_Transition();
-..\Src\PowerModes.c(208): warning:  #188-D: enumerated type mixed with another type
-  		return Eclipse_Transition();
-..\Src\PowerModes.c(212): warning:  #188-D: enumerated type mixed with another type
-  		return ScienceOnly_Transition(); 
 ..\Src\PowerModes.c(214): warning:  #188-D: enumerated type mixed with another type
+  		return Eclipse_Transition();
+..\Src\PowerModes.c(218): warning:  #188-D: enumerated type mixed with another type
+  		return ScienceOnly_Transition(); 
+..\Src\PowerModes.c(220): warning:  #188-D: enumerated type mixed with another type
   	return 255;
 ..\Src\PowerModes.c: 7 warnings, 0 errors
+compiling main.c...
+../Src/main.c(193): warning:  #188-D: enumerated type mixed with another type
+  					state = 255; // Error
+../Src/main.c: 1 warning, 0 errors
 linking...
-Program Size: Code=5176 RO-data=352 RW-data=24 ZI-data=1024  
+Program Size: Code=5252 RO-data=352 RW-data=24 ZI-data=1024  
 FromELF: creating hex file...
-"int_test_L1\int_test_L1.axf" - 0 Error(s), 7 Warning(s).
+"int_test_L1\int_test_L1.axf" - 0 Error(s), 19 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -69,7 +97,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.1.2
-Build Time Elapsed:  00:00:01
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

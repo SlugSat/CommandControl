@@ -65,7 +65,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-States globalTest = Detumble;
+uint8_t globalIntterupt = 0;
+States globalState = Detumble;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,12 +129,11 @@ int main(void)
 	/* Enter the state machine */
 		while(1)
 		{
-			globalTest = state;
+			globalState = state;
 			switch (state)
 			{
 				/* In Detumble mode */
 				case (Detumble): 
-					globalTest = state;
 					//if (DEBUG) printf("\nEntering Detumble mode\n");
 					Set_PowerModes(&functions, Detumble);
 					//Print_System_Settings(&functions);	// Used for testing and debugging
@@ -190,6 +190,7 @@ int main(void)
 					break;
 				/* An error occurred */
 				default:
+					state = 255; // Error
 					//fprintf(stderr, "\nInvalid state in the state machine reached...\nExiting\n");
 					continue;
 			}
@@ -306,37 +307,35 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
-	{
-		//if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN) != RESET) 
-		{ 
-		//	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN);
-		}
-		
-		
+	{		
 		if (GPIO_PIN == GPIO_PIN_13)
 		{
-			change_variables(NULL);
-			//globalTest = 1;
+			change_variables(STABLE);
+			globalIntterupt = 13;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
-		/*else if (GPIO_PIN == GPIO_PIN_8)
+		else if (GPIO_PIN == GPIO_PIN_8)
 		{
-			globalTest = 2;
+			change_variables(SCI_EVENT);
+			globalIntterupt = 8;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
-		else if (GPIO_PIN == GPIO_PIN_10)
+		/*else if (GPIO_PIN == GPIO_PIN_10)
 		{
-			globalTest = 3;
+			change_variables(DIE);
+			globalIntterupt = 3;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-		}
+		} */
 		else if (GPIO_PIN == GPIO_PIN_2)
 		{
-			globalTest = 4;
+			change_variables(BATT);
+			globalIntterupt = 2;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-		}*/
+		}
 		else if (GPIO_PIN == GPIO_PIN_4)
 		{
-			//globalTest = 5;
+			change_variables(SOLAR);
+			globalIntterupt = 4;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		else 

@@ -25,26 +25,31 @@ void Print_Globals(void)
 uint8_t Set_Stable(uint8_t change)
 {
 	stable = change;
+	return change;
 }
 /* Set the die global variable */
 uint8_t Set_Die(uint8_t change)
 {
 	die = change;
+	return change;
 }
 /* Set the batteryLevel global variable */
 uint8_t Set_ScienceEvent(uint8_t change)
 {
 	scienceEvent = change;
+	return change;
 }
 /* Set the scienceEvent global variable */
 uint8_t Set_SolarVector(uint8_t change)
 {
 	solarVector = change;
+	return change;
 }
 /* Set the solarVector global variable */
 uint8_t Set_BatteryLevel(uint8_t change)
 {
 	batteryLevel = change;
+	return change;
 }
 
 /* State transition for Detumble */

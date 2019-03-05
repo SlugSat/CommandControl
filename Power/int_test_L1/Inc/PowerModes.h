@@ -23,6 +23,12 @@ typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, S
 #define ULTRA_LOW_BATT (15)
 #define LOW_BATT	   (50)
 
+#define STABLE (1)
+#define DIE (2)
+#define SCI_EVENT (3)
+#define BATT (4)
+#define SOLAR (5)
+
 
 enum PowerLevel {Power, LimitedPower, NoPower};
 
@@ -100,6 +106,6 @@ uint8_t Set_SolarVector(uint8_t change);
 uint8_t Set_BatteryLevel(uint8_t change);
 
 /* Thread calls which variables to change */
-void *change_variables(void *);
+void *change_variables(uint8_t type);
 
 #endif
