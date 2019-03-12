@@ -41,9 +41,9 @@ uint8_t Create_Kill_Packet(uint8_t *retPacket)
 {
 	// Opcode: 1111
 	
-	uint8_t packet = 0b11110000;
+	uint8_t packet = 0xf0;
 	
-	retPacket = &packet;
+	retPacket[0] = packet;
 	
 	return SUCCESS;
 }
