@@ -209,7 +209,7 @@ uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day S
 	uint8_t packet[4] = {0};
 	
 	// HHHH H0MM
-	packet[0] = SatTime.hour << 5;
+	packet[0] = SatTime.hour << 3;
 	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
 	
 	// MMMM 0SSS
@@ -238,7 +238,7 @@ uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLeng
 	uint8_t packet[MAX_PACK_SIZE] = {0};
 	
 	// HHHH H0MM
-	packet[0] = SatTime.hour << 5;
+	packet[0] = SatTime.hour << 3;
 	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
 	
 	// MMMM 0SSS
@@ -285,7 +285,7 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_da
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	//packet[2] = packet[2] | SAT_ACK;
+	packet[2] = packet[2] | 0x7;
 	
 	// Store the hash of the command being acknowledged
 	packet[3] = hashValue;
@@ -306,7 +306,7 @@ uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepEle
 	uint8_t packet[6] = {0};
 	
 	// HHHH H0MM
-	packet[0] = SatTime.hour << 5;
+	packet[0] = SatTime.hour << 3;
 	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
 	
 	// MMMM 0SSS
@@ -315,7 +315,7 @@ uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepEle
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	//packet[2] = packet[2] | SAT_LOCATION;
+	packet[2] = packet[2] | 0x5;
 	
 	// Store the Keplerian elements
 	packet[3] = KepElem1;

@@ -47,6 +47,8 @@ typedef struct time_of_day
 #define SCI_DATA   (4)
 
 
+
+
 /********** Function Declarations **********/
 
 /*** Functions for the ground station side ***/

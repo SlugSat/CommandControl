@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 	if (y)
 	{	
 		printf("The output should be 40 0d 1D 02 14 23 3B for testing requesting science data\n");
-		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", pack[0], pack[1], pack[2],pack[3], pack[4], pack[5], pack[6]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", packReqSci[0], packReqSci[1], packReqSci[2],packReqSci[3], packReqSci[4], packReqSci[5], packReqSci[6]);
 	}
 	
 	/* Chunk Size is non zero so the packet should only use the start time and the chunk size */
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 	if (z)
 	{	
 		printf("The output should be 44 0d 1D 02 00 00 01\n");
-		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", pack[0], pack[1], pack[2],pack[3], pack[4], pack[5], pack[6]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", packReqSci2[0], packReqSci2[1], packReqSci2[2],packReqSci2[3], packReqSci2[4], packReqSci2[5], packReqSci2[6]);
 	}
 	
 	//////////////////////////Testing request location command  //////////////////////
