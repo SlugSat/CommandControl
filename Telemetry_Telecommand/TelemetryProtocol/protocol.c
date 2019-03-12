@@ -218,7 +218,7 @@ uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day S
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	//packet[2] = packet[2] | SAT_STATUS;
+	packet[2] = packet[2] | SAT_STATUS;
 	
 	packet[3] = status;
 	
@@ -247,7 +247,7 @@ uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLeng
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	//packet[2] = packet[2] | SCI_DATA;
+	packet[2] = packet[2] | SCI_DATA;
 	
 	// Store the science payload data
 	// The data input to this function is 3 bye value in the format of science payload data

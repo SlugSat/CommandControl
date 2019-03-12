@@ -43,6 +43,8 @@ typedef struct time_of_day
 #define MAX_PACK_SIZE (1024)
 #define SUCCESS (1)
 #define FAIL (0)
+#define SAT_STATUS (2)
+#define SCI_DATA   (4)
 
 
 /********** Function Declarations **********/
