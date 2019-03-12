@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	if (t)
 	{	
 		printf("The output should be 14 48 FB----------logType =1 = logat a certain time \n");
-		printf("Final packet: %x\t%x\t%x\n\n", pack[0], pack[1], pack[2]);
+		printf("Final packet: %02x\t%02x\t%02x\n\n", pack[0], pack[1], pack[2]);
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 	if (u)
 	{
 		printf("The output should be 10 00 00 --------logType =0 log now \n");
-		printf("Final packet: %x\t%x\t%x\n\n", packet[0], packet[1], packet[2]);
+		printf("Final packet: %02x\t%02x\t%02x\n\n", packet[0], packet[1], packet[2]);
 	}	
 	
 	////////////////////////////////////////////////////////////////////////////////	
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 	if (v)
 	{
 		printf("The output should be 14 d7 42----------logType =1 = logat a certain time \n");
-		printf("Final packet: %x\t%x\t%x\n\n", pack2[0], pack2[1], pack2[2]);
+		printf("Final packet: %02x\t%02x\t%02x\n\n", pack2[0], pack2[1], pack2[2]);
 	}
 	
 	//////////////////////////Testing  kill command //////////////////////
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	if (w)
 	{
 		printf("The output should be f0 for kill command \n");
-		printf("Final packet: %x\t\n\n", packKill);
+		printf("Final packet: %02x\t\n\n", packKill);
 	}
 	
 	//////////////////////////Testing request status command  //////////////////////
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	if (x)
 	{
 		printf("The output should be 20 for request status command \n");
-		printf("Final packet: %x\t\n\n", packReqstat);
+		printf("Final packet: %02x\t\n\n", packReqstat);
 	}
 	
 	//////////////////////////Testing request science data command  //////////////////////
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 	if (y)
 	{	
 		printf("The output should be 40 0d 1D 02 14 23 3B for testing requesting science data\n");
-		printf("Final packet: %x\t%x\t%x\t%x%x\t%x\t%x\n\n", pack[0], pack[1], pack[2],pack[3], pack[4], pack[5], pack[6]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", pack[0], pack[1], pack[2],pack[3], pack[4], pack[5], pack[6]);
 	}
 	
 	/* Chunk Size is non zero so the packet should only use the start time and the chunk size */
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 	if (z)
 	{	
 		printf("The output should be 44 0d 1D 02 00 00 01\n");
-		printf("Final packet: %x\t%x\t%x\t%x\t%x\t%x\t%x\n\n", pack[0], pack[1], pack[2],pack[3], pack[4], pack[5], pack[6]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", pack[0], pack[1], pack[2],pack[3], pack[4], pack[5], pack[6]);
 	}
 	
 	//////////////////////////Testing request location command  //////////////////////
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 	if (aa)
 	{
 		printf("The output should be 50 for request location command \n");
-		printf("Final packet: %x\t\n\n", packReqLoc);
+		printf("Final packet: %02x\t\n\n", packReqLoc);
 	}
 	
 	//////////////////////////Testing update location command  //////////////////////
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 	if (a)
 	{
 		printf("The output should be 30 0d 1D 02 for updating location command \n");
-		printf("Final packet: %x\t%x\t%x\t%x\n\n", packUpdateLoc[0], packUpdateLoc[1], packUpdateLoc[2], packUpdateLoc[3]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\n\n", packUpdateLoc[0], packUpdateLoc[1], packUpdateLoc[2], packUpdateLoc[3]);
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	if (b)
 	{
 		printf("The output should be 69 D0 42 02 for Satellite  Status\n");
-		printf("Final packet: %x\t%x\t%x\t%x\n\n", packResponseStat[0], packResponseStat[1], packResponseStat[2], packResponseStat[3]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\n\n", packResponseStat[0], packResponseStat[1], packResponseStat[2], packResponseStat[3]);
 	}
 	////////////////////////// testing ScienceData//////////////////////
 	
@@ -144,29 +144,30 @@ int main(int argc, char **argv)
 	uint8_t packAckCube[4];
 	uint8_t hashValue  = 2; 
 	time_of_day satTime3;
-	satTime3.hour = 13; // 0000 1101//0d
-	satTime3.min = 29; // 0001 1101//1D
-	satTime3.sec = 02; // 0000 0010//02
+	satTime3.hour = 13; // 0000 1101 // 0d
+	satTime3.min = 29; // 0001 1101 // 1D
+	satTime3.sec = 02; // 0000 0010 // 02
 	uint8_t d = Create_Acknowledgement( packAckCube,  hashValue,  satTime3);
 	if (d)
 	{
-		printf("The output should be 69 D0 47 02 for Satellite  Status\n");
-		printf("Final packet: %x\t%x\t%x\t%x\n\n", packAckCube[0], packAckCube[1], packAckCube[2], packAckCube[3]);
+		printf("The output should be 69 D0 47 02 for Satellite Acknowledgement\n");
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\n\n", packAckCube[0], packAckCube[1], packAckCube[2], packAckCube[3]);
 	}
+	
 	/////////////////// testing Create location data for cubesat///////////////
 	uint8_t packLocCube[6];
-	uint8_t KepElem11 = 13; // 0000 1101//0d
-	uint8_t KepElem22 = 29; // 0001 1101//1D
-	uint8_t KepElem33 = 02; // 0000 0010//02 
+	uint8_t KepElem11 = 13; // 0000 1101 // 0d
+	uint8_t KepElem22 = 29; // 0001 1101 // 1D
+	uint8_t KepElem33 = 02; // 0000 0010 // 02 
 	time_of_day satTime4;
-	satTime4.hour = 20; // 0001 0100//14
-	satTime4.min = 35; // 0010 0011//23
-	satTime4.sec = 59; // 0011 1011//3B
+	satTime4.hour = 20; // 0001 0100 // 14
+	satTime4.min = 35; // 0010 0011 // 23
+	satTime4.sec = 59; // 0011 1011 // 3B
 	uint8_t e = Create_LocationData( packLocCube,  KepElem11,  KepElem22,  KepElem33,  satTime4);
 	if (e)
 	{
 		printf("The output should be A2 37 65 0D 1D 02 for Satellite  Status\n");
-		printf("Final packet: %x\t%x\t%x\t%x\t%x\t%x\n\n", packLocCube[0], packLocCube[1], packLocCube[2], packLocCube[3], packLocCube[4], packLocCube[5]);
+		printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", packLocCube[0], packLocCube[1], packLocCube[2], packLocCube[3], packLocCube[4], packLocCube[5]);
 	}
 	/////////////////////////////////////////////////////////////////////////////
 
@@ -175,42 +176,5 @@ int main(int argc, char **argv)
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	//free(pack);
 	return 0;
 }

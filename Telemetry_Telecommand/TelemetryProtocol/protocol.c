@@ -276,7 +276,7 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_da
 	uint8_t packet[4] = {0};
 	
 	// HHHH H0MM
-	packet[0] = SatTime.hour << 5;
+	packet[0] = SatTime.hour << 3;
 	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
 	
 	// MMMM 0SSS
