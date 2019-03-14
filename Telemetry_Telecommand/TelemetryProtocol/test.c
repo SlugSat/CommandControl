@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	if (t)
 	{	
 		printf("Request: Log Science Event at a specified time\n");
-		printf("\tThe output should be:\t14 48 FB\n");
+		printf("\tThe packet should be:\t14 48 FB\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 3; i++)	printf("%02X ", pack[i]);
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	if (u)
 	{
 		printf("Request: Log Science Event Now\n");
-		printf("\tThe output should be:\t10 00 00\n");
+		printf("\tThe packet should be:\t10 00 00\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 3; i++)	printf("%02X ", packet[i]);
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	if (v)
 	{
 		printf("Request: Log Science Event at a specified time\n");
-		printf("\tThe output should be:\t14 D7 42\n");
+		printf("\tThe packet should be:\t14 D7 42\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 3; i++)	printf("%02X ", pack2[i]);
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 	if (w)
 	{
 		printf("Command: Kill\n");
-		printf("\tThe output should be:\tF0\n");
+		printf("\tThe packet should be:\tF0\n");
 		printf("\tPacket created:\t\t%02X\n", packKill);
 	}
 	
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 	if (x)
 	{
 		printf("Request: Status of CubeSat\n");
-		printf("\tThe output should be:\t20\n");
+		printf("\tThe packet should be:\t20\n");
 		printf("\tPacket created:\t\t%02X\n", packReqstat);
 	}
 	
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 	if (y)
 	{	
 		printf("Request: Science Data with an end time\n");
-		printf("\tThe output should be:\t40 0D 1D 02 14 23 3B\n");
+		printf("\tThe packet should be:\t40 0D 1D 02 14 23 3B\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 7; i++)	printf("%02X ", packReqSci[i]);
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 	if (z)
 	{	
 		printf("Request: Science Data with a chunk\n");
-		printf("\tThe output should be:\t44 0D 1D 02 00 00 01\n");
+		printf("\tThe packet should be:\t44 0D 1D 02 00 00 10\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 7; i++)	printf("%02X ", packReqSci2[i]);
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 	if (aa)
 	{
 		printf("Request: CubeSat location\n");
-		printf("\tThe output should be:\t50\n");
+		printf("\tThe packet should be:\t50\n");
 		printf("\tPacket created:\t\t%02X\n", packReqLoc);
 	}
 	
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 	if (a)
 	{
 		printf("Command: Update Keplerian Elements\n");
-		printf("\tThe output should be:\t30 0D 1D 02\n");
+		printf("\tThe packet should be:\t30 0D 1D 02\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 4; i++)	printf("%02X ", packUpdateLoc[i]);
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 	if (b)
 	{
 		printf("Respond with Satellite Status\n");
-		printf("\tThe output should be:\t69 D0 42 02\n");
+		printf("\tThe packet should be:\t69 D0 42 02\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 4; i++)	printf("%02X ", packResponseStat[i]);
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 	if (d)
 	{
 		printf("Satellite Acknowledgement\n");
-		printf("\tThe output should be:\t69 D0 47 02\n");
+		printf("\tThe packet should be:\t69 D0 47 02\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 4; i++)	printf("%02X ", packAckCube[i]);
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 	if (e)
 	{
 		printf("Respond with Location Data\n");
-		printf("\tThe output should be:\tA2 37 65 0D 1D 02\n");
+		printf("\tThe packet should be:\tA2 37 65 0D 1D 02\n");
 		
 		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 6; i++)	printf("%02X ", packLocCube[i]);
