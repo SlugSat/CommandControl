@@ -215,23 +215,21 @@ int main(int argc, char **argv)
 
 	// Test decoding certain types of packets
 	printf("\n*Now Testing Decoding Packets from the CubeSat:*\n");
-	Decode_Ground_Packet(packLocCube);
-	Decode_Ground_Packet(packAckCube);
 	Decode_Ground_Packet(packResponseStat);
+	Decode_Ground_Packet(packAckCube);
+	Decode_Ground_Packet(packLocCube);
 
 	printf("\n*Now Testing Decoding Packets from the Ground Station:*\n");
-	Decode_Sat_Packet(packUpdateLoc);
+	
 	Decode_Sat_Packet(pack);
-	Decode_Sat_Packet(pack2);
 	Decode_Sat_Packet(packet);
-	Decode_Sat_Packet(&packReqLoc);
+	Decode_Sat_Packet(pack2);
+	Decode_Sat_Packet(&packKill);
+	Decode_Sat_Packet(&packReqstat);
 	Decode_Sat_Packet(packReqSci2);
 	Decode_Sat_Packet(packReqSci);
-	Decode_Sat_Packet(&packReqstat);
-	Decode_Sat_Packet(&packKill);
-	
-	
-	
+	Decode_Sat_Packet(&packReqLoc);
+	Decode_Sat_Packet(packUpdateLoc);
 	
 	return 0;
 }
