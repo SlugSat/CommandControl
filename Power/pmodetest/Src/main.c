@@ -170,7 +170,8 @@ int main(void)
 			/*we have successfully stabilized at this point*/
 			// SEND STABLE SIGNAL
 			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
-//			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(10);
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
 			
 			
 		}

@@ -39,7 +39,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h" 
+#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -141,11 +141,12 @@ int main(void)
 				
 					if (state == Detumble)
 					{
-						HAL_GPIO_WritePin(GPIOA, DETUMBLE_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, DETUMBLE_Pin, GPIO_PIN_SET);
 
-					} else
+					}
+					else
 					{
-						HAL_GPIO_WritePin(GPIOA, DETUMBLE_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, DETUMBLE_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* In Kill mode */
@@ -157,11 +158,11 @@ int main(void)
 					state = Transition(Kill);
 					if (state == Kill)
 					{
-						HAL_GPIO_WritePin(GPIOA, DEAD_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, DEAD_Pin, GPIO_PIN_SET);
 					}
 					else
 					{
-						HAL_GPIO_WritePin(GPIOA, DEAD_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, DEAD_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* In Normal mode */
@@ -173,11 +174,11 @@ int main(void)
 					state = Transition(Normal);
 					if (state == Normal)
 					{
-						HAL_GPIO_WritePin(GPIOA, NORMAL_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, NORMAL_Pin, GPIO_PIN_SET);
 					}
 					else
 					{
-						HAL_GPIO_WritePin(GPIOA, NORMAL_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, NORMAL_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* In UltraLowPower mode */	
@@ -189,11 +190,11 @@ int main(void)
 					state = Transition(UltraLowPower);
 					if (state == UltraLowPower)
 					{
-						HAL_GPIO_WritePin(GPIOA, ULOW_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, ULOW_Pin, GPIO_PIN_SET);
 					}
 					else
 					{
-						HAL_GPIO_WritePin(GPIOA, ULOW_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, ULOW_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* In LowPower mode */
@@ -205,11 +206,11 @@ int main(void)
 					state = Transition(LowPower);
 					if (state == LowPower)
 					{
-						HAL_GPIO_WritePin(GPIOA, LOW_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, LOW_Pin, GPIO_PIN_SET);
 					}
 					else
 					{
-						HAL_GPIO_WritePin(GPIOA, LOW_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, LOW_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* In Eclipse mode */
@@ -221,11 +222,11 @@ int main(void)
 					state = Transition(Eclipse);
 					if (state == Eclipse)
 					{
-						HAL_GPIO_WritePin(GPIOA, ECLIPSE_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, ECLIPSE_Pin, GPIO_PIN_SET);
 					}
 					else
 					{
-						HAL_GPIO_WritePin(GPIOA, ECLIPSE_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, ECLIPSE_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* In ScienceOnly mode */
@@ -237,11 +238,11 @@ int main(void)
 					state = Transition(ScienceOnly);
 					if (state == ScienceOnly)
 					{
-						HAL_GPIO_WritePin(GPIOA, SCILOG_PIN_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, SCILOG_Pin, GPIO_PIN_SET);
 					}
 					else
 					{
-						HAL_GPIO_WritePin(GPIOA, SCILOG_PIN_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, SCILOG_Pin, GPIO_PIN_RESET);
 					}
 					break;
 				/* An error occurred */
@@ -311,33 +312,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|ULOW_PIN_Pin|LOW_PIN_Pin|DETUMBLE_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|ULOW_Pin|LOW_Pin|DETUMBLE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ECLIPSE_PIN_GPIO_Port, ECLIPSE_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(ECLIPSE_GPIO_Port, ECLIPSE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, NORMAL_PIN_Pin|DEAD_PIN_Pin|SCILOG_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, NORMAL_Pin|DEAD_Pin|SCILOG_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA2 PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_8;
+  /*Configure GPIO pins : PA2 PA3 PA8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA5 ULOW_PIN_Pin LOW_PIN_Pin DETUMBLE_PIN_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|ULOW_PIN_Pin|LOW_PIN_Pin|DETUMBLE_PIN_Pin;
+  /*Configure GPIO pins : BOARD_LED_Pin ULOW_Pin LOW_Pin DETUMBLE_Pin */
+  GPIO_InitStruct.Pin = BOARD_LED_Pin|ULOW_Pin|LOW_Pin|DETUMBLE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -349,15 +344,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ECLIPSE_PIN_Pin */
-  GPIO_InitStruct.Pin = ECLIPSE_PIN_Pin;
+  /*Configure GPIO pin : ECLIPSE_Pin */
+  GPIO_InitStruct.Pin = ECLIPSE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(ECLIPSE_PIN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECLIPSE_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : NORMAL_PIN_Pin DEAD_PIN_Pin SCILOG_PIN_Pin */
-  GPIO_InitStruct.Pin = NORMAL_PIN_Pin|DEAD_PIN_Pin|SCILOG_PIN_Pin;
+  /*Configure GPIO pins : NORMAL_Pin DEAD_Pin SCILOG_Pin */
+  GPIO_InitStruct.Pin = NORMAL_Pin|DEAD_Pin|SCILOG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -369,7 +364,7 @@ static void MX_GPIO_Init(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 	{		
-		if (GPIO_PIN == GPIO_PIN_13)
+		if (GPIO_PIN == GPIO_PIN_3)
 		{
 			change_variables(STABLE);
 			globalIntterupt = 13;

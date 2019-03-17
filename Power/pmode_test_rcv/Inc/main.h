@@ -78,20 +78,22 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define ULOW_PIN_Pin GPIO_PIN_6
-#define ULOW_PIN_GPIO_Port GPIOA
-#define LOW_PIN_Pin GPIO_PIN_7
-#define LOW_PIN_GPIO_Port GPIOA
-#define ECLIPSE_PIN_Pin GPIO_PIN_7
-#define ECLIPSE_PIN_GPIO_Port GPIOC
-#define DETUMBLE_PIN_Pin GPIO_PIN_9
-#define DETUMBLE_PIN_GPIO_Port GPIOA
-#define NORMAL_PIN_Pin GPIO_PIN_6
-#define NORMAL_PIN_GPIO_Port GPIOB
-#define DEAD_PIN_Pin GPIO_PIN_8
-#define DEAD_PIN_GPIO_Port GPIOB
-#define SCILOG_PIN_Pin GPIO_PIN_9
-#define SCILOG_PIN_GPIO_Port GPIOB
+#define BOARD_LED_Pin GPIO_PIN_5
+#define BOARD_LED_GPIO_Port GPIOA
+#define ULOW_Pin GPIO_PIN_6
+#define ULOW_GPIO_Port GPIOA
+#define LOW_Pin GPIO_PIN_7
+#define LOW_GPIO_Port GPIOA
+#define ECLIPSE_Pin GPIO_PIN_7
+#define ECLIPSE_GPIO_Port GPIOC
+#define DETUMBLE_Pin GPIO_PIN_9
+#define DETUMBLE_GPIO_Port GPIOA
+#define NORMAL_Pin GPIO_PIN_6
+#define NORMAL_GPIO_Port GPIOB
+#define DEAD_Pin GPIO_PIN_8
+#define DEAD_GPIO_Port GPIOB
+#define SCILOG_Pin GPIO_PIN_9
+#define SCILOG_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
