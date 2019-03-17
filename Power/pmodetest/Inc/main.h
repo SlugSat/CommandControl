@@ -78,6 +78,20 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define BLUE_PUSH_Pin GPIO_PIN_13
+#define BLUE_PUSH_GPIO_Port GPIOC
+#define BOARD_LED_Pin GPIO_PIN_5
+#define BOARD_LED_GPIO_Port GPIOA
+#define SCI_EVENT_Pin GPIO_PIN_7
+#define SCI_EVENT_GPIO_Port GPIOA
+#define BATT_Pin GPIO_PIN_7
+#define BATT_GPIO_Port GPIOC
+#define STABLE_Pin GPIO_PIN_8
+#define STABLE_GPIO_Port GPIOA
+#define SOLAR_Pin GPIO_PIN_9
+#define SOLAR_GPIO_Port GPIOA
+#define DIE_Pin GPIO_PIN_6
+#define DIE_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -53,7 +53,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define BUTTON_DOWN 0xFE
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,9 +64,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t push=0;
-uint16_t another =0;
-		uint16_t flag=0;
+	uint8_t button_states = 0;
+
+//uint16_t push=0;
+//uint16_t another =0;
+//		uint16_t flag=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,7 +117,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	uint8_t bounce = 0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -125,24 +126,67 @@ int main(void)
 		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 		
 
-		push = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);///i think it only outputs 1 when pushed 
-		bounce = (bounce << 1);
-		bounce |= push; 
-		if (bounce == 0xFE)
+		/*right bit shift button_states variable
+			once to save previous state*/
+		button_states <<= 1;
+		
+		/*store current button state into button_states*/
+		button_states |= HAL_GPIO_ReadPin(GPIOC, BLUE_PUSH_Pin); 
+		
+		/* blue button press indicates start of simulation */
+		if (button_states == BUTTON_DOWN)
 		{
-			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-			flag++;
-			if (flag == 2)
+			HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+			/*simulate detumble state and set pins at varying
+			  frequencies except stable*/
+			for (int i = 0; i < 1000000; i++)
 			{
-				flag =0;
-				another =0;
+				
+				if (!(i % 500))
+				{
+					// BATTERY LEVEL CHANGE
+					HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
+//					HAL_Delay(5);
+//					HAL_GPIO_TogglePin(GPIOA, BATT_Pin);
+				}
+				if (!(i % 1000))
+				{
+					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+					// SCIENCE EVENT PULSE
+					HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+//					HAL_Delay(5);
+//					HAL_GPIO_TogglePin(GPIOA, SCI_EVENT_Pin);
+				}
+				if (!(i % 10000))
+				{
+//					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+					// SOLAR VECTOR PULSE
+					HAL_GPIO_TogglePin(GPIOA, SOLAR_Pin);
+//					HAL_Delay(5);
+//					HAL_GPIO_TogglePin(GPIOA, SOLAR_Pin);
+				}
 			}
-			push=0;
+			
+			/*we have successfully stabilized at this point*/
+			// SEND STABLE SIGNAL
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+//			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			
+			
 		}
-		else 
-		{
+			
+//			flag++;
+//			if (flag == 2)
+//			{
+//				flag = 0;
+//				another =0;
+//			}
+//			push=0;
+//		}
+//		else 
+//		{
 		 //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-		}
+		//}
 		
 		/*if (flag ==1)
 		{
@@ -169,13 +213,13 @@ int main(void)
 			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF			
 		}
 		else*/ 
-		if (flag ==1)
-		{
-			//printf("DIE \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);//SETTING STABLE OFF
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF
-			another =1;
-		}
+//		if (flag ==1)
+//		{
+//			//printf("DIE \n" );
+//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);//SETTING STABLE OFF
+//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF
+//			another =1;
+//		}
 		/*
 		else if (flag ==6)
 		{
@@ -238,30 +282,40 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|SCI_EVENT_Pin|STABLE_Pin|SOLAR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(BATT_GPIO_Port, BATT_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(DIE_GPIO_Port, DIE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : BLUE_PUSH_Pin */
+  GPIO_InitStruct.Pin = BLUE_PUSH_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(BLUE_PUSH_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA3 PA5 PA8 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : BOARD_LED_Pin SCI_EVENT_Pin STABLE_Pin SOLAR_Pin */
+  GPIO_InitStruct.Pin = BOARD_LED_Pin|SCI_EVENT_Pin|STABLE_Pin|SOLAR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  /*Configure GPIO pin : BATT_Pin */
+  GPIO_InitStruct.Pin = BATT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(BATT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DIE_Pin */
+  GPIO_InitStruct.Pin = DIE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(DIE_GPIO_Port, &GPIO_InitStruct);
 
 }
 
