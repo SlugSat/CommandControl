@@ -173,7 +173,19 @@ int main(int argc, char **argv)
 		printf("\n");
 	}
 	////////////////////////// testing ScienceData//////////////////////
-	
+	uint8_t packSciData[18];//change this
+	uint32_t data[5]={996425292, 1555747228,429467295,487478373,555555555 }; 
+	uint16_t dataLength =15;
+	uint8_t c = Create_ScienceData(packSciData, data,  dataLength,  satTime);
+	if (c)
+	{
+		printf("Respond with Science data\n");
+		printf("\tThe packet should be:\t69 D0 44 64 3E 4C BA D1 9C 99 26 9F 0E 54 65 1D 1A E3 \n");
+		
+		printf("\tPacket created:\t\t");
+		for (int i = 0; i < 18; i++)      printf("%02X ",packSciData[i]); 
+		printf("\n");
+	}
 	/////////////////// testing Create Acknowledgement for cubesat///////////////
 	uint8_t packAckCube[4];
 	uint8_t hashValue  = 2; 
@@ -216,6 +228,7 @@ int main(int argc, char **argv)
 	// Test decoding certain types of packets
 	printf("\n*Now Testing Decoding Packets from the CubeSat:*\n");
 	Decode_Ground_Packet(packResponseStat);
+	Decode_Ground_Packet(packSciData);
 	Decode_Ground_Packet(packAckCube);
 	Decode_Ground_Packet(packLocCube);
 

@@ -268,7 +268,7 @@ uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLeng
 	{
 		packet[j + 0] = (data[i] & 0xFF0000) >> 16;
 		packet[j + 1] = (data[i] & 0x00FF00) >> 8;
-		packet[j + 2] = (data[i] & 0x00FF00) >> 8;
+		packet[j + 2] = (data[i] & 0x0000FF) >> 0;
 		j += 3;
 	}
 	
