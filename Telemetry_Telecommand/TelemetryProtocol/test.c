@@ -3,6 +3,9 @@
 
 int main(int argc, char **argv)
 {
+	
+	printf("*First create tests that will encapsulate a packet and then test the packet contents*\n");
+	
 //This is for the ground station side
 	////////////////////// Testing the log science command///////////////////////////
 	uint8_t pack[3];
@@ -14,18 +17,18 @@ int main(int argc, char **argv)
 	uint8_t t = Create_Command_LogSciEvent(pack, logType, &testTime);
 	if (t)
 	{	
-		printf("The output should be: 14 48 FB    Test request log sci event at a certain time \n");
-		//printf("Final packet: %02x\t%02x\t%02x\n\n", pack[0], pack[1], pack[2]);
+		printf("Request: Log Science Event at a specified time\n");
+		printf("\tThe packet should be:\t14 48 FB\n");
 		
-		printf("Final packet: ");
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 3; i++)	printf("%02X ", pack[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////
 	
 	uint8_t packet[3];
-	uint8_t logType1 =0 ;
+	uint8_t logType1 = 0;
 	time_of_day testTime1;
 	testTime1.hour = 20; // 0001 0100
 	testTime1.min = 35; // 0010 0011
@@ -33,12 +36,12 @@ int main(int argc, char **argv)
 	uint8_t u = Create_Command_LogSciEvent(packet, logType1, &testTime1);
 	if (u)
 	{
-		printf("The output should be: 10 00 00    Test request log sci event at time now \n");
-		//printf("Final packet: %02x\t%02x\t%02x\n\n", packet[0], packet[1], packet[2]);
+		printf("Request: Log Science Event Now\n");
+		printf("\tThe packet should be:\t10 00 00\n");
 		
-		printf("Final packet: ");
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 3; i++)	printf("%02X ", packet[i]);
-		printf("\n\n");
+		printf("\n");
 	}	
 	
 	////////////////////////////////////////////////////////////////////////////////	
@@ -51,12 +54,12 @@ int main(int argc, char **argv)
 	uint8_t v = Create_Command_LogSciEvent(pack2, logType2, &testTime2);
 	if (v)
 	{
-		printf("The output should be: 14 D7 42    Test request log sci event at a certain time \n");
-		//printf("Final packet: %02x\t%02x\t%02x\n\n", pack2[0], pack2[1], pack2[2]);
+		printf("Request: Log Science Event at a specified time\n");
+		printf("\tThe packet should be:\t14 D7 42\n");
 		
-		printf("Final packet: ");
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 3; i++)	printf("%02X ", pack2[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
 	//////////////////////////Testing  kill command //////////////////////
@@ -64,8 +67,9 @@ int main(int argc, char **argv)
 	uint8_t w = Create_Kill_Packet(&packKill);
 	if (w)
 	{
-		printf("The output should be: F0    for kill command \n");
-		printf("Final packet: %02X\n\n", packKill);
+		printf("Command: Kill\n");
+		printf("\tThe packet should be:\tF0\n");
+		printf("\tPacket created:\t\t%02X\n", packKill);
 	}
 	
 	//////////////////////////Testing request status command  //////////////////////
@@ -73,8 +77,9 @@ int main(int argc, char **argv)
 	uint8_t x = Create_Request_Status(&packReqstat);
 	if (x)
 	{
-		printf("The output should be: 20    for request status command \n");
-		printf("Final packet: %02X\n\n", packReqstat);
+		printf("Request: Status of CubeSat\n");
+		printf("\tThe packet should be:\t20\n");
+		printf("\tPacket created:\t\t%02X\n", packReqstat);
 	}
 	
 	//////////////////////////Testing request science data command  //////////////////////
@@ -92,12 +97,12 @@ int main(int argc, char **argv)
 	uint8_t y = Create_Request_ScienceData(packReqSci, &testTimeStart, &testTimeFinish,  chunkSize);
 	if (y)
 	{	
-		printf("The output should be: 40 0D 1D 02 14 23 3B    for requesting science data\n");
-		//printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", packReqSci[0], packReqSci[1], packReqSci[2],packReqSci[3], packReqSci[4], packReqSci[5], packReqSci[6]);
+		printf("Request: Science Data with an end time\n");
+		printf("\tThe packet should be:\t40 0D 1D 02 14 23 3B\n");
 		
-		printf("Final packet: ");
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 7; i++)	printf("%02X ", packReqSci[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
 	/* Chunk Size is non zero so the packet should only use the start time and the chunk size */
@@ -112,12 +117,12 @@ int main(int argc, char **argv)
 	uint8_t z = Create_Request_ScienceData(packReqSci2, &testTimeStart2, &testTimeFinish2,  chunkSize2);
 	if (z)
 	{	
-		printf("The output should be: 44 0D 1D 02 00 00 01     for requesting science data\n");
-		//printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", packReqSci2[0], packReqSci2[1], packReqSci2[2],packReqSci2[3], packReqSci2[4], packReqSci2[5], packReqSci2[6]);
+		printf("Request: Science Data with a chunk\n");
+		printf("\tThe packet should be:\t44 0D 1D 02 00 00 10\n");
 		
-		printf("Final packet: ");
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 7; i++)	printf("%02X ", packReqSci2[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
 	//////////////////////////Testing request location command  //////////////////////
@@ -125,8 +130,9 @@ int main(int argc, char **argv)
 	uint8_t aa = Create_Request_Location(&packReqLoc);
 	if (aa)
 	{
-		printf("The output should be: 50    for request location command \n");
-		printf("Final packet: %02X\n\n", packReqLoc);
+		printf("Request: CubeSat location\n");
+		printf("\tThe packet should be:\t50\n");
+		printf("\tPacket created:\t\t%02X\n", packReqLoc);
 	}
 	
 	//////////////////////////Testing update location command  //////////////////////
@@ -137,12 +143,12 @@ int main(int argc, char **argv)
 	uint8_t a = Create_Command_UpdateKep( packUpdateLoc,  KepElem1,  KepElem2,  KepElem3);
 	if (a)
 	{
-		printf("The output should be: 30 0D 1D 02    for updating location command \n");
-		//printf("Final packet: %02x\t%02x\t%02x\t%02x\n\n", packUpdateLoc[0], packUpdateLoc[1], packUpdateLoc[2], packUpdateLoc[3]);
+		printf("Command: Update Keplerian Elements\n");
+		printf("\tThe packet should be:\t30 0D 1D 02\n");
 		
-		printf("Final packet: ");
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 4; i++)	printf("%02X ", packUpdateLoc[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////
@@ -159,11 +165,12 @@ int main(int argc, char **argv)
 	uint8_t b = Create_Response_Status( packResponseStat,  status,  satTime);
 	if (b)
 	{
-		printf("The output should be: 69 D0 42 02    for Satellite  Status\n");
-		//printf("Final packet: %02x\t%02x\t%02x\t%02x\n\n", packResponseStat[0], packResponseStat[1], packResponseStat[2], packResponseStat[3]);
-		printf("Final packet: ");
+		printf("Respond with Satellite Status\n");
+		printf("\tThe packet should be:\t69 D0 42 02\n");
+		
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 4; i++)	printf("%02X ", packResponseStat[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	////////////////////////// testing ScienceData//////////////////////
 	
@@ -177,11 +184,12 @@ int main(int argc, char **argv)
 	uint8_t d = Create_Acknowledgement( packAckCube,  hashValue,  satTime3);
 	if (d)
 	{
-		printf("The output should be: 69 D0 47 02    for Satellite Acknowledgement\n");
-		//printf("Final packet: %02x\t%02x\t%02x\t%02x\n\n", packAckCube[0], packAckCube[1], packAckCube[2], packAckCube[3]);
-		printf("Final packet: ");
+		printf("Satellite Acknowledgement\n");
+		printf("\tThe packet should be:\t69 D0 47 02\n");
+		
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 4; i++)	printf("%02X ", packAckCube[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
 	/////////////////// testing Create location data for cubesat///////////////
@@ -196,18 +204,32 @@ int main(int argc, char **argv)
 	uint8_t e = Create_LocationData( packLocCube,  KepElem11,  KepElem22,  KepElem33,  satTime4);
 	if (e)
 	{
-		printf("The output should be: A2 37 65 0D 1D 02    for Creating location data\n");
-		//printf("Final packet: %02x\t%02x\t%02x\t%02x\t%02x\t%02x\n\n", packLocCube[0], packLocCube[1], packLocCube[2], packLocCube[3], packLocCube[4], packLocCube[5]);
-		printf("Final packet: ");
+		printf("Respond with Location Data\n");
+		printf("\tThe packet should be:\tA2 37 65 0D 1D 02\n");
+		
+		printf("\tPacket created:\t\t");
 		for (int i = 0; i < 6; i++)	printf("%02X ", packLocCube[i]);
-		printf("\n\n");
+		printf("\n");
 	}
 	/////////////////////////////////////////////////////////////////////////////
 
+	// Test decoding certain types of packets
+	printf("\n*Now Testing Decoding Packets from the CubeSat:*\n");
+	Decode_Ground_Packet(packResponseStat);
+	Decode_Ground_Packet(packAckCube);
+	Decode_Ground_Packet(packLocCube);
 
+	printf("\n*Now Testing Decoding Packets from the Ground Station:*\n");
 	
-	
-	
+	Decode_Sat_Packet(pack);
+	Decode_Sat_Packet(packet);
+	Decode_Sat_Packet(pack2);
+	Decode_Sat_Packet(&packKill);
+	Decode_Sat_Packet(&packReqstat);
+	Decode_Sat_Packet(packReqSci2);
+	Decode_Sat_Packet(packReqSci);
+	Decode_Sat_Packet(&packReqLoc);
+	Decode_Sat_Packet(packUpdateLoc);
 	
 	return 0;
 }

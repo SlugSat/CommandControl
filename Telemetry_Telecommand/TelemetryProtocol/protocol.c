@@ -4,44 +4,44 @@
 /***** Functions for the ground station side *****/
 
 /* This function will decode packets that have come into the ground station */
-//uint8_t Decode_Ground_Packet(uint8_t *packet)
-//{
-//	// Decode the packet given to the ground station from the CubeSat
-//	uint8_t command = (packet[2] & 0x07);
-//	
-//	// First decode the opcode
-//	switch (command)
-//	{
-//		case (SAT_STATUS):
-//			printf("Got a request for the status of the CubeSat\n");
-//			// Handle the request here
-//			break;
-//		case (SCI_DATA):
-//			printf("Got a request for science data\n");
-//			// Handle the request here
-//			break;
-//		case (SAT_LOCATION):
-//			printf("Got a request for the CubeSat's location\n");
-//			// Handle the request here
-//			break;
-//		case (SAT_ACK):
-//			printf("Got a request for the CubeSat's location\n");
-//			// Handle the request here
-//			break;
-//		default:
-//			fprintf(stderr, "Invalid packet command received\n");
-//			return FAIL; // Packet cold not be decoded	
-//	}
-//	
-//	return command;
-//}
+uint8_t Decode_Ground_Packet(uint8_t *packet)
+{
+	// Decode the packet given to the ground station from the CubeSat
+	uint8_t command = (packet[2] & 0x07);
+	
+	// First decode the opcode
+	switch (command)
+	{
+		case (SAT_STATUS):
+			printf("Received a packet containing the status of the CubeSat\n");
+			// Handle the request here
+			break;
+		case (SCI_DATA):
+			printf("Received a packet of science data\n");
+			// Handle the request here
+			break;
+		case (SAT_LOCATION):
+			printf("Received a packet with the CubeSat's location\n");
+			// Handle the request here
+			break;
+		case (SAT_ACK):
+			printf("Received an Acknowledgement\n");
+			// Handle the request here
+			break;
+		default:
+			fprintf(stderr, "Invalid packet command received\n");
+			return FAIL; // Packet cold not be decoded	
+	}
+	
+	return command;
+}
 
 /* Create the packet used for sending a Kill signal */
 uint8_t Create_Kill_Packet(uint8_t *retPacket)
 {
 	// Opcode: 1111
 	
-	uint8_t packet = 0xf0;
+	uint8_t packet = KILL;
 	
 	retPacket[0] = packet;
 	
@@ -57,11 +57,11 @@ uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_
 	
 	if (logType == 0) // log now
 	{
-		packet[0] = 0x10;
+		packet[0] = REQ_LOG;
 	}
 	else if (logType == 1) // log at a specific later date
 	{
-		packet[0] = 0x14;
+		packet[0] = REQ_LOG_TIME;
 		
 		// Packet               [0]       [1]       [2]
 		// Packet structure: 0001 010H HHHH MMMM MMSS SSSS	
@@ -91,7 +91,7 @@ uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_
 uint8_t Create_Request_Status(uint8_t *retPacket)
 {
 	// 1st byte is 0010 0000, where the bottom 4 bits could be used for optional messages in the future
-	uint8_t packet = 0x20;
+	uint8_t packet = REQ_STATUS;
 	
 	// Return the packet to be used outside this function
 	retPacket[0] = packet;
@@ -107,7 +107,7 @@ uint8_t Create_Request_ScienceData(uint8_t *retPacket, time_of_day *StartTime, t
 	// 1st byte is 0100 0X00, where X is whether there is a chunk or end time
 	if ((chunkSize != 0) && (chunkSize < 0xFFFFFF))
 	{
-		packet[0] = 0x44;
+		packet[0] = REQ_SCI_DATA2;
 		packet[1] = StartTime->hour;
 		packet[2] = StartTime->min;
 		packet[3] = StartTime->sec;
@@ -117,7 +117,7 @@ uint8_t Create_Request_ScienceData(uint8_t *retPacket, time_of_day *StartTime, t
 	} 
 	else if (chunkSize == 0) // chunk is not specified
 	{
-		packet[0] = 0x40;
+		packet[0] = REQ_SCI_DATA;
 		packet[1] = StartTime->hour;
 		packet[2] = StartTime->min;
 		packet[3] = StartTime->sec;
@@ -136,7 +136,7 @@ uint8_t Create_Request_ScienceData(uint8_t *retPacket, time_of_day *StartTime, t
 uint8_t Create_Request_Location(uint8_t *retPacket)
 {
 	// 1st byte is 0101 0000, where the bottom 4 bits could be used for optional messages in the future
-	uint8_t packet = 0x50;
+	uint8_t packet = REQ_LOCATION;
 	
 	// Return the packet to be used outside this function
 	retPacket[0] = packet;
@@ -148,7 +148,7 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 {
 	// 1st byte is 0011 0000
 	// The other 3 bytes are each Keplerian elements
-	uint8_t packet[4] = {0x30,
+	uint8_t packet[4] = {UPDATE_KEP,
 						 KepElem1,
 						 KepElem2,
 						 KepElem3};
@@ -163,41 +163,53 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 /***** Functions for the CubeSat side *****/
 
 /* This function will decode packets that have come into the CubeSat */
-//uint8_t Decode_Sat_Packet(uint8_t *packet)
-//{
-//	// Decode the packet given to the CubeSat from the ground station
-//	uint8_t command = (packet[0] & 0xFF00) >> 4;
-//	
-//	// First decode the opcode
-//	switch (command)
-//	{
-//		case (0x1):
-//			printf("Got a command to log a science event\n");
-//			// Handle the request here
-//			break;
-//		case (SAT_STATUS):
-//			printf("Got a request for the status of the CubeSat\n");
-//			// Handle the request here
-//			break;
-//		case (0x3):
-//			printf("Got a command to update the CubeSat's location with Keplerian elements\n");
-//			// Handle the request here
-//			break;
-//		case (SCI_DATA):
-//			printf("Got a request for science data\n");
-//			// Handle the request here
-//			break;
-//		case (SAT_LOCATION):
-//			printf("Got a request for the CubeSat's location\n");
-//			// Handle the request here
-//			break;
-//		default:
-//			fprintf(stderr, "Invalid packet command received\n");
-//			return FAIL; // Packet cold not be decoded	
-//	}
-//	
-//	return command;
-//}
+uint8_t Decode_Sat_Packet(uint8_t *packet)
+{
+	// Decode the packet given to the CubeSat from the ground station
+	uint16_t command = (packet[0] & 0xFF);
+	
+	// First decode the opcode
+	switch (command)
+	{
+		case (REQ_LOG):
+			printf("Received a command to log a science event now\n");
+			// Handle the request here
+			break;
+		case (REQ_LOG_TIME):
+			printf("Received a command to log a science event\n");
+			// Handle the request here
+			break;
+		case (REQ_STATUS):
+			printf("Received a request for the status of the CubeSat\n");
+			// Handle the request here
+			break;
+		case (UPDATE_KEP):
+			printf("Received a command to update the CubeSat's location with Keplerian elements\n");
+			// Handle the request here
+			break;
+		case (REQ_SCI_DATA):
+			printf("Received a request for science data\n");
+			// Handle the request here
+			break;
+		case (REQ_SCI_DATA2):
+			printf("Received a request for a chunk of science data\n");
+			// Handle the request here
+			break;
+		case (REQ_LOCATION):
+			printf("Received a request for the CubeSat's location\n");
+			// Handle the request here
+			break;
+		case (KILL):
+			printf("Received a kill command\n");
+			// Handle the request here
+			break;
+		default:
+			fprintf(stderr, "Invalid packet command received\n");
+			return FAIL; // Packet cold not be decoded	
+	}
+	
+	return command;
+}
 
 /* Create a packet responding to the status request from ground station */
 uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day SatTime)
@@ -285,7 +297,7 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_da
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | 0x7;
+	packet[2] = packet[2] | SAT_ACK;
 	
 	// Store the hash of the command being acknowledged
 	packet[3] = hashValue;
@@ -315,7 +327,7 @@ uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepEle
 	
 	// SSS0 0XXX
 	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | 0x5;
+	packet[2] = packet[2] | SAT_LOCATION;
 	
 	// Store the Keplerian elements
 	packet[3] = KepElem1;

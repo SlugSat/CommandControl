@@ -43,10 +43,20 @@ typedef struct time_of_day
 #define MAX_PACK_SIZE (1024)
 #define SUCCESS (1)
 #define FAIL (0)
-#define SAT_STATUS (2)
-#define SCI_DATA   (4)
 
+#define SAT_STATUS 		(0x2)
+#define SCI_DATA   		(0x4)
+#define SAT_LOCATION 	(0x5)
+#define SAT_ACK 		(0x7)
 
+#define REQ_LOG 		(0x10)
+#define REQ_LOG_TIME	(0x14)
+#define REQ_STATUS 		(0x20)
+#define UPDATE_KEP 		(0x30)
+#define REQ_SCI_DATA	(0x40)
+#define REQ_SCI_DATA2	(0x44)
+#define REQ_LOCATION 	(0x50)
+#define KILL			(0xF0)
 
 
 /********** Function Declarations **********/
