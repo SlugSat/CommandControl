@@ -1,8 +1,12 @@
 OBJECTS = PowerModes.o transitions.o  PModeTest.o 
+CHECKOFF = PowerModes.o transitions.o  PowerCheckoff.o 
 THREADS = -lpthread
 
 
-all: PModeTest
+all: PModeTest PowerCheckoff
+
+PowerCheckoff: $(CHECKOFF)
+	gcc -o PowerCheckoff $(CHECKOFF) $(THREADS)
 	
 PModeTest: $(OBJECTS)
 	gcc -o pmodes $(OBJECTS) $(THREADS)
@@ -17,4 +21,4 @@ transitions.o: transitions.c
 	gcc -c transitions.c  $(THREADS)
 	
 clean:
-	rm -f pmodes *.o
+	rm -f PowerCheckoff pmodes *.o
