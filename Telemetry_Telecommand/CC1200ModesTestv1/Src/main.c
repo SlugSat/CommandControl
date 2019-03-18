@@ -46,6 +46,7 @@
 
 #include "string.h"
 
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,13 +83,10 @@ static void MX_USART2_UART_Init(void);
 void trxRfSpiInterfaceInit(uint8_t prescalerValue);
 uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len);
 
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-#define TESTS 7
 
 //#define SPI_BEGIN()       SPI_CS_N_PIN = 0                // Pull CSn low to start communication
 #define SPI_TX(x)         HAL_SPI_Transmit(&hspi1, x, 1, 10)                    // Load x into SPI buffer  
@@ -112,11 +110,10 @@ uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, i
 
 uint8_t pDataRead;
 
-
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
+  * @brief  The application entry point. 
   * @retval int
   */
 int main(void)
@@ -146,9 +143,9 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	
-	
-	/* Start CC1200 SPI Test Harness
+
+
+/* Start CC1200 SPI Test Harness
 	 * 
 	 * Wiring:
 	 * Reset -- D7 (PA8)
@@ -187,11 +184,11 @@ int main(void)
     uint8_t wrData = 0x55;
 	uint8_t correct = 0;
 	uint8_t testOpener [35] = "\r\n\r\nCC1200 Mode Switching Test...\r\n";
-	uint8_t idleOpener [16] = "\r\nIdle Mode...  ";
-	uint8_t txOpener [16] = "\r\nTX Mode...    ";
-	uint8_t rxOpener [16] = "\r\nRX Mode...    ";
+	uint8_t idleOpener [14] = "Idle Mode...  ";
+	uint8_t txOpener [14] = "TX Mode...    ";
+	uint8_t rxOpener [14] = "RX Mode...    ";
 	uint8_t statusCheck [28];
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/3]\r\n", stByte, correct);
 	
 //    uint8_t addr;
   
@@ -208,11 +205,10 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	// TX test
+	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/3]\r\n", stByte, correct);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
-	
-	// TX test
 	HAL_UART_Transmit(&huart2, txOpener, sizeof(txOpener), 1);
 	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_TX, &wrData, sizeof (wrData));
 	HAL_Delay(10);
@@ -223,42 +219,32 @@ int main(void)
 		correct++;
 	}
 		
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	// RX test
+	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/3]\r\n", stByte, correct);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
-	// RX test
 	HAL_UART_Transmit(&huart2, rxOpener, sizeof(rxOpener), 1);
 	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_RX, &wrData, sizeof (wrData));
 	HAL_Delay(10);
 	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
 	HAL_Delay(10);
 	
-	if((stByte>>4) == 1){
-		correct++;
-	}
-
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	// TX test
+	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/3]\r\n", stByte, correct);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-	
 
-	
-	// IDLE test
-	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_IDLE, &wrData, sizeof (wrData));
+	HAL_UART_Transmit(&huart2, txOpener, sizeof(txOpener), 1);
+	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_TX, &wrData, sizeof (wrData));
 	HAL_Delay(10);
 	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
 	HAL_Delay(10);
-	if((stByte>>4) == 0){
-		correct++;
-	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	// RX test
+	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/3]\r\n", stByte, correct);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-	
-	
-	// TX test
-	HAL_UART_Transmit(&huart2, txOpener, sizeof(txOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_TX, &wrData, sizeof (wrData));
+
+	HAL_UART_Transmit(&huart2, rxOpener, sizeof(rxOpener), 1);
+	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_RX, &wrData, sizeof (wrData));
 	HAL_Delay(10);
 	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
 	HAL_Delay(10);
@@ -267,49 +253,26 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-
-
-	// RX test
-	HAL_UART_Transmit(&huart2, rxOpener, sizeof(rxOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_RX, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	
 	if((stByte>>4) == 1){
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 	
-	
-	// IDLE test
-	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_IDLE, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	if((stByte>>4) == 0){
-		correct++;
-	}
 	 
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
+	// TEST RESULTS
 	
-	if (correct == TESTS){
-		uint8_t finishMsg [50] = "Success! CC1200 mode switching is operational\r\n";
-		snprintf(finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Success! Mode switching is operational\r\n", correct, TESTS);
+	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/3]\r\n", stByte, correct);
+	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
+
+	if (correct == 6){
+		uint8_t finishMsg [48] = "[3/3] Success! Mode switching is operational\r\n";
 		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
 	} else {
-		uint8_t finishMsg [78];
-		snprintf(finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Mode switching failure... check your wiring and pin initialization\r\n", correct, TESTS);
+		uint8_t finishMsg [76];
+		snprintf(finishMsg, sizeof(finishMsg), "[%u/3] Mode switching failure... check your wiring and pin initialization\r\n", correct);
 		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
 	}
-		
-	
+
 
   /* USER CODE END 2 */
 
@@ -333,18 +296,14 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /**Configure the main internal regulator output voltage 
-  */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /**Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
-  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -355,10 +314,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -449,10 +408,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|RESET_Pin|CSN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA5 PA8 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : LED_Pin RESET_Pin CSN_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|RESET_Pin|CSN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -519,7 +478,6 @@ uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, i
 
     return (readValue);
 }
-
 
 
 
