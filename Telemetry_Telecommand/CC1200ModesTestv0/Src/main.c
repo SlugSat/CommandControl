@@ -184,7 +184,7 @@ int main(void)
 
 
 	volatile uint8_t stByte;
-    uint8_t wrData = 0x55;
+    uint8_t wrData = 0x00;
 	uint8_t correct = 0;
 	uint8_t testOpener [35] = "\r\n\r\nCC1200 Mode Switching Test...\r\n";
 	uint8_t idleOpener [16] = "\r\nIdle Mode...  ";
@@ -309,8 +309,59 @@ int main(void)
 		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
 	}
 		
-	
+	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
+	stByte = trx8BitRegAccess(RADIO_READ_ACCESS | RADIO_SINGLE_ACCESS, 0x01, &wrData, sizeof (wrData));
+	HAL_Delay(10);
 
+	uint8_t Msg [78];
+	snprintf((char *)Msg, sizeof(Msg), "\r\nSup, the value is %x\r\n", wrData);
+	HAL_UART_Transmit(&huart2, Msg, sizeof(Msg), 1);
+
+	wrData = 0x06;
+	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
+	stByte = trx8BitRegAccess(RADIO_READ_ACCESS | RADIO_SINGLE_ACCESS, 0x02, &wrData, sizeof (wrData));
+	HAL_Delay(10);
+
+	uint8_t Msg2 [78];
+	snprintf((char *)Msg2, sizeof(Msg2), "\r\nSup, the value is (after writing): %x\r\n", wrData);
+	HAL_UART_Transmit(&huart2, Msg2, sizeof(Msg2), 1);
+
+	
+	
+	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
+	stByte = trx8BitRegAccess(RADIO_READ_ACCESS | RADIO_SINGLE_ACCESS, 0x2F, &wrData, sizeof (wrData));
+	stByte = trx8BitRegAccess(RADIO_READ_ACCESS | RADIO_SINGLE_ACCESS, 0x01, &wrData, sizeof (wrData));
+	HAL_Delay(10);
+
+	uint8_t Msg1 [78];
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nSup, the value is now: %x\r\n", wrData);
+	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
+
+	//new test
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+	uint8_t addrHI = 0xAF;
+	uint8_t addrLO = 0x02;
+	uint8_t readValue = 0;
+	
+	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	
+	//HAL_SPI_Receive(&hspi1, &readValue, 1, 10);	
+	//snprintf((char *)Msg1, sizeof(Msg1), "\r\nThis is the print after transmit 1: %u\r\n", readValue);
+	//HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
+	
+	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+		
+	HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+	//HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+		
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nSup, this is a new test and the value is now: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
+
+
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -505,7 +556,7 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
 uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len)
 {
 	uint8_t addr;
-	uint8_t readValue;
+	uint8_t readValue  = 0;
 	addr = accessType | addrByte;
 	
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
@@ -513,7 +564,7 @@ uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, i
 	HAL_SPI_Transmit(&hspi1,&addr, 1, 10);
 	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
 	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
-    trxReadWriteBurstSingle(accessType | addrByte, pData, len);
+	trxReadWriteBurstSingle(accessType | addrByte, pData, len);
 		
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 
