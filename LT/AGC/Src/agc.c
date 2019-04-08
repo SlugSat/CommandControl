@@ -54,8 +54,11 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 static volatile uint32_t VgaValue, VaValue, DetectorValue;
 
 static void AGC_SetOutputs(void) {
+	if (HAL_ADC_PollForConversion(&hadc, 5) == HAL_OK)
+	{
 	HAL_DAC_SetValue(&hdac, DAC_CH_VA, DAC_ALIGN_12B_R, VaValue);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VGA, DAC_ALIGN_12B_R, VgaValue);
+	}
 }
 
 void AGC_Init(void) {
