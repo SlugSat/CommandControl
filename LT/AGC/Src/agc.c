@@ -23,13 +23,13 @@ static AgcState_t CurrentState = STATE_IDLE;
 volatile float InputV = 0;
 static  float AGC_DetectorToRSSI(uint32_t DetectorValue) {
 	InputV = (3.3 * DetectorValue / 4095.);
-	//return (52.4748346 * InputV) - 34.33916738;
-	return (12.4 * InputV) + 0.117;
+	return (52.4748346 * InputV) - 34.33916738;
+	//return (12.4 * InputV) + 0.117;
 }
 
 static uint32_t AGC_VGAToDAC(float VgaValue) {
-	//float val = (0.011479857 * VgaValue) + 1.09158902;
-	float val = (0.89924 * VgaValue) - 0.474323;
+	float val = (0.011479857 * VgaValue) + 1.09158902;
+	//float val = (0.89924 * VgaValue) - 0.474323;
 	return (4096 * val / 3.3);
 }
 
@@ -54,11 +54,9 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 static volatile uint32_t VgaValue, VaValue, DetectorValue;
 
 static void AGC_SetOutputs(void) {
-	if (HAL_ADC_PollForConversion(&hadc, 5) == HAL_OK)
-	{
+	while(HAL_ADC_PollForConversion(&hadc, 1000) != HAL_OK);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VA, DAC_ALIGN_12B_R, VaValue);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VGA, DAC_ALIGN_12B_R, VgaValue);
-	}
 }
 
 void AGC_Init(void) {

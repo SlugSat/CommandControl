@@ -80,3 +80,6 @@
 
 # Power Subfolder
 pmodes
+
+# Eclipse stuff
+.metadata
