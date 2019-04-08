@@ -1,0 +1,19 @@
+# eclipse stuff
+.settings/
+.cproject
+
+# from https://forum.atollic.com/viewtopic.php?t=1427#p3312
+*.rar
+*.o
+*.d
+*.crf
+*.htm
+*.dep
+*.map
+*.bak
+*.axf
+*.lnp
+*.lst
+*.ini
+*.hex
+Debug/
