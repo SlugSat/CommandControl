@@ -46,6 +46,7 @@
 
 #include "string.h"
 #include "CC1200_reg.h"
+#include "smartrf_CC1200.h"
 
 /* USER CODE END Includes */
 
@@ -84,6 +85,7 @@ void trxRfSpiInterfaceInit(uint8_t prescalerValue);
 uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len);
 uint8_t ReadWriteExtendedReg (uint8_t accessType, uint16_t address, uint8_t value);
 uint8_t ReadWriteCommandReg (uint8_t address);
+void CC1200_INIT(void);
 
 
 /* USER CODE END PFP */
@@ -138,7 +140,7 @@ int main(void)
 	 */
 	 
 	 
-//	//Set CS high
+	//Set CS high
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 
 	//Set reset high, low, high to begin
@@ -148,37 +150,48 @@ int main(void)
 	HAL_Delay(10);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 	HAL_Delay(10);
-
 	
-		
-  // test
+	///////////////////////////////////////////////////////////////////////
+	// Start the test
+	///////////////////////////////////////////////////////////////////////
 	uint16_t address = 0x2F02;
 	uint8_t value = 0xa;
 	uint8_t readValue;
 	char Msg1[100] = {0};
 	char Msg2[100] = {0};
 	
-  readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); // Read initial reg value
+	snprintf((char *)Msg1, sizeof(Msg1), "\n\nSTARTING THE TRANSCEIVER TEST\n\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	memcpy(Msg1, Msg2, 100);
+	
+	
+	///////////////////////////////////////////////////////////////////////
+  // Test reading and writing to a configuration register
+	///////////////////////////////////////////////////////////////////////
+	// Read initial reg value
+  readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); 
 		
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x: 0x%x\r\n", address, readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-		
-  readValue = ReadWriteExtendedReg (CC1200_WRITE_BIT, address, value); // Write to register
 	
-	readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value);  // Read new value
+	// Write to register
+  readValue = ReadWriteExtendedReg (CC1200_WRITE_BIT, address, value); 
+	
+	// Read new value
+	readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value);  
 		
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x after writing to the register: 0x%x\r\n", address, readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-	
+	///////////////////////////////////////////////////////////////////////
 	// Test command strobes
-	
+	///////////////////////////////////////////////////////////////////////
   memcpy(Msg1, Msg2, 100);
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test Expected Bytes: transmit 0x2F, idle 0x0F, receive 0x1F\r\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 	readValue = 0;
-	readValue = ReadWriteCommandReg(CC1200_SIDLE); // 
+	readValue = ReadWriteCommandReg(CC1200_SIDLE); // Idle
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 
@@ -187,7 +200,7 @@ int main(void)
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 	readValue = 0;
-	readValue = ReadWriteCommandReg(CC1200_STX);
+	readValue = ReadWriteCommandReg(CC1200_STX); // Transmit
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 
@@ -203,27 +216,47 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 
-//	uint8_t wrData = 0;
-//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SRX, &wrData, sizeof (wrData));
-//	HAL_Delay(10);
-//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SNOP, &wrData, sizeof (wrData));
-//	HAL_Delay(10);
-
-//	memcpy(Msg1, Msg2, 100);
-//	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
-//	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-//	
-//  wrData = 0;
-//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SIDLE, &wrData, sizeof (wrData));
-//	HAL_Delay(10);
-//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SNOP, &wrData, sizeof (wrData));
-//	HAL_Delay(10);
-
-//	memcpy(Msg1, Msg2, 100);
-//	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
-//	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-//	
+	///////////////////////////////////////////////////////////////////////
+	// Configure all registers
+	///////////////////////////////////////////////////////////////////////
+	//HAL_Delay(100);
+	CC1200_INIT();
+	//HAL_Delay(100);
 	
+	// Check a register 
+	address = CC1200_AGC_CFG0;
+  readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); 
+	
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x: 0x%x\r\n", address, readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	
+	// Check a register
+	address = CC1200_AGC_CFG1;
+	uint8_t randRead = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); 
+		
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from random register 0x%x: 0x%x\r\n", address, randRead);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	
+	
+	///////////////////////////////////////////////////////////////////////
+	// Test: send a packet continuously and receive with the dev board
+	///////////////////////////////////////////////////////////////////////
+
+	address = CC1200_RXFIFO;
+	for(int i = 0; i < 1000; i++)
+	{
+		readValue = ReadWriteExtendedReg(0x80, address, i);
+	}
+	
+	
+	
+	
+	
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\n\nEND OF TRANSCEIVER TEST %x\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -381,20 +414,18 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
 {
     int i;
     uint8_t dummy;
-	  uint8_t pDataRead = *pData;
     /* Communicate len number of bytes: if RX - the procedure sends 0x00 to push bytes from slave*/
     if (addr & CC1200_READ_BIT) {
         if (addr & CC1200_BURST_BIT) {
             for (i = 0; i < len; i++) {
-				
-				HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+								HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
                 while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
                 HAL_SPI_Receive(&hspi1, pData, 1, 10);
                 pData++;
 				
             }
         } else {
-			HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+						HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
             while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
             HAL_SPI_Receive(&hspi1, pData, 1, 10);
         }
@@ -402,9 +433,9 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
         if (addr & CC1200_BURST_BIT) {
             /* Communicate len number of bytes: if TX - the procedure doesn't overwrite pData */
             for (i = 0; i < len; i++) {
-				HAL_SPI_Transmit(&hspi1,pData, 1, 10);
+								HAL_SPI_Transmit(&hspi1,pData, 1, 10);
                 while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-				HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
+								HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
                 pData++;
             }
         } else {
@@ -445,26 +476,38 @@ uint8_t ReadWriteExtendedReg (uint8_t accessType, uint16_t address, uint8_t valu
 	
 	if(accessType) { 	// Read from address
 		
-		addrHI |= CC1200_READ_BIT;
-		
-		HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	// Access address	
-		HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
-		while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-			
+		if (addrHI)
+		{
+			addrHI |= CC1200_READ_BIT;
+			HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	// Access address	
+			while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+			HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+		}
+		else
+		{
+			addrLO |= CC1200_READ_BIT;
+			HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+			while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+		}
 		HAL_SPI_Transmit(&hspi1,0x0, 1, 10); // Transmit 0 for read
 		HAL_SPI_Receive(&hspi1, &readValue, 1, 10); // Read value
+			
 			
 	} else { // Write to address
 			
 		addrHI |= CC1200_WRITE_BIT;
 		
-		HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	// Access address
+		if (addrHI)
+		{
+			HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	// Access address	
+			while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+		}
 		HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
 		while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-			
+
 		HAL_SPI_Transmit(&hspi1,&value, 1, 10);		// Write value
 	}
-			
+	
 	// Chip select high	
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 	
@@ -486,6 +529,51 @@ uint8_t ReadWriteCommandReg (uint8_t address)
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 	
 	return readValue;
+}
+
+void CC1200_INIT(void)
+{
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IOCFG2, SMARTRF_SETTING_IOCFG2);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_DEVIATION_M, SMARTRF_SETTING_DEVIATION_M);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_MODCFG_DEV_E, SMARTRF_SETTING_MODCFG_DEV_E);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_DCFILT_CFG, SMARTRF_SETTING_DCFILT_CFG);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_PREAMBLE_CFG0, SMARTRF_SETTING_PREAMBLE_CFG0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IQIC, SMARTRF_SETTING_IQIC);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_CHAN_BW, SMARTRF_SETTING_CHAN_BW);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_MDMCFG1, SMARTRF_SETTING_MDMCFG1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_MDMCFG0, SMARTRF_SETTING_MDMCFG0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_SYMBOL_RATE2, SMARTRF_SETTING_SYMBOL_RATE2);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_SYMBOL_RATE1, SMARTRF_SETTING_SYMBOL_RATE1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_SYMBOL_RATE0, SMARTRF_SETTING_SYMBOL_RATE0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_AGC_REF, SMARTRF_SETTING_AGC_REF);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_AGC_CS_THR, SMARTRF_SETTING_AGC_CS_THR);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_AGC_CFG1, SMARTRF_SETTING_AGC_CFG1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_AGC_CFG0, SMARTRF_SETTING_AGC_CFG0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FIFO_CFG, SMARTRF_SETTING_FIFO_CFG);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_CFG, SMARTRF_SETTING_FS_CFG);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_PKT_CFG2, SMARTRF_SETTING_PKT_CFG2);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_PKT_CFG0, SMARTRF_SETTING_PKT_CFG0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_PKT_LEN, SMARTRF_SETTING_PKT_LEN);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IF_MIX_CFG, SMARTRF_SETTING_IF_MIX_CFG);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FREQOFF_CFG, SMARTRF_SETTING_FREQOFF_CFG);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_MDMCFG2, SMARTRF_SETTING_MDMCFG2);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FREQ2, SMARTRF_SETTING_FREQ2);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IF_ADC1, SMARTRF_SETTING_IF_ADC1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IF_ADC0, SMARTRF_SETTING_IF_ADC0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_DIG1, SMARTRF_SETTING_FS_DIG1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_DIG0, SMARTRF_SETTING_FS_DIG0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_CAL1, SMARTRF_SETTING_FS_CAL1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_CAL0, SMARTRF_SETTING_FS_CAL0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_DIVTWO, SMARTRF_SETTING_FS_DIVTWO);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_DSM0, SMARTRF_SETTING_FS_DSM0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_DVC0, SMARTRF_SETTING_FS_DVC0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_PFD, SMARTRF_SETTING_FS_PFD);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_PRE, SMARTRF_SETTING_FS_PRE);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_REG_DIV_CML, SMARTRF_SETTING_FS_REG_DIV_CML);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_SPARE, SMARTRF_SETTING_FS_SPARE);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_VCO0, SMARTRF_SETTING_FS_VCO0);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_XOSC5, SMARTRF_SETTING_XOSC5);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_XOSC1, SMARTRF_SETTING_XOSC1);
 }
 
 
