@@ -186,7 +186,7 @@ States Transition(uint8_t event)
 	// Create a function once this is known
 	
 	// Delay the program for awhile to test they are correct
-	for (int i = 0; i < 100000000; i++);
+//	for (int i = 0; i < 100000000; i++);
 	
 	
 	if (event == Detumble)
