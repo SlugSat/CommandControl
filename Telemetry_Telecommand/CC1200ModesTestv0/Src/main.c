@@ -171,18 +171,6 @@ int main(void)
 	HAL_Delay(10);
 
 
-//  //Simple tutorial mode switch
-//	//Read Data
-//	//1. Set CS low
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-//	//2. Transmit Command Strobe Address
-//	HAL_SPI_Transmit(&hspi1, spiIn, 1, 10);
-//	//3. Transmit a NOP for the one operation delay
-//	HAL_SPI_Receive(&hspi1, &spiIn[1], 1, 10);
-//	//4. Set CS high
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-
-
 	volatile uint8_t stByte;
     uint8_t wrData = 0x00;
 	uint8_t correct = 0;
@@ -191,7 +179,7 @@ int main(void)
 	uint8_t txOpener [16] = "\r\nTX Mode...    ";
 	uint8_t rxOpener [16] = "\r\nRX Mode...    ";
 	uint8_t statusCheck [28];
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/%d]\r\n", stByte, correct, TESTS);
 	
 //    uint8_t addr;
   
@@ -208,7 +196,7 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
 	
@@ -223,7 +211,7 @@ int main(void)
 		correct++;
 	}
 		
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
 	// RX test
