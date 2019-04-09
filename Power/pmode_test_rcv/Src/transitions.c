@@ -80,6 +80,7 @@ uint8_t Detumble_Transition(void)
 					return UltraLowPower;
 				}
 			}
+			return Detumble;
 		}
 		else
 		{

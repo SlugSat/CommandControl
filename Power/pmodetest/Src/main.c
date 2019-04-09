@@ -141,7 +141,6 @@ int main(void)
 			  frequencies except stable*/
 			for (int i = 0; i < 1000000; i++)
 			{
-				
 				if (!(i % 500))
 				{
 					// BATTERY LEVEL CHANGE
@@ -176,56 +175,6 @@ int main(void)
 			
 		}
 			
-//			flag++;
-//			if (flag == 2)
-//			{
-//				flag = 0;
-//				another =0;
-//			}
-//			push=0;
-//		}
-//		else 
-//		{
-		 //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-		//}
-		
-		/*if (flag ==1)
-		{
-			//printf("LED ON \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);//SETTING LED ON
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);//SETTING LED OFF
-		}
-		else if (flag ==2)
-		{
-			//printf("sCI-EVENT \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);//SETTING SCIEVENT ON 
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);//SETTING SCIEVENT OFF
-		}
-		else if (flag ==3)
-		{
-			//printf("SOLAR VECTOR \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);//SETTING SOLARVECTOR ON
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);//SETTING SOLARVECTOR OFF			
-		}
-		else if (flag ==4)
-		{
-			//printf("STABLE  \n" );
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);//SETTING STABLE ON
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF			
-		}
-		else*/ 
-//		if (flag ==1)
-//		{
-//			//printf("DIE \n" );
-//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);//SETTING STABLE OFF
-//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF
-//			another =1;
-//		}
-		/*
-		else if (flag ==6)
-		{
-			//printf("THIS IS BAD :FLAG IS 6 \n" );
-		}*/
   }
   /* USER CODE END 3 */
 }
