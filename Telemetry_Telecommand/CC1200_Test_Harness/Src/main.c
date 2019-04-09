@@ -45,6 +45,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "string.h"
+#include "CC1200_reg.h"
 
 /* USER CODE END Includes */
 
@@ -81,36 +82,14 @@ static void MX_USART2_UART_Init(void);
 
 void trxRfSpiInterfaceInit(uint8_t prescalerValue);
 uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len);
+uint8_t ReadWriteExtendedReg (uint8_t accessType, uint16_t address, uint8_t value);
+uint8_t ReadWriteCommandReg (uint8_t address);
 
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-#define TESTS 7
-
-//#define SPI_BEGIN()       SPI_CS_N_PIN = 0                // Pull CSn low to start communication
-#define SPI_TX(x)         HAL_SPI_Transmit(&hspi1, x, 1, 10)                    // Load x into SPI buffer  
-#define SPI_WAIT_READY()  while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY)   // Wait for receive buffer to fill
-#define SPI_RX(x)         HAL_SPI_Receive(&hspi1, x, 1, 10)                        // SPI buffer to read
-//#define SPI_END()         SPI_CS_N_PIN = 1                // Pull CSn high to end communication
-
-#define RADIO_BURST_ACCESS   0x40
-#define RADIO_SINGLE_ACCESS  0x00
-#define RADIO_READ_ACCESS    0x80
-#define RADIO_WRITE_ACCESS   0x00	
-
-
-//#define SPI_TX SPI_WriteByte
-//#define SPI_RX SPI_ReadByte
-
-#define RADIO_IDLE 0x36
-#define RADIO_NOP 0x3D
-#define RADIO_RX 0x34
-#define RADIO_TX 0x35
-
-uint8_t pDataRead;
 
 
 /* USER CODE END 0 */
@@ -170,221 +149,80 @@ int main(void)
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 	HAL_Delay(10);
 
-
-//  //Simple tutorial mode switch
-//	//Read Data
-//	//1. Set CS low
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-//	//2. Transmit Command Strobe Address
-//	HAL_SPI_Transmit(&hspi1, spiIn, 1, 10);
-//	//3. Transmit a NOP for the one operation delay
-//	HAL_SPI_Receive(&hspi1, &spiIn[1], 1, 10);
-//	//4. Set CS high
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-
-
-	volatile uint8_t stByte;
-    uint8_t wrData = 0x00;
-	uint8_t correct = 0;
-	uint8_t testOpener [35] = "\r\n\r\nCC1200 Mode Switching Test...\r\n";
-	uint8_t idleOpener [16] = "\r\nIdle Mode...  ";
-	uint8_t txOpener [16] = "\r\nTX Mode...    ";
-	uint8_t rxOpener [16] = "\r\nRX Mode...    ";
-	uint8_t statusCheck [28];
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/%d]\r\n", stByte, correct, TESTS);
 	
-//    uint8_t addr;
-  
-	HAL_UART_Transmit(&huart2, testOpener, sizeof(testOpener), 1);
-
-
-	// IDLE test
-	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_IDLE, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	if((stByte>>4) == 0){
-		correct++;
-	}
-	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-
-	
-	// TX test
-	HAL_UART_Transmit(&huart2, txOpener, sizeof(txOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_TX, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	
-	if((stByte>>4) == 2){
-		correct++;
-	}
 		
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-
-	// RX test
-	HAL_UART_Transmit(&huart2, rxOpener, sizeof(rxOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_RX, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
+  // test
+	uint16_t address = 0x2F02;
+	uint8_t value = 0xa;
+	uint8_t readValue;
+	char Msg1[100] = {0};
+	char Msg2[100] = {0};
 	
-	if((stByte>>4) == 1){
-		correct++;
-	}
-
-	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-	
-
-	
-	// IDLE test
-	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_IDLE, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	if((stByte>>4) == 0){
-		correct++;
-	}
-	
-	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-	
-	
-	// TX test
-	HAL_UART_Transmit(&huart2, txOpener, sizeof(txOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_TX, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	
-	if((stByte>>4) == 2){
-		correct++;
-	}
-	
-	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-
-
-	// RX test
-	HAL_UART_Transmit(&huart2, rxOpener, sizeof(rxOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_RX, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	
-	if((stByte>>4) == 1){
-		correct++;
-	}
-	
-	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-	
-	
-	// IDLE test
-	HAL_UART_Transmit(&huart2, idleOpener, sizeof(idleOpener), 1);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_IDLE, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	stByte = trx8BitRegAccess(RADIO_WRITE_ACCESS | RADIO_SINGLE_ACCESS, RADIO_NOP, &wrData, sizeof (wrData));
-	HAL_Delay(10);
-	if((stByte>>4) == 0){
-		correct++;
-	}
-	 
-	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
-	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
-	
-	if (correct == TESTS){
-		uint8_t finishMsg [50] = "Success! CC1200 mode switching is operational\r\n";
-		snprintf((char *)finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Success! Mode switching is operational\r\n", correct, TESTS);
-		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
-	} else {
-		uint8_t finishMsg [78];
-		snprintf((char *)finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Mode switching failure... check your wiring and pin initialization\r\n", correct, TESTS);
-		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
-	}
+  readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); // Read initial reg value
 		
-	
-
-	uint8_t Msg2 [78];
-	uint8_t Msg1 [78];
-	
-
-// Test reading a register value 
-	
-	// Chip select low
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-	
-	uint8_t addrHI = 0xAF;
-	uint8_t addrLO = 0x02;
-	uint8_t readValue = 0;
-	
-	// CC1200 read/write
-	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);		
-	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x: 0x%x\r\n", address, readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 		
-	HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
-	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+  readValue = ReadWriteExtendedReg (CC1200_WRITE_BIT, address, value); // Write to register
+	
+	readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value);  // Read new value
 		
-	// Chip select high	
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-		
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nSup, this is a new test and the value is now: 0x%x\r\n", readValue);
-	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
-
-	// Test writing to a register and read the value that we are writing
-		
-	addrHI = 0x2F;
-  addrLO = 0x02;
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x after writing to the register: 0x%x\r\n", address, readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	
+	
+	// Test command strobes
+	
+  memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test Expected Bytes: transmit 0x2F, idle 0x0F, receive 0x1F\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	
 	readValue = 0;
-	uint8_t writeValue = 0xA;
-		
-		
-	// Chip select low
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-		
-	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	
-	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-		
-	HAL_SPI_Transmit(&hspi1,&writeValue, 1, 10);
-	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
-		
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nWrite complete\r\n");
-	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
-		
-	// Chip select high	
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-		
-		
-	// Chip select low
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	readValue = ReadWriteCommandReg(CC1200_SIDLE); // 
+	HAL_Delay(10);
+	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: transmit status byte: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-	addrHI = 0xAF;
-	addrLO = 0x02;
 	readValue = 0;
+	readValue = ReadWriteCommandReg(CC1200_STX);
+	HAL_Delay(10);
+	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: idle status byte: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-	// CC1200 read/write
-	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);		
-	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-		
-	HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
-	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
-		
-	// Chip select high	
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-		
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nSup, this is a new test and the value is now: 0x%x\r\n", readValue);
-	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
-		
+	readValue = 0;
+	readValue = ReadWriteCommandReg(CC1200_SRX); // Recieve
+	HAL_Delay(10);
+	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+
+//	uint8_t wrData = 0;
+//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SRX, &wrData, sizeof (wrData));
+//	HAL_Delay(10);
+//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SNOP, &wrData, sizeof (wrData));
+//	HAL_Delay(10);
+
+//	memcpy(Msg1, Msg2, 100);
+//	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+//	
+//  wrData = 0;
+//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SIDLE, &wrData, sizeof (wrData));
+//	HAL_Delay(10);
+//	readValue = trx8BitRegAccess(CC1200_WRITE_BIT, CC1200_SNOP, &wrData, sizeof (wrData));
+//	HAL_Delay(10);
+
+//	memcpy(Msg1, Msg2, 100);
+//	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+//	
 	
   /* USER CODE END 2 */
 
@@ -543,10 +381,10 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
 {
     int i;
     uint8_t dummy;
-	pDataRead = *pData;
+	  uint8_t pDataRead = *pData;
     /* Communicate len number of bytes: if RX - the procedure sends 0x00 to push bytes from slave*/
-    if (addr & RADIO_READ_ACCESS) {
-        if (addr & RADIO_BURST_ACCESS) {
+    if (addr & CC1200_READ_BIT) {
+        if (addr & CC1200_BURST_BIT) {
             for (i = 0; i < len; i++) {
 				
 				HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
@@ -561,7 +399,7 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
             HAL_SPI_Receive(&hspi1, pData, 1, 10);
         }
     } else {
-        if (addr & RADIO_BURST_ACCESS) {
+        if (addr & CC1200_BURST_BIT) {
             /* Communicate len number of bytes: if TX - the procedure doesn't overwrite pData */
             for (i = 0; i < len; i++) {
 				HAL_SPI_Transmit(&hspi1,pData, 1, 10);
@@ -570,9 +408,9 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
                 pData++;
             }
         } else {
-			HAL_SPI_Transmit(&hspi1,pData, 1, 10);
+						HAL_SPI_Transmit(&hspi1,pData, 1, 10);
             while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-			HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
+						HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
         }
     }
 }
@@ -592,9 +430,63 @@ uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, i
 		
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 
-    return (readValue);
+	return (readValue);
 }
 
+uint8_t ReadWriteExtendedReg (uint8_t accessType, uint16_t address, uint8_t value)
+{
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+	uint8_t addrHI = address>>8;
+	uint8_t addrLO = (uint8_t) address;
+	uint8_t readValue = 0;
+	
+	
+	if(accessType) { 	// Read from address
+		
+		addrHI |= CC1200_READ_BIT;
+		
+		HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	// Access address	
+		HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+		while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+			
+		HAL_SPI_Transmit(&hspi1,0x0, 1, 10); // Transmit 0 for read
+		HAL_SPI_Receive(&hspi1, &readValue, 1, 10); // Read value
+			
+	} else { // Write to address
+			
+		addrHI |= CC1200_WRITE_BIT;
+		
+		HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	// Access address
+		HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+		while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+			
+		HAL_SPI_Transmit(&hspi1,&value, 1, 10);		// Write value
+	}
+			
+	// Chip select high	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+	
+	return readValue;
+}
+
+uint8_t ReadWriteCommandReg (uint8_t address)
+{
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+  uint8_t readValue  = 0;
+	
+	HAL_SPI_Transmit(&hspi1,&address, 1, 10);
+	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+		
+	// Chip select high	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+	
+	return readValue;
+}
 
 
 
