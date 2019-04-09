@@ -412,6 +412,11 @@
               <FileType>5</FileType>
               <FilePath>..\Inc\CC1200_reg.h</FilePath>
             </File>
+            <File>
+              <FileName>smartrf_CC1200.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\smartrf_CC1200.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
