@@ -200,6 +200,7 @@ int main(void)
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 	readValue = 0;
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
 	readValue = ReadWriteCommandReg(CC1200_STX); // Transmit
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
@@ -208,13 +209,14 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: idle status byte: 0x%x\r\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-	readValue = 0;
-	readValue = ReadWriteCommandReg(CC1200_SRX); // Recieve
-	HAL_Delay(10);
-	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
-	memcpy(Msg1, Msg2, 100);
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
-	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+//	readValue = 0;
+//	readValue = ReadWriteCommandReg(CC1200_SRX); // Recieve
+//	HAL_Delay(10);
+//	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+//	memcpy(Msg1, Msg2, 100);
+//	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 
 	///////////////////////////////////////////////////////////////////////
 	// Configure all registers
@@ -244,10 +246,14 @@ int main(void)
 	// Test: send a packet continuously and receive with the dev board
 	///////////////////////////////////////////////////////////////////////
 
-	address = CC1200_RXFIFO;
+	address = CC1200_TXFIFO;
 	for(int i = 0; i < 1000; i++)
 	{
-		readValue = ReadWriteExtendedReg(0x80, address, i);
+		readValue = ReadWriteExtendedReg(0x00, address, i);
+		HAL_Delay(1);
+//		memcpy(Msg1, Msg2, 100);
+//	  snprintf((char *)Msg1, sizeof(Msg1), " DATA:%x\n", i);
+//	  HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	}
 	
 	
@@ -395,10 +401,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA5 PA8 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : PA5 PA7 PA8 PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
