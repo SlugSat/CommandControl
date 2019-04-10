@@ -200,7 +200,8 @@ int main(void)
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 	readValue = 0;
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 	readValue = ReadWriteCommandReg(CC1200_STX); // Transmit
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
@@ -247,7 +248,7 @@ int main(void)
 	///////////////////////////////////////////////////////////////////////
 
 	address = CC1200_TXFIFO;
-	for(int i = 0; i < 1000; i++)
+	for(int i = 0; i < 10000; i++)
 	{
 		readValue = ReadWriteExtendedReg(0x00, address, i);
 		HAL_Delay(1);
@@ -401,10 +402,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8 
+                          |GPIO_PIN_9, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA5 PA7 PA8 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : PA5 PA6 PA7 PA8 
+                           PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8 
+                          |GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
