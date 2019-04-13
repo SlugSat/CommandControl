@@ -152,9 +152,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>131</LineNumber>
+          <LineNumber>330</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134223080</Address>
+          <Address>134218378</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -163,7 +163,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>../Src/main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\int_test_L1\../Src/main.c\131</Expression>
+          <Expression>\\int_test_L1\../Src/main.c\330</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -171,6 +171,11 @@
           <count>0</count>
           <WinNumber>1</WinNumber>
           <ItemText>globalTest,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>1</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>globalState</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -488,7 +493,7 @@
       <GroupNumber>5</GroupNumber>
       <FileNumber>20</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Src\transitions.c</PathWithFileName>
