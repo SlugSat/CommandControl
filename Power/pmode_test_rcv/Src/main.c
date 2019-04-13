@@ -150,7 +150,7 @@ int main(void)
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Kill);
 					tmp = state == Kill ? GPIO_PIN_SET : GPIO_PIN_RESET;
-					HAL_GPIO_WritePin(GPIOA, DEAD_Pin, tmp);
+					HAL_GPIO_WritePin(GPIOB, DEAD_Pin, tmp);
 					break;
 				/* In Normal mode */
 				case (Normal): 
@@ -209,10 +209,6 @@ int main(void)
 					continue;
 			}
 		}
-		
-		
-		
-		
 		
     /* USER CODE END WHILE */
 
@@ -354,13 +350,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 		{
 			change_variables(DIE);
 			globalIntterupt = DIE_INT_Pin;
-			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		else if (GPIO_PIN == BATT_INT_Pin)
 		{
 			change_variables(BATT);
 			globalIntterupt = BATT_INT_Pin;
-			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		else if (GPIO_PIN == SOLAR_INT_Pin)
 		{
