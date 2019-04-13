@@ -160,7 +160,7 @@ int main(void)
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Normal);
 					tmp = state == Normal ? GPIO_PIN_SET : GPIO_PIN_RESET;
-					HAL_GPIO_WritePin(GPIOA, NORMAL_Pin, tmp);
+					HAL_GPIO_WritePin(GPIOB, NORMAL_Pin, tmp);
 					break;
 				/* In UltraLowPower mode */	
 				case (UltraLowPower): 
@@ -190,7 +190,7 @@ int main(void)
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Eclipse);
 					tmp = state == Eclipse ? GPIO_PIN_SET : GPIO_PIN_RESET;
-					HAL_GPIO_WritePin(GPIOA, ECLIPSE_Pin, tmp);
+					HAL_GPIO_WritePin(GPIOC, ECLIPSE_Pin, tmp);
 					break;
 				/* In ScienceOnly mode */
 				case (ScienceOnly): 
@@ -200,7 +200,7 @@ int main(void)
 					// Set the pins high for each rail that should be one here //
 					state = Transition(ScienceOnly);
 					tmp = state == ScienceOnly ? GPIO_PIN_SET : GPIO_PIN_RESET;
-					HAL_GPIO_WritePin(GPIOA, SCILOG_Pin, tmp);
+					HAL_GPIO_WritePin(GPIOB, SCILOG_Pin, tmp);
 					break;
 				/* An error occurred */
 				default:
@@ -282,12 +282,6 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, NORMAL_Pin|DEAD_Pin|SCILOG_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : BATT_INT_Pin STABLE_INT_Pin SCI_INT_Pin */
-  GPIO_InitStruct.Pin = BATT_INT_Pin|STABLE_INT_Pin|SCI_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pins : BOARD_LED_Pin ULOW_Pin LOW_Pin DETUMBLE_Pin */
   GPIO_InitStruct.Pin = BOARD_LED_Pin|ULOW_Pin|LOW_Pin|DETUMBLE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -295,8 +289,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DIE_INT_Pin SOLAR_INT_Pin */
-  GPIO_InitStruct.Pin = DIE_INT_Pin|SOLAR_INT_Pin;
+  /*Configure GPIO pins : BATT_INT_Pin DIE_INT_Pin STABLE_INT_Pin SOLAR_INT_Pin */
+  GPIO_InitStruct.Pin = BATT_INT_Pin|DIE_INT_Pin|STABLE_INT_Pin|SOLAR_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -308,6 +302,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ECLIPSE_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SCI_INT_Pin */
+  GPIO_InitStruct.Pin = SCI_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SCI_INT_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : NORMAL_Pin DEAD_Pin SCILOG_Pin */
   GPIO_InitStruct.Pin = NORMAL_Pin|DEAD_Pin|SCILOG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -315,13 +315,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
-	{		
-		HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+	{
+		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		if (GPIO_PIN == STABLE_INT_Pin)
 		{
 			change_variables(STABLE);
@@ -344,7 +360,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 		{
 			change_variables(BATT);
 			globalIntterupt = BATT_INT_Pin;
-			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		else if (GPIO_PIN == SOLAR_INT_Pin)
 		{
