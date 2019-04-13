@@ -139,9 +139,9 @@ int main(void)
 			HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
 			/*simulate detumble state and set pins at varying
 			  frequencies except stable*/
-			for (int i = 0; i < 1000000; i++)
+			for (int i = 0; i < 100000; i++)
 			{
-				if (!(i % 500))
+				if (!(i % 900))
 				{
 					// BATTERY LEVEL CHANGE
 					HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
@@ -169,7 +169,23 @@ int main(void)
 			/*we have successfully stabilized at this point*/
 			// SEND STABLE SIGNAL
 			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
-			HAL_Delay(10);
+			HAL_Delay(100);
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			
+			HAL_Delay(100);
+			
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
+			
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
+			
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
 			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
 			
 			
