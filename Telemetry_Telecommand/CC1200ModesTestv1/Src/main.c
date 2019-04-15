@@ -181,7 +181,7 @@ int main(void)
 
 
 	volatile uint8_t stByte;
-    uint8_t wrData = 0x55;
+  uint8_t wrData = 0x55;
 	uint8_t correct = 0;
 	uint8_t testOpener [35] = "\r\n\r\nCC1200 Mode Switching Test...\r\n";
 	uint8_t idleOpener [14] = "Idle Mode...  ";
@@ -433,14 +433,14 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
         if (addr & RADIO_BURST_ACCESS) {
             for (i = 0; i < len; i++) {
 				
-				HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+								HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
                 while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
                 HAL_SPI_Receive(&hspi1, pData, 1, 10);
                 pData++;
 				
             }
         } else {
-			HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+						HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
             while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
             HAL_SPI_Receive(&hspi1, pData, 1, 10);
         }
@@ -448,15 +448,15 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
         if (addr & RADIO_BURST_ACCESS) {
             /* Communicate len number of bytes: if TX - the procedure doesn't overwrite pData */
             for (i = 0; i < len; i++) {
-				HAL_SPI_Transmit(&hspi1,pData, 1, 10);
+								HAL_SPI_Transmit(&hspi1,pData, 1, 10);
                 while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-				HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
+								HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
                 pData++;
             }
         } else {
-			HAL_SPI_Transmit(&hspi1,pData, 1, 10);
+						HAL_SPI_Transmit(&hspi1,pData, 1, 10);
             while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-			HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
+						HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
         }
     }
 }
@@ -472,11 +472,11 @@ uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, i
 	HAL_SPI_Transmit(&hspi1,&addr, 1, 10);
 	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
 	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
-    trxReadWriteBurstSingle(accessType | addrByte, pData, len);
+  trxReadWriteBurstSingle(accessType | addrByte, pData, len);
 		
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-
-    return (readValue);
+		
+  return (readValue);
 }
 
 

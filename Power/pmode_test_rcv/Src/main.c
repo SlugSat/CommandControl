@@ -64,8 +64,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t globalIntterupt = 0;
+uint16_t globalIntterupt = 0;
 States globalState = Detumble;
+volatile States state;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -111,7 +112,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	/* Initialize Variables */
-	States state;
 	system_function functions;
 
 	/* Initialize the starting state of each of the systems that need power */
@@ -123,6 +123,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	volatile int tmp;
   while (1)
   {
 	/* Enter the state machine */
@@ -138,16 +139,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Detumble);
-				
-					if (state == Detumble)
-					{
-						HAL_GPIO_WritePin(GPIOA, DETUMBLE_Pin, GPIO_PIN_SET);
-
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, DETUMBLE_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == Detumble ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOA, DETUMBLE_Pin, tmp);
 					break;
 				/* In Kill mode */
 				case (Kill): 
@@ -156,14 +149,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Kill);
-					if (state == Kill)
-					{
-						HAL_GPIO_WritePin(GPIOA, DEAD_Pin, GPIO_PIN_SET);
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, DEAD_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == Kill ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOB, DEAD_Pin, tmp);
 					break;
 				/* In Normal mode */
 				case (Normal): 
@@ -172,14 +159,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Normal);
-					if (state == Normal)
-					{
-						HAL_GPIO_WritePin(GPIOA, NORMAL_Pin, GPIO_PIN_SET);
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, NORMAL_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == Normal ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOB, NORMAL_Pin, tmp);
 					break;
 				/* In UltraLowPower mode */	
 				case (UltraLowPower): 
@@ -188,14 +169,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(UltraLowPower);
-					if (state == UltraLowPower)
-					{
-						HAL_GPIO_WritePin(GPIOA, ULOW_Pin, GPIO_PIN_SET);
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, ULOW_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == UltraLowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOA, ULOW_Pin, tmp);
 					break;
 				/* In LowPower mode */
 				case (LowPower): 
@@ -204,14 +179,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(LowPower);
-					if (state == LowPower)
-					{
-						HAL_GPIO_WritePin(GPIOA, LOW_Pin, GPIO_PIN_SET);
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, LOW_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == LowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOA, LOW_Pin, tmp);
 					break;
 				/* In Eclipse mode */
 				case (Eclipse): 
@@ -220,14 +189,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(Eclipse);
-					if (state == Eclipse)
-					{
-						HAL_GPIO_WritePin(GPIOA, ECLIPSE_Pin, GPIO_PIN_SET);
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, ECLIPSE_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == Eclipse ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOC, ECLIPSE_Pin, tmp);
 					break;
 				/* In ScienceOnly mode */
 				case (ScienceOnly): 
@@ -236,14 +199,8 @@ int main(void)
 					//Print_System_Settings(&functions);	// Used for testing and debugging
 					// Set the pins high for each rail that should be one here //
 					state = Transition(ScienceOnly);
-					if (state == ScienceOnly)
-					{
-						HAL_GPIO_WritePin(GPIOA, SCILOG_Pin, GPIO_PIN_SET);
-					}
-					else
-					{
-						HAL_GPIO_WritePin(GPIOA, SCILOG_Pin, GPIO_PIN_RESET);
-					}
+					tmp = state == ScienceOnly ? GPIO_PIN_SET : GPIO_PIN_RESET;
+					HAL_GPIO_WritePin(GPIOB, SCILOG_Pin, tmp);
 					break;
 				/* An error occurred */
 				default:
@@ -253,14 +210,10 @@ int main(void)
 			}
 		}
 		
-		
-		
-		
-		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+  }	
   /* USER CODE END 3 */
 }
 
@@ -325,12 +278,6 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, NORMAL_Pin|DEAD_Pin|SCILOG_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA2 PA3 PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pins : BOARD_LED_Pin ULOW_Pin LOW_Pin DETUMBLE_Pin */
   GPIO_InitStruct.Pin = BOARD_LED_Pin|ULOW_Pin|LOW_Pin|DETUMBLE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -338,8 +285,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB10 PB4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_4;
+  /*Configure GPIO pins : BATT_INT_Pin DIE_INT_Pin STABLE_INT_Pin SOLAR_INT_Pin */
+  GPIO_InitStruct.Pin = BATT_INT_Pin|DIE_INT_Pin|STABLE_INT_Pin|SOLAR_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -351,6 +298,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ECLIPSE_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SCI_INT_Pin */
+  GPIO_InitStruct.Pin = SCI_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SCI_INT_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : NORMAL_Pin DEAD_Pin SCILOG_Pin */
   GPIO_InitStruct.Pin = NORMAL_Pin|DEAD_Pin|SCILOG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -358,41 +311,58 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
-	{		
-		if (GPIO_PIN == GPIO_PIN_3)
+	{
+		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+		if (GPIO_PIN == STABLE_INT_Pin)
 		{
 			change_variables(STABLE);
-			globalIntterupt = 13;
-			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			globalIntterupt = STABLE_INT_Pin;
+			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
-		else if (GPIO_PIN == GPIO_PIN_8)
+		else if (GPIO_PIN == SCI_INT_Pin)
 		{
 			change_variables(SCI_EVENT);
-			globalIntterupt = 8;
-			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			globalIntterupt = SCI_INT_Pin;
+			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
-		else if (GPIO_PIN == GPIO_PIN_10)
+		else if (GPIO_PIN == DIE_INT_Pin)
 		{
 			change_variables(DIE);
-			globalIntterupt = 3;
+			globalIntterupt = DIE_INT_Pin;
 			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
-		else if (GPIO_PIN == GPIO_PIN_2)
+		else if (GPIO_PIN == BATT_INT_Pin)
 		{
 			change_variables(BATT);
-			globalIntterupt = 2;
-			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			globalIntterupt = BATT_INT_Pin;
+			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
-		else if (GPIO_PIN == GPIO_PIN_4)
+		else if (GPIO_PIN == SOLAR_INT_Pin)
 		{
 			change_variables(SOLAR);
-			globalIntterupt = 4;
-			HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+			globalIntterupt = SOLAR_INT_Pin;
+			//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 		}
 		else 
 		{

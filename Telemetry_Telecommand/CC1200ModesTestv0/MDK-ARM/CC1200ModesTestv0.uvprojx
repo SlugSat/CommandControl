@@ -407,6 +407,11 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32l1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>CC1200_reg.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\CC1200_reg.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -3,6 +3,8 @@
 void *change_variables(uint8_t type)
 {
 	uint8_t temp = 0;
+	static int cnt = 200;
+	
 	switch(type)
 	{
 		case (STABLE):
@@ -11,9 +13,9 @@ void *change_variables(uint8_t type)
 			Set_Stable(temp);
 			break;
 		case (DIE):
-			temp = rand() % 2;
+			temp = 1;
 			//printf("Setting die  to: %u\n", temp);
-			//Set_Die(temp);
+			Set_Die(temp);
 			break;
 		case (SCI_EVENT):
 			temp = rand() % 2;
@@ -21,7 +23,16 @@ void *change_variables(uint8_t type)
 			Set_ScienceEvent(temp);
 			break;
 		case (BATT):
-			temp = rand() % 101;
+			cnt--;
+			if (cnt > 100 && cnt <= 200)
+			{
+				temp = cnt - 100;
+			}
+			else if (cnt <= 100)
+			{
+				temp = 100 - cnt;
+			}
+			
 			//printf("Setting power to: %u\n", temp);
 			Set_BatteryLevel(temp);
 			break;
@@ -186,7 +197,7 @@ States Transition(uint8_t event)
 	// Create a function once this is known
 	
 	// Delay the program for awhile to test they are correct
-	for (int i = 0; i < 100000000; i++);
+//	for (int i = 0; i < 100000000; i++);
 	
 	
 	if (event == Detumble)

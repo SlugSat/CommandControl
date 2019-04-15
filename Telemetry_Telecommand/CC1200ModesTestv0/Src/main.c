@@ -171,27 +171,15 @@ int main(void)
 	HAL_Delay(10);
 
 
-//  //Simple tutorial mode switch
-//	//Read Data
-//	//1. Set CS low
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-//	//2. Transmit Command Strobe Address
-//	HAL_SPI_Transmit(&hspi1, spiIn, 1, 10);
-//	//3. Transmit a NOP for the one operation delay
-//	HAL_SPI_Receive(&hspi1, &spiIn[1], 1, 10);
-//	//4. Set CS high
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-
-
 	volatile uint8_t stByte;
-    uint8_t wrData = 0x55;
+    uint8_t wrData = 0x00;
 	uint8_t correct = 0;
 	uint8_t testOpener [35] = "\r\n\r\nCC1200 Mode Switching Test...\r\n";
 	uint8_t idleOpener [16] = "\r\nIdle Mode...  ";
 	uint8_t txOpener [16] = "\r\nTX Mode...    ";
 	uint8_t rxOpener [16] = "\r\nRX Mode...    ";
 	uint8_t statusCheck [28];
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x.2%u, [%u/%d]\r\n", stByte, correct, TESTS);
 	
 //    uint8_t addr;
   
@@ -208,7 +196,7 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
 	
@@ -223,7 +211,7 @@ int main(void)
 		correct++;
 	}
 		
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
 	// RX test
@@ -237,7 +225,7 @@ int main(void)
 		correct++;
 	}
 
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 	
 
@@ -252,7 +240,7 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 	
 	
@@ -267,7 +255,7 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 
 
@@ -282,7 +270,7 @@ int main(void)
 		correct++;
 	}
 	
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 	
 	
@@ -296,21 +284,96 @@ int main(void)
 		correct++;
 	}
 	 
-	snprintf(statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
+	snprintf((char *)statusCheck, sizeof(statusCheck), "Status byte is 0x%.2X, [%u/%d]\r\n", stByte, correct, TESTS);
 	HAL_UART_Transmit(&huart2, statusCheck, sizeof(statusCheck), 1);
 	
 	if (correct == TESTS){
 		uint8_t finishMsg [50] = "Success! CC1200 mode switching is operational\r\n";
-		snprintf(finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Success! Mode switching is operational\r\n", correct, TESTS);
+		snprintf((char *)finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Success! Mode switching is operational\r\n", correct, TESTS);
 		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
 	} else {
 		uint8_t finishMsg [78];
-		snprintf(finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Mode switching failure... check your wiring and pin initialization\r\n", correct, TESTS);
+		snprintf((char *)finishMsg, sizeof(finishMsg), "\r\n[%u/%d] Mode switching failure... check your wiring and pin initialization\r\n", correct, TESTS);
 		HAL_UART_Transmit(&huart2, finishMsg, sizeof(finishMsg), 1);
 	}
 		
 	
 
+	uint8_t Msg2 [78];
+	uint8_t Msg1 [78];
+	
+
+// Test reading a register value 
+	
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+	uint8_t addrHI = 0xAF;
+	uint8_t addrLO = 0x02;
+	uint8_t readValue = 0;
+	
+	// CC1200 read/write
+	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);		
+	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+		
+	HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+		
+	// Chip select high	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nSup, this is a new test and the value is now: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
+
+	// Test writing to a register and read the value that we are writing
+		
+	addrHI = 0x2F;
+  addrLO = 0x02;
+	readValue = 0;
+	uint8_t writeValue = 0xA;
+		
+		
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+		
+	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);	
+	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+		
+	HAL_SPI_Transmit(&hspi1,&writeValue, 1, 10);
+	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+		
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nWrite complete\r\n");
+	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
+		
+	// Chip select high	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		
+		
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+	addrHI = 0xAF;
+	addrLO = 0x02;
+	readValue = 0;
+	
+	// CC1200 read/write
+	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);		
+	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
+	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+		
+	HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+		
+	// Chip select high	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nSup, this is a new test and the value is now: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, Msg1, sizeof(Msg1), 1);
+		
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -505,7 +568,7 @@ static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
 uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len)
 {
 	uint8_t addr;
-	uint8_t readValue;
+	uint8_t readValue  = 0;
 	addr = accessType | addrByte;
 	
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
@@ -513,7 +576,7 @@ uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, i
 	HAL_SPI_Transmit(&hspi1,&addr, 1, 10);
 	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
 	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
-    trxReadWriteBurstSingle(accessType | addrByte, pData, len);
+	trxReadWriteBurstSingle(accessType | addrByte, pData, len);
 		
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 

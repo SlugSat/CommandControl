@@ -6,9 +6,9 @@
 /* Global variables controlling events and signals */
 uint8_t stable = 0;
 uint8_t die = 0;
-uint8_t batteryLevel = 0;
+uint8_t batteryLevel = 100;
 uint8_t scienceEvent = 0;
-uint8_t solarVector = 0; 
+uint8_t solarVector = 1; 
 #endif
 
 /* Print out each global variable */
@@ -80,6 +80,7 @@ uint8_t Detumble_Transition(void)
 					return UltraLowPower;
 				}
 			}
+			return Detumble;
 		}
 		else
 		{

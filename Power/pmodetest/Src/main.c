@@ -54,6 +54,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define BUTTON_DOWN 0xFE
+#define TEST (2)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -75,6 +76,8 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
+void Test1(void);
+void BatteryLevelChange(void);
 
 /* USER CODE END PFP */
 
@@ -122,110 +125,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		//HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-		
-
-		/*right bit shift button_states variable
-			once to save previous state*/
-		button_states <<= 1;
-		
-		/*store current button state into button_states*/
-		button_states |= HAL_GPIO_ReadPin(GPIOC, BLUE_PUSH_Pin); 
-		
-		/* blue button press indicates start of simulation */
-		if (button_states == BUTTON_DOWN)
+		if (TEST == 1)
 		{
-			HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
-			/*simulate detumble state and set pins at varying
-			  frequencies except stable*/
-			for (int i = 0; i < 1000000; i++)
-			{
-				
-				if (!(i % 500))
-				{
-					// BATTERY LEVEL CHANGE
-					HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
-//					HAL_Delay(5);
-//					HAL_GPIO_TogglePin(GPIOA, BATT_Pin);
-				}
-				if (!(i % 1000))
-				{
-					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
-					// SCIENCE EVENT PULSE
-					HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
-//					HAL_Delay(5);
-//					HAL_GPIO_TogglePin(GPIOA, SCI_EVENT_Pin);
-				}
-				if (!(i % 10000))
-				{
-//					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
-					// SOLAR VECTOR PULSE
-					HAL_GPIO_TogglePin(GPIOA, SOLAR_Pin);
-//					HAL_Delay(5);
-//					HAL_GPIO_TogglePin(GPIOA, SOLAR_Pin);
-				}
-			}
-			
-			/*we have successfully stabilized at this point*/
-			// SEND STABLE SIGNAL
-			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
-			HAL_Delay(10);
-			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
-			
-			
+			Test1();
+		}
+		else if (TEST == 2)
+		{
+			BatteryLevelChange();
 		}
 			
-//			flag++;
-//			if (flag == 2)
-//			{
-//				flag = 0;
-//				another =0;
-//			}
-//			push=0;
-//		}
-//		else 
-//		{
-		 //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-		//}
-		
-		/*if (flag ==1)
-		{
-			//printf("LED ON \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);//SETTING LED ON
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);//SETTING LED OFF
-		}
-		else if (flag ==2)
-		{
-			//printf("sCI-EVENT \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);//SETTING SCIEVENT ON 
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);//SETTING SCIEVENT OFF
-		}
-		else if (flag ==3)
-		{
-			//printf("SOLAR VECTOR \n" );
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);//SETTING SOLARVECTOR ON
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);//SETTING SOLARVECTOR OFF			
-		}
-		else if (flag ==4)
-		{
-			//printf("STABLE  \n" );
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);//SETTING STABLE ON
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF			
-		}
-		else*/ 
-//		if (flag ==1)
-//		{
-//			//printf("DIE \n" );
-//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);//SETTING STABLE OFF
-//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);//SETTING STABLE OFF
-//			another =1;
-//		}
-		/*
-		else if (flag ==6)
-		{
-			//printf("THIS IS BAD :FLAG IS 6 \n" );
-		}*/
   }
   /* USER CODE END 3 */
 }
@@ -322,6 +230,126 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void Test1(void)
+{
+	/*right bit shift button_states variable
+		once to save previous state*/
+	button_states <<= 1;
+	
+	/*store current button state into button_states*/
+	button_states |= HAL_GPIO_ReadPin(GPIOC, BLUE_PUSH_Pin); 
+	
+	/* blue button press indicates start of simulation */
+	if (button_states == BUTTON_DOWN)
+	{
+		HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+		/*simulate detumble state and set pins at varying
+			frequencies except stable*/
+		for (int i = 0; i < 100000; i++)
+		{
+			if (!(i % 900))
+			{
+				// BATTERY LEVEL CHANGE
+				HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
+//					HAL_Delay(5);
+//					HAL_GPIO_TogglePin(GPIOA, BATT_Pin);
+			}
+			if (!(i % 1000))
+			{
+				HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+				// SCIENCE EVENT PULSE
+				HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+//					HAL_Delay(5);
+//					HAL_GPIO_TogglePin(GPIOA, SCI_EVENT_Pin);
+			}
+			if (!(i % 10000))
+			{
+//					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+				// SOLAR VECTOR PULSE
+				HAL_GPIO_TogglePin(GPIOA, SOLAR_Pin);
+//					HAL_Delay(5);
+//					HAL_GPIO_TogglePin(GPIOA, SOLAR_Pin);
+			}
+		}
+		
+		/*we have successfully stabilized at this point*/
+		// SEND STABLE SIGNAL
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		
+		HAL_Delay(100);
+		
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		HAL_Delay(100);
+		
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		HAL_Delay(100);
+		
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+	}
+}
+	
+void BatteryLevelChange(void)
+{
+	// D > LP > > ULP > LP > ULP > LP > N > K
+	
+	/* right bit shift button_states variable
+	 * once to save previous state */
+	button_states <<= 1;
+	
+	/*store current button state into button_states*/
+	button_states |= HAL_GPIO_ReadPin(GPIOC, BLUE_PUSH_Pin); 
+	
+	/* blue button press indicates start of simulation */
+	if (button_states == BUTTON_DOWN)
+	{
+		// Turn on MCU LED
+		HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+		
+		// Stable interrupt
+		for (int i = 0; i < 2; i++)
+		{
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
+			HAL_GPIO_TogglePin(GPIOA, STABLE_Pin);
+			HAL_Delay(100);
+		}
+		
+		// Battery Interrupt... 100 interrupts to go from 100% to 1%
+		for (int i = 100; i > 1; i--)
+		{
+			HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
+			HAL_Delay(50);
+		}
+		
+		// Battery Interrupt... 100 interrupts to go from 1% to 100%
+		for (int i = 0; i < 100; i++)
+		{
+			HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
+			HAL_Delay(50);
+		}
+		HAL_GPIO_TogglePin(GPIOC, BATT_Pin);
+		
+		// Send the kill signal
+		for (int i = 0; i < 5; i++)
+		{
+			HAL_GPIO_TogglePin(GPIOB, DIE_Pin);
+			HAL_Delay(50);
+			HAL_GPIO_TogglePin(GPIOB, DIE_Pin);
+			HAL_Delay(50);
+		}
+		// Test End
+		return;		
+	}
+	
+}
 /* USER CODE END 4 */
 
 /**
