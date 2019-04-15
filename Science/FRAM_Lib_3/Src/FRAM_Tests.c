@@ -43,7 +43,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 			
 			//Set Mode to 0 for fast wipe, 1 for full wipe
-			if(Wipe_Memory(i2c_handler, i, 0) != FRAM_SUCCESS){
+			if(Wipe_Memory(i2c_handler, i, 1) != FRAM_SUCCESS){
 				HAL_UART_Transmit(uart_handler,ERROR,5,10);
 			}
 		}
@@ -230,7 +230,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 
 	uint8_t energy;
 	uint32_t time;
-	for(int i=0; i<6000; i=i+2){
+	for(int i=0; i<3000; i=i+2){
 		GenerateTestData(&energy, &time);
 		if(FRAM_Data_Builder(&TestData, time, energy) != FRAM_SUCCESS){
 			HAL_UART_Transmit(uart_handler,ERROR,6,10);
