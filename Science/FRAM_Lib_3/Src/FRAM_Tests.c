@@ -230,7 +230,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 
 	uint8_t energy;
 	uint32_t time;
-	for(int i=0; i<6540; i=i+2){
+	for(int i=0; i<6000; i=i+2){
 		GenerateTestData(&energy, &time);
 		if(FRAM_Data_Builder(&TestData, time, energy) != FRAM_SUCCESS){
 			HAL_UART_Transmit(uart_handler,ERROR,6,10);
@@ -251,6 +251,23 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 //		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);	
 //	}
 	
+	HAL_UART_Transmit(uart_handler,READ_HEAD,21,10);
+
+	currentWriteHead = 0;
+	currentWriteHeadAddress = 0;
+	startTime = 0;
+	endTime = 0;
+	
+	for(int i = 0; i < 2;  i++){
+		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &startTime, &endTime) != FRAM_SUCCESS){
+			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
+			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
+		}
+		sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
+			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
+	}
+	
+	
 	
 	HAL_UART_Transmit(uart_handler,SUCCESS,8,10);
 	
@@ -263,10 +280,14 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	uint32_t TestStart = 100;
 	uint32_t TestEnd = 5000;
 	
-	if(FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler) != FRAM_SUCCESS){
+	FRAM_Return SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler);
+	if(SearchReturn == FRAM_ERROR){
 		HAL_UART_Transmit(uart_handler,ERROR,5,10);
 	}
-	else{
+	else if(SearchReturn == FRAM_TIME_NOT_FOUND){
+		uint8_t NO_TIME[20] = "Time not found\n";
+		HAL_UART_Transmit(uart_handler,NO_TIME,15,10);		
+	}else{
 		HAL_UART_Transmit(uart_handler,SUCCESS,8,10);
 	}
 	

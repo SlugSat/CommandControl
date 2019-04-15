@@ -200,6 +200,18 @@ FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPack
 	}
 	
 	currentMemAddress = currentMemAddress + STORAGE_SIZE_BYTES;
+	
+	//Store new mem address 
+	uint8_t DataBufferIn[4] = {0};
+	uint8_t* p = (uint8_t*)&currentMemAddress;	
+	for(int i=0; i<4; i++){
+		DataBufferIn[i] = p[3-i];								//Cut up and store current write head address
+	}
+	if(HAL_I2C_Mem_Write(i2c_handler, 0xA0 | (currentFRAM << 1) + 1, 0x2, 0x08, DataBufferIn, 4, 10) != HAL_OK){
+		return FRAM_ERROR;
+	}
+	
+	
 	return FRAM_SUCCESS;
 }
 
