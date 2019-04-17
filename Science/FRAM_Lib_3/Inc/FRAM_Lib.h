@@ -112,7 +112,7 @@ FRAM_Return FRAM_Read_Header(I2C_HandleTypeDef *i2c_handler, uint8_t memNum, uin
  * @brief  Writes the given science payload data to the next spot in the FRAM
  * @note  None
  * @author Zee Moffatt */
-FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *scienceData);
+FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *scienceData, UART_HandleTypeDef *uart_handler);
 
 /**
  * @file

@@ -18,11 +18,13 @@ uint8_t Successes = 0;
 uint8_t Failures = 0;
 
 /* Helper Functions -------------------------------------------------------- */
-static uint32_t lastTime = 0;
-void GenerateTestData(uint8_t *energy, uint32_t *time){
+static uint32_t lastTime = 1;
+void GenerateTestData(uint8_t *energy, uint32_t *time, UART_HandleTypeDef *uart_handler){
 	*time = (uint32_t)(lastTime + (rand() % (300 + 1 - 1) + 1));
 	lastTime = *time;
   *energy = (uint8_t)(rand() % (17 + 1 - 1) + 1);
+	//sprintf(StrOut,"T: %d\n", *time);
+	//HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
 }
 
 /* Tests -------------------------------------------------------------------- */
@@ -156,7 +158,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	
 	struct ScienceDataPackage TestData;
 	
-	if(FRAM_Data_Builder(&TestData, 110011, D2_E3) != FRAM_SUCCESS){
+	if(FRAM_Data_Builder(&TestData, 0x19, D2_E3) != FRAM_SUCCESS){
 		HAL_UART_Transmit(uart_handler,ERROR,6,10);
 	}
 	else{
@@ -165,7 +167,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	
 	HAL_UART_Transmit(uart_handler,VALIDATION,12,10);
 	
-	if(TestData.Time != 110011 || TestData.Energy != D2_E3){
+	if(TestData.Time != 0x19 || TestData.Energy != D2_E3){
 		HAL_UART_Transmit(uart_handler,ERROR,6,10);
 	}
 	else{
@@ -184,7 +186,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
 	HAL_UART_Transmit(uart_handler,WRITE,17,10);	
 	
-	if(FRAM_IO_Write(i2c_handler, &TestData) != FRAM_SUCCESS){
+	if(FRAM_IO_Write(i2c_handler, &TestData, uart_handler) != FRAM_SUCCESS){
 		HAL_UART_Transmit(uart_handler,ERROR,6,10);
 	}
 	else{
@@ -193,12 +195,12 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	
 	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
 	
-	//uint8_t data[16] = {0};
+//  uint8_t data[16] = {0};
 //	if(HAL_I2C_Mem_Read(i2c_handler, 0xA0, 0x0, 0x08, data, 16, 10) != HAL_OK){
 //		sprintf(StrOut,"Header Read Error\n");
 //		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
 //	}
-//	
+	
 //	for(int i=0; i<16; i++){
 //		sprintf(StrOut,"Header %d: %d\r\n",i,data[i]);
 //		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
@@ -230,15 +232,15 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 
 	uint8_t energy;
 	uint32_t time;
-	for(int i=0; i<3000; i=i+2){
-		GenerateTestData(&energy, &time);
+	for(int i=0; i<1000; i=i+2){
+		GenerateTestData(&energy, &time, uart_handler);
 		if(FRAM_Data_Builder(&TestData, time, energy) != FRAM_SUCCESS){
 			HAL_UART_Transmit(uart_handler,ERROR,6,10);
 			
 		}else{
 //			sprintf(StrOut,"Data Pack: %d, %d\n",ScienceTestData[i], (uint8_t)ScienceTestData[i+1]);
 //			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
-			if(FRAM_IO_Write(i2c_handler, &TestData) != FRAM_SUCCESS){
+			if(FRAM_IO_Write(i2c_handler, &TestData, uart_handler) != FRAM_SUCCESS){
 				HAL_UART_Transmit(uart_handler,ERROR,6,10);
 			}
 		}
@@ -263,7 +265,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
 			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
 		}
-		sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
+			sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
 			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
 	}
 	
@@ -313,14 +315,14 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 //	}
 	
 	//Demo first 50 Energy Points
-	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
-	for(int i=0; i<20; i=i+2){
-		if(FRAM_IO_Search_GetNextItem(i2c_handler, &TestData) != FRAM_SUCCESS){
-			HAL_UART_Transmit(uart_handler,ERROR,5,10);
-		}
-		sprintf(StrOut,"Energy: %d\r\n",TestData.Energy);
-		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
-	}
+//	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
+//	for(int i=0; i<1000; i=i+2){
+//		if(FRAM_IO_Search_GetNextItem(i2c_handler, &TestData) != FRAM_SUCCESS){
+//			HAL_UART_Transmit(uart_handler,ERROR,5,10);
+//		}
+//		sprintf(StrOut,"Energy: %d\r\n",TestData.Energy);
+//		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+//	}
 
 	//Tests Complete
 	uint8_t Done[6] = "Done: ";
@@ -339,6 +341,15 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 //		sprintf(StrOut,"T: %d, E: %d\n",time, energy);
 //		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 //	}
+	uint8_t dataOut;
+	for(int i=16; i<2625; i++){
+		HAL_I2C_Mem_Read(i2c_handler, 0xA0, i, 0x08, &dataOut, 1, 10);
+		sprintf(StrOut,"%#x ", dataOut);
+		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
+		if (((i-16) % 5) == 0) {
+			HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
+		}
+	}
 	
 	while(1);
 }
