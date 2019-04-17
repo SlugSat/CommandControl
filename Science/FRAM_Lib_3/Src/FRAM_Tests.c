@@ -45,7 +45,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 			
 			//Set Mode to 0 for fast wipe, 1 for full wipe
-			if(Wipe_Memory(i2c_handler, i, 1) != FRAM_SUCCESS){
+			if(Wipe_Memory(i2c_handler, i, 0) != FRAM_SUCCESS){
 				HAL_UART_Transmit(uart_handler,ERROR,5,10);
 			}
 		}
@@ -230,6 +230,21 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 //		}
 //	}
 
+	currentWriteHead = 0;
+	currentWriteHeadAddress = 0;
+	startTime = 0;
+	endTime = 0;
+	
+//	for(int i = 0; i < 2;  i++){
+//		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &startTime, &endTime) != FRAM_SUCCESS){
+//			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
+//		}
+//			sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
+//	}
+
+
 	uint8_t energy;
 	uint32_t time;
 	for(int i=0; i<1000; i=i+2){
@@ -260,14 +275,14 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	startTime = 0;
 	endTime = 0;
 	
-	for(int i = 0; i < 2;  i++){
-		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &startTime, &endTime) != FRAM_SUCCESS){
-			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
-			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
-		}
-			sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
-			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
-	}
+//	for(int i = 0; i < 2;  i++){
+//		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &startTime, &endTime) != FRAM_SUCCESS){
+//			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
+//		}
+//			sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
+//	}
 	
 	
 	
@@ -279,8 +294,8 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	uint8_t SEARCH_START[14] = "Search Start: ";
 	HAL_UART_Transmit(uart_handler,SEARCH_START,14,10);			
 
-	uint32_t TestStart = 100;
-	uint32_t TestEnd = 5000;
+	uint32_t TestStart = 35;
+	uint32_t TestEnd = 600;
 	
 	FRAM_Return SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler);
 	if(SearchReturn == FRAM_ERROR){
@@ -295,14 +310,14 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	
 	uint8_t RUN_SEARCH[11] = "Run Start: ";
 	HAL_UART_Transmit(uart_handler,RUN_SEARCH,11,10);		
-	
-	if(FRAM_IO_Search_GetNextItem(i2c_handler, &TestData) != FRAM_SUCCESS){
-		HAL_UART_Transmit(uart_handler,ERROR,5,10);
-	}
-	else{
-		HAL_UART_Transmit(uart_handler,SUCCESS,8,10);
-	}
-	
+//	
+//	if(FRAM_IO_Search_GetNextItem(i2c_handler, &TestData, uart_handler) != FRAM_SUCCESS){
+//		HAL_UART_Transmit(uart_handler,ERROR,5,10);
+//	}
+//	else{
+//		HAL_UART_Transmit(uart_handler,SUCCESS,8,10);
+//	}
+//	
 	//uint8_t data[16] = {0};
 //	if(HAL_I2C_Mem_Read(i2c_handler, 0xA0, 0x0, 0x08, data, 16, 10) != HAL_OK){
 //		sprintf(StrOut,"Header Read Error\n");
@@ -315,14 +330,27 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 //	}
 	
 	//Demo first 50 Energy Points
-//	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
-//	for(int i=0; i<1000; i=i+2){
-//		if(FRAM_IO_Search_GetNextItem(i2c_handler, &TestData) != FRAM_SUCCESS){
-//			HAL_UART_Transmit(uart_handler,ERROR,5,10);
-//		}
-//		sprintf(StrOut,"Energy: %d\r\n",TestData.Energy);
-//		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
-//	}
+	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
+	
+	uint8_t END_SEARCH[14] = "Search Over\n";
+	FRAM_Return SearchOut;
+	int i = 0;
+	while(1){
+		SearchOut = FRAM_IO_Search_GetNextItem(i2c_handler, &TestData, uart_handler);
+		if(SearchOut == FRAM_ERROR){
+			HAL_UART_Transmit(uart_handler,ERROR,5,10);
+		}
+		if(SearchOut ==FRAM_SEARCH_ENDED){
+			HAL_UART_Transmit(uart_handler,END_SEARCH,12,10);
+		}
+		sprintf(StrOut,"%4d: Energy: %2d, Time: %5d\n",i , TestData.Energy, TestData.Time);
+		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+		i++;
+		
+		if(i>1000){
+			break;
+		}
+	}
 
 	//Tests Complete
 	uint8_t Done[6] = "Done: ";
@@ -341,15 +369,26 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 //		sprintf(StrOut,"T: %d, E: %d\n",time, energy);
 //		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 //	}
-	uint8_t dataOut;
-	for(int i=16; i<2625; i++){
-		HAL_I2C_Mem_Read(i2c_handler, 0xA0, i, 0x08, &dataOut, 1, 10);
-		sprintf(StrOut,"%#x ", dataOut);
-		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
-		if (((i-16) % 5) == 0) {
-			HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
-		}
-	}
+//	uint8_t dataOut;
+//	for(int i=16; i<200; i++){
+//		HAL_I2C_Mem_Read(i2c_handler, 0xA0, i, 0x08, &dataOut, 1, 10);
+//		sprintf(StrOut,"%#2x ", dataOut);
+//		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
+//		if (((i-16) % 5) == 0) {
+//			HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
+//			sprintf(StrOut,"%2d (%3d): ", (i-16) / 5, i);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
+//		}
+//	}
+	
+//	for(int i = 0; i < 2;  i++){
+//		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &startTime, &endTime) != FRAM_SUCCESS){
+//			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
+//		}
+//		sprintf(StrOut,"!!Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", i, currentWriteHead, currentWriteHeadAddress, startTime, endTime);
+//		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
+//	}
 	
 	while(1);
 }

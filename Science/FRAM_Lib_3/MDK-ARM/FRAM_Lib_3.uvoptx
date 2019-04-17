@@ -152,46 +152,51 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>148</LineNumber>
+          <LineNumber>387</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134227204</Address>
+          <Address>134218534</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>../Src/main.c</Filename>
+          <Filename>..\Src\FRAM_Lib.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\FRAM_Lib_3\../Src/main.c\148</Expression>
+          <Expression>\\FRAM_Lib_3\../Src/FRAM_Lib.c\387</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>135</LineNumber>
+          <LineNumber>376</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134227126</Address>
+          <Address>0</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>../Src/main.c</Filename>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>..\Src\FRAM_Lib.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\FRAM_Lib_3\../Src/main.c\135</Expression>
+          <Expression></Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>retrival,0x10</ItemText>
+          <ItemText>StartTime,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>testData,0x10</ItemText>
+          <ItemText>lowTime,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>highTime,0x10</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
