@@ -55,7 +55,8 @@ uint8_t currentFRAM;
 
 //Search Variables
 int8_t searchFram = -1;
-uint16_t searchAddress;
+uint16_t searchAddress = 0;
+uint32_t stopTime = 0;
 
 /* Functions --------------------------------------------------------------------*/
 
@@ -89,7 +90,7 @@ FRAM_Return FRAM_Write_Headers(I2C_HandleTypeDef *i2c_handler){
 	Build up the header buffer
 	*/
 	DataBufferIn[0] = 0; 												//Address Bit
-	DataBufferIn[1] = currentFRAM;							//Current write head FRAM
+	DataBufferIn [1] = currentFRAM;							//Current write head FRAM
 	uint8_t* p = (uint8_t*)&currentMemAddress;	
 	for(int i=0; i<4; i++){
 		DataBufferIn[2+i] = p[3-i];								//Cut up and store current write head address
@@ -164,13 +165,20 @@ FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPack
 	}
 
 	//Read in the times from the header in order to decide if start and end time need to be updated
-	uint32_t startTime, endTime;
-	//Start (7)
-	if(Retrieve_Time(i2c_handler, currentFRAM, 7, &startTime) != FRAM_SUCCESS){
-		return FRAM_ERROR;
-	}
-	//End (12)
-	if(Retrieve_Time(i2c_handler, currentFRAM, 12, &endTime) != FRAM_SUCCESS){
+	uint32_t startTime = 0;
+	uint32_t endTime = 0;
+	uint8_t dumpValue1 = 0;
+	uint32_t dumpValue2 = 0;
+//	//Start (7)
+//	if(Retrieve_Time(i2c_handler, currentFRAM, 7, &startTime) != FRAM_SUCCESS){
+//		return FRAM_ERROR;
+//	}
+//	//End (12)
+//	if(Retrieve_Time(i2c_handler, currentFRAM, 12, &endTime) != FRAM_SUCCESS){
+//		return FRAM_ERROR;
+//	}
+	
+	if(FRAM_Read_Header(i2c_handler, currentFRAM,&dumpValue1,&dumpValue2,&startTime,&endTime) != FRAM_SUCCESS){
 		return FRAM_ERROR;
 	}
 	
@@ -188,22 +196,33 @@ FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPack
 		return FRAM_ERROR;
 	}
 	//If earlier time then in header, update
-	if(startTime > Time){
-		sprintf(StrOut,"Start Time Replaced With: %d\n", Time);
+	if((startTime == 0) || (startTime > Time)){
+		//sprintf(StrOut,"Start Time Replaced in %d With: %d which is less then: %d\n",currentFRAM, Time, startTime);
 		if( Store_Time(i2c_handler, currentFRAM, 7, Time) != FRAM_SUCCESS){		
 			return FRAM_ERROR;
-		}		
+		}
 	}
 	//If later time then in header, update
 	if(endTime < Time){
-		sprintf(StrOut,"End Time Replaced With: %d\n", Time);
+		//sprintf(StrOut,"End Time Replaced in %d With: %d which is greater then: %d\n",currentFRAM, Time, endTime);
 		if( Store_Time(i2c_handler, currentFRAM, 12, Time) != FRAM_SUCCESS){		
 			return FRAM_ERROR;
 		}				
 	}
 	
-	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
-
+	//HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);	
+	uint8_t currentWriteHead = 0;
+	uint32_t currentWriteHeadAddress = 0;
+	uint32_t sT = 0;
+	uint32_t eT = 0;
+	
+//		if(FRAM_Read_Header(i2c_handler, 1, &currentWriteHead, &currentWriteHeadAddress, &sT, &eT) != FRAM_SUCCESS){
+//			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", 1);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
+//		}
+//			sprintf(StrOut,"Header %d: WrtHd: %d, WrtHdAd: %d, Str: %d, End: %d\n", 1, currentWriteHead, currentWriteHeadAddress, sT, eT);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);					
+ 
 	currentMemAddress = currentMemAddress + STORAGE_SIZE_BYTES;
 	
 	//Store new mem address 
@@ -240,30 +259,45 @@ FRAM_Return FRAM_IO_Write_To_Address(I2C_HandleTypeDef *i2c_handler, struct Scie
 * @param  
 **/
 FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartTime, uint32_t EndTime, UART_HandleTypeDef *uart_handler){
-	uint32_t lowTime, highTime, searchTime;
-	uint8_t currentWriteHead; 
-	uint32_t currentWriteHeadAddress;
+	uint32_t lowTime = 0;
+	uint32_t highTime = 0;
+	uint32_t searchTime = 0;
+	uint8_t currentWriteHead = 0;
+	uint32_t currentWriteHeadAddress = 0;
 	searchFram = -1;
 	
 	uint8_t StrOut[25] = {0};
 	
+	stopTime = EndTime;
+	
 	for(int i=0; i < NUMFRAM; i++){
+		lowTime = 0;
+		highTime = 0;
 		//Get high and low times
-		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &lowTime, &highTime) != FRAM_SUCCESS){		
+		if(FRAM_Read_Header(i2c_handler, i, &currentWriteHead, &currentWriteHeadAddress, &lowTime, &highTime) != FRAM_SUCCESS){
+//			sprintf(StrOut,"FRAM %d Read Error, possibly not active\r\n", i);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);			
 			return FRAM_ERROR;
 		}
 		
 		//Delay necessary for Header to fully retrieve. 
 		//Retrieval needs to be optimized to remove this
-		HAL_Delay(500);	
+		HAL_Delay(1000);	
 
 		//Check if start is between high and low
+//		sprintf(StrOut,"FRAM: %d, Low: %d, High: %d, Search: %d \n",i,lowTime,highTime,StartTime);
+//		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+		
 		if(StartTime > lowTime && StartTime < highTime){
-			
-			sprintf(StrOut,"FRAM: %d, Low: %d, High: %d \n",i,lowTime,highTime);
-			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
-			
+//			sprintf(StrOut,"Target time %d found in FRAM %d between %d and %d \n", StartTime,i,lowTime,highTime);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 			searchFram = i;
+			break;
+		}else{
+//			HAL_Delay(1000);	
+//			sprintf(StrOut,"Target time %d NOT found in FRAM %d between %d and %d \n", StartTime,i,lowTime,highTime);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);	
+			HAL_Delay(1000);	
 		}
 	}
 	
@@ -273,31 +307,61 @@ FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartT
 	//Binary Search time block
 	
 	//searchAddress = CENTER_DATA_ADDRESS;
-	uint16_t searchNum = CENTER_DATA_COUNT;	
+	//uint16_t searchNum = CENTER_DATA_COUNT;	
+	uint32_t searchNum = 0;
 	
 	//Read in time block and binary search
-	int iteration = 0;
+	//int iteration = 0;
+	uint8_t tOut[5] = {0};
+	uint32_t lastTime = 0;
+	searchAddress = DATA_START;
+	uint8_t e = 0;
+	
 	while(1){
-		
-		searchAddress = (searchNum * STORAGE_SIZE_BYTES) + DATA_START;
-		
-		if(Retrieve_Time(i2c_handler, searchFram, searchAddress + ENERGY_BYTES, &searchTime) != FRAM_SUCCESS){		
+		for(int i = 0; i<5; i++){
+			tOut[i] = 0;
+		}		
+		//HAL_Delay(1000);
+		if(HAL_I2C_Mem_Read(i2c_handler, 0xA0 | (searchFram << 1) + 1, searchAddress, 0x08, tOut, 5, 10) != HAL_OK){
 			return FRAM_ERROR;
 		}
-		
-		iteration++;
-		if(searchTime == StartTime){
-			break;
-		}else if(iteration > 11){
-			break;
-		}else if(StartTime > searchTime){
-			searchNum = searchNum + (searchNum/2);
-		}else{
-			searchNum = searchNum/2;
+		for(int i=0; i<4; i++){
+			searchTime |= (tOut[i+1] << (3-i)*8);		
 		}
+		e = tOut[0];
+		
+		//HAL_Delay(1000);
+		//sprintf(StrOut,"Searching... SearchNum: %d, Address: %d, E: %d, Time Retrieved: %#x\n",searchNum, searchAddress,e,searchTime);
+		//sprintf(StrOut,"Searching... SearchNum: %d, Address: %d, Time Retrieved: %#x %#x %#x %#x\n",searchNum, searchAddress,tOut[0],tOut[1],tOut[2],tOut[3]);
+		//HAL_Delay(1000);
+		//HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+		//HAL_Delay(1000);
+		
+		searchAddress = searchAddress + STORAGE_SIZE_BYTES;
+//		if(searchAddress >= 32768){
+//			return FRAM_ERROR;
+//		}
+		
+		if((StartTime > lastTime) && (StartTime <= searchTime)){
+			break;
+		}
+	
+//	sprintf(StrOut,"FRAM: %d, Address: %d, searchTime %d \n",searchFram,searchAddress, searchTime);
+//	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+		
+		//iteration++;
+//		if(searchTime == StartTime){
+//			break;
+//		}else if(iteration > 11){
+//			break;
+//		}else if(StartTime > searchTime){
+//			searchNum = searchNum + (searchNum/2);
+//		}else{
+//			searchNum = searchNum/2;
+//		}
 	}
 	
-	sprintf(StrOut,"FRAM: %d, Address: %d \n",searchFram,searchAddress);
+	sprintf(StrOut,"FRAM: %d, Address: %d, searchTime %d \n",searchFram, searchAddress, searchTime);
 	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 	
 	return FRAM_SUCCESS;
@@ -307,30 +371,41 @@ FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartT
 * 
 * @param  
 **/
-FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *DataPack){
+FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *DataPack, UART_HandleTypeDef *uart_handler){
 	if(searchFram == -1){
 		return FRAM_ERROR;
 	}
 	
-	uint8_t tOut[8] = {0};
-	uint8_t eOut;
+	uint8_t tOut[5] = {0};
+	uint8_t eOut = 0;
+	DataPack->Time = 0;
+	uint8_t StrOut[50];
+//	sprintf(StrOut,"searchFram %d \n",searchFram);
+//	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 	
-	if(HAL_I2C_Mem_Read(i2c_handler, 0xA0 | (searchFram << 1) + 1, searchAddress, 0x08, tOut,8, 10) != HAL_OK){
+	if(HAL_I2C_Mem_Read(i2c_handler, 0xA0 | (searchFram << 1) + 1, searchAddress, 0x08, tOut,5, 10) != HAL_OK){
 		return FRAM_ERROR;
 	}
-	if(HAL_I2C_Mem_Read(i2c_handler, 0xA0 | (searchFram << 1) + 1, searchAddress+8, 0x08, &eOut,1, 10) != HAL_OK){
-		return FRAM_ERROR;
-	}
+//	if(HAL_I2C_Mem_Read(i2c_handler, 0xA0 | (searchFram << 1) + 1, searchAddress+4, 0x08, &eOut,1, 10) != HAL_OK){
+//		return FRAM_ERROR;
+//	}
 	
 	//rebuild 32 bit number
-	DataPack->Time = 0;
+
 	for(int i=0; i<4; i++){
-		DataPack->Time |= (tOut[i] << (3-i)*8);
+		DataPack->Time |= (tOut[i+1] << (3-i)*8);
 	}
 	
-	DataPack->Energy = eOut;
+	DataPack->Energy = tOut[0];
+
+//	sprintf(StrOut,"searchFram %d, searchAddress %d, E: %d, T: %d \n",searchFram,searchAddress,DataPack->Energy,DataPack->Time);
+//	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 	
 	searchAddress = searchAddress + STORAGE_SIZE_BYTES;
+	
+	if(DataPack->Time > stopTime){
+		FRAM_IO_Search_EndSearch();
+	}
 	
 	return FRAM_SUCCESS;
 }
@@ -341,7 +416,7 @@ FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct Sc
 **/
 FRAM_Return FRAM_IO_Search_EndSearch(){
 	searchFram = -1;
-	return FRAM_SUCCESS;
+	return FRAM_SEARCH_ENDED;
 }
 
 FRAM_Return FRAM_Reset(I2C_HandleTypeDef *i2c_handler){
@@ -372,7 +447,7 @@ FRAM_Return FRAM_Data_Builder(struct ScienceDataPackage *DataPack, uint32_t Time
 }
 
 /* Helper Functions *******************************************************************************************/
-
+/*
 FRAM_Return Retrieve_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, uint32_t *output){
 	uint8_t tOut[4] = {0};
 	output = 0;
@@ -388,7 +463,7 @@ FRAM_Return Retrieve_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint
 
 	return FRAM_SUCCESS;
 }
-
+*/
 FRAM_Return Store_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, uint32_t time){
 	uint8_t tIn[4] = {0};
 	uint8_t* p = (uint8_t*)&time;
@@ -403,7 +478,7 @@ FRAM_Return Store_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_
 
 	return FRAM_SUCCESS;
 }
-
+/*
 FRAM_Return Retrieve_Full_Package(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, struct ScienceDataPackage *DataPack){
 	//Retrieve Energy
 	uint8_t EOut = 0;
@@ -421,7 +496,7 @@ FRAM_Return Retrieve_Full_Package(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_N
 	
 	return FRAM_SUCCESS;
 }
-
+*/
 FRAM_Return Wipe_Memory(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint8_t Mode){
 	int i =0;
 	uint8_t zero = 0;

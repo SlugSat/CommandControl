@@ -29,7 +29,8 @@ typedef enum{
 	FRAM_SUCCESS,
 	FRAM_ERROR,
 	FRAM_NULL_ERROR,
-	FRAM_TIME_NOT_FOUND
+	FRAM_TIME_NOT_FOUND,
+	FRAM_SEARCH_ENDED
 }FRAM_Return;
 
 
@@ -159,7 +160,7 @@ FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartT
  * @brief  
  * @note  None.
  * @author Zee Moffatt */
-FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *DataPack);
+FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *DataPack, UART_HandleTypeDef *uart_handler);
 
 /**
  * @file
@@ -204,6 +205,8 @@ FRAM_Return FRAM_IO_Search_EndSearch();
  * @author Zee Moffatt */
 FRAM_Return FRAM_Data_Builder(struct ScienceDataPackage *DataPack, uint32_t Time, FRAM_Science_Levels Energy);
 
+//WARNING
+//DO NOT USE, ERRORS
 /**
  * @file
  * @Function Retrieve_Time()
@@ -214,7 +217,7 @@ FRAM_Return FRAM_Data_Builder(struct ScienceDataPackage *DataPack, uint32_t Time
  * @brief  Retrieves and rebuilds the given time data from the given address. Assumes the caller knows if the given address is correct
  * @note  Mostly meant to be a helper function
  * @author Zee Moffatt */
-FRAM_Return Retrieve_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, uint32_t *output);
+//FRAM_Return Retrieve_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, uint32_t *output);
 
 /**
  * @file
@@ -229,6 +232,6 @@ FRAM_Return Retrieve_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint
  * @author Zee Moffatt */
 FRAM_Return Store_Time(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, uint32_t time);
 
-FRAM_Return Retrieve_Full_Package(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, struct ScienceDataPackage *DataPack);
+//FRAM_Return Retrieve_Full_Package(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint16_t address, struct ScienceDataPackage *DataPack);
 
 FRAM_Return Wipe_Memory(I2C_HandleTypeDef *i2c_handler, uint8_t FRAM_Num, uint8_t Mode);
