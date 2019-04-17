@@ -147,7 +147,7 @@ FRAM_Return FRAM_Read_Header(I2C_HandleTypeDef *i2c_handler, uint8_t memNum, uin
 	return FRAM_SUCCESS;
 }
 
-FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *scienceData){
+FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *scienceData, UART_HandleTypeDef *uart_handler){
 	//Avoid running off the end of the FRAM
 	if(FRAM32KB - currentMemAddress < STORAGE_SIZE_BYTES){
 		//Not enough space left in current FRAM
@@ -180,25 +180,30 @@ FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPack
 		return FRAM_ERROR;
 	}
 	
+	uint8_t StrOut[50];
+	
 	//Store Time Data
 	uint32_t Time = scienceData->Time;
 	if(Store_Time(i2c_handler, currentFRAM, currentMemAddress+1, Time) != FRAM_SUCCESS){		
 		return FRAM_ERROR;
-	}else{
-		//If earlier time then in header, update
-		if(startTime > Time){
-			if( Store_Time(i2c_handler, currentFRAM, 7, Time) != FRAM_SUCCESS){		
-				return FRAM_ERROR;
-			}		
-		}
-		//If later time then in header, update
-		if(endTime < Time){
-			if( Store_Time(i2c_handler, currentFRAM, 12, Time) != FRAM_SUCCESS){		
-				return FRAM_ERROR;
-			}				
-		}
+	}
+	//If earlier time then in header, update
+	if(startTime > Time){
+		sprintf(StrOut,"Start Time Replaced With: %d\n", Time);
+		if( Store_Time(i2c_handler, currentFRAM, 7, Time) != FRAM_SUCCESS){		
+			return FRAM_ERROR;
+		}		
+	}
+	//If later time then in header, update
+	if(endTime < Time){
+		sprintf(StrOut,"End Time Replaced With: %d\n", Time);
+		if( Store_Time(i2c_handler, currentFRAM, 12, Time) != FRAM_SUCCESS){		
+			return FRAM_ERROR;
+		}				
 	}
 	
+	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);		
+
 	currentMemAddress = currentMemAddress + STORAGE_SIZE_BYTES;
 	
 	//Store new mem address 
@@ -207,8 +212,10 @@ FRAM_Return FRAM_IO_Write(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPack
 	for(int i=0; i<4; i++){
 		DataBufferIn[i] = p[3-i];								//Cut up and store current write head address
 	}
-	if(HAL_I2C_Mem_Write(i2c_handler, 0xA0 | (currentFRAM << 1) + 1, 0x2, 0x08, DataBufferIn, 4, 10) != HAL_OK){
-		return FRAM_ERROR;
+	for(int i = 0; i < NUMFRAM;  i++){
+		if(HAL_I2C_Mem_Write(i2c_handler, 0xA0 | (currentFRAM << 1) + 1, 0x2, 0x08, DataBufferIn, 4, 10) != HAL_OK){
+			return FRAM_ERROR;
+		}
 	}
 	
 	
