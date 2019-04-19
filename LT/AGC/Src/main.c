@@ -100,10 +100,17 @@ int main(void) {
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
+	//int value = 0;
 	while (1) {
 		/* USER CODE END WHILE */
 		/* USER CODE BEGIN 3 */
 		AGC_DoEvent();
+		//while(HAL_ADC_PollForConversion(&hadc, 1000) != HAL_OK);
+
+		//HAL_DAC_SetValue(&hdac, DAC_CH_VA, DAC_ALIGN_12B_R, 4000);
+		//HAL_DAC_SetValue(&hdac, DAC_CH_VGA, DAC_ALIGN_12B_R, 4000);
+		//value += 1000;
+		//HAL_Delay(500);
 	}
 	/* USER CODE END 3 */
 }

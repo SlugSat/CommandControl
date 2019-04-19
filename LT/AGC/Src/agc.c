@@ -28,14 +28,14 @@ static  float AGC_DetectorToRSSI(uint32_t DetectorValue) {
 }
 
 static uint32_t AGC_VGAToDAC(float VgaValue) {
-	float val = (0.011479857 * VgaValue) + 1.09158902;
+	float val = (0.011479857 * (VgaValue)) + 1.09158902; // diode drop of transistor included
 	//float val = (0.89924 * VgaValue) - 0.474323;
-	return (4096 * val / 3.3);
+	return (4096 * (val + 0.7) / 3.3);
 }
 
 static uint32_t AGC_VAToDAC(float VaValue) {
-	float val = (0.029660982 * VaValue) + 2.543671697; // -50dBm at 1.8Vcc
-	return (4096 * val / 3.3);
+	float val = (0.029660982 * VaValue) + 2.543671697; // -50dBm at 1.8Vcc, diode drop of transistor
+	return (4096 * (val + 0.7) / 3.3);
 }
 
 #define AGC_SETPOINT (-30.0) // dBm
@@ -54,7 +54,7 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 static volatile uint32_t VgaValue, VaValue, DetectorValue;
 
 static void AGC_SetOutputs(void) {
-	while(HAL_ADC_PollForConversion(&hadc, 1000) != HAL_OK);
+	//while(HAL_ADC_PollForConversion(&hadc, 1000) != HAL_OK);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VA, DAC_ALIGN_12B_R, VaValue);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VGA, DAC_ALIGN_12B_R, VgaValue);
 }
