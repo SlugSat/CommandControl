@@ -8,6 +8,11 @@
  *  \maintainer  Alex Brown  rbirac@cox.net
  */
 
+#include "main.h"
+
+#define UM7_READ_BIT  (0x00)
+#define UM7_WRITE_BIT (0x01)
+
 
 // Define the firmware revision
 #define  UM7_FIRMWARE_REVISION    (('U' << 24) | ('7' << 16) | ('1' << 8) | 'C')
@@ -256,3 +261,17 @@
 #define FGET_FACTORY_UNINITIALIZED()  ((uint32_t)( *(__IO uint32_t*)(FACTORY_FLASH_ADDRESS) ) == 0xFFFFFFFF)
 
 #define GYRO_ZERO_SAMPLE_SIZE  500
+
+// FUNCTION PROTOTYPES
+uint8_t UM7_Write_Data(SPI_HandleTypeDef *hspi, uint8_t *data, uint8_t length, uint8_t reg);
+uint8_t UM7_Read_Data(SPI_HandleTypeDef *hspi, uint8_t *data , uint8_t length, uint8_t reg);
+
+void UM7_Init(SPI_HandleTypeDef *hspi, uint8_t gyrRate, uint8_t magRate);
+
+void get_mag_data(SPI_HandleTypeDef *hspi, float *data);
+void get_gyr_data(SPI_HandleTypeDef *hspi, float *data);
+
+void get_gyr_offsets(SPI_HandleTypeDef *hspi, uint8_t *data);
+void get_mag_offsets(SPI_HandleTypeDef *hspi, uint8_t *data);
+
+void get_raw_data(SPI_HandleTypeDef *hspi, int16_t *data);

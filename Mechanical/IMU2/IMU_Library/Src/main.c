@@ -53,8 +53,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define UM7_READ_BIT  (0x00)
-#define UM7_WRITE_BIT (0x01)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -74,8 +73,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
-uint8_t UM7_Write_Data(uint8_t *data, uint8_t length, uint8_t reg);
-uint8_t UM7_Read_Data(uint8_t *data , uint8_t length, uint8_t reg);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -138,18 +136,38 @@ int main(void)
 //	
 //	HAL_GPIO_WritePin(GPIOB, SPI1_CHIPSEL_Pin, GPIO_PIN_SET);
 
-
+	// Test reading and writing to a register
 	uint8_t output[5] = {0};
 	uint8_t reg = CREG_COM_SETTINGS;
-	UM7_Read_Data(output, 4, reg); 
+	UM7_Read_Data(&hspi1, output, 4, reg); 
 	
 	uint8_t newVal[4] = {0x00, 0x00, 0x00, 0x03};
-	UM7_Write_Data(newVal, 4, reg);
+	UM7_Write_Data(&hspi1, newVal, 4, reg);
 	
 	uint8_t out2[4] = {0};
-	UM7_Read_Data(out2, 4, reg); 
+	UM7_Read_Data(&hspi1, out2, 4, reg); 
 	
-
+	uint8_t gyrRate = 150;
+	uint8_t magRate = 100;
+	
+	//
+	UM7_Init(&hspi1, gyrRate, magRate);
+	
+	uint8_t initTest[4] = {0};
+	reg = CREG_COM_RATES1;
+	//UM7_Read_Data(&hspi1, initTest, 4, reg); 
+	
+	
+	float magData[3] = {0};
+	float gyrData[3] = {0};
+	int16_t rawData[1] = {0};
+	get_mag_data(&hspi1, magData);
+	
+	
+	uint8_t magOff[12] = {0};
+	get_mag_offsets(&hspi1, magOff);
+	
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -157,7 +175,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-		
+			get_raw_data(&hspi1, rawData);
+			get_mag_data(&hspi1, magData);
+			get_gyr_data(&hspi1, gyrData);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -264,54 +284,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-// Function that will use SPI to write data to a register
-uint8_t UM7_Write_Data(uint8_t *data, uint8_t length, uint8_t reg)
-{
-	uint8_t dummy = 0;
-	HAL_GPIO_WritePin(GPIOB, SPI1_CHIPSEL_Pin, GPIO_PIN_RESET);
 
-	// Create request for the register value
-	uint8_t requestWrite[2] = {UM7_WRITE_BIT, reg};
-	// Send the register that we want to read from
-	HAL_SPI_Transmit(&hspi1, requestWrite, 2, 10);
-	
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-	HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
-		
-	// Loop through 4 times to get each byte of the register data
-	for (int8_t i = length - 1; i >= 0; i--)
-	{
-		HAL_SPI_Transmit(&hspi1, &data[i], 1, 10);
-		//HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
-	}
-	
-	HAL_GPIO_WritePin(GPIOB, SPI1_CHIPSEL_Pin, GPIO_PIN_SET);
-	return 0;
-}
-
-// Function that will use SPI to read data from 1 register at a time 
-uint8_t UM7_Read_Data(uint8_t *data, uint8_t length, uint8_t reg)
-{
-	uint8_t dummy = 0;
-	HAL_GPIO_WritePin(GPIOB, SPI1_CHIPSEL_Pin, GPIO_PIN_RESET);
-
-	// Create request for the register value
-	uint8_t requestData[2] = {UM7_READ_BIT, reg};
-	// Send the register that we want to read from
-	HAL_SPI_Transmit(&hspi1, requestData, 2, 10);
-	
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-	HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
-	// Loop through 4 times to get each byte of the register data
-	for (int8_t i = length - 1; i >= 0; i--)
-	{
-		HAL_SPI_Receive(&hspi1, &data[i], 1, 10);
-		HAL_SPI_Transmit(&hspi1, 0x00, 1, 10);
-	}
-	
-	HAL_GPIO_WritePin(GPIOB, SPI1_CHIPSEL_Pin, GPIO_PIN_SET);
-	return 0;
-}
 /* USER CODE END 4 */
 
 /**
