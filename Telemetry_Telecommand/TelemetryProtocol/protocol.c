@@ -1,7 +1,24 @@
 #include "protocol.h"
 
 
+
+
 /***** Functions for the ground station side *****/
+
+/* This function will decode the time of the CubeSat by looking at the packet received */
+time_of_day Decode_CubeSat_Time (uint8_t *packet)
+{
+	// Packets structure: HHHH H0MM MMMM 0SSS SSS0 0XXX
+	// H = hour, M = minute, S = seconds, XXX represents the command
+	time_of_day satTime;
+	satTime.hour = (packet[2] >> 3) & 0x1F;
+	satTime.min = ((packet[2] & 0x03) << 4) | ((packet[1] >> 4) & 0x0F);
+	satTime.sec = ((packet[2] & 0x07) << 3) | ((packet[0] >> 5) & 0xE0);
+	
+	printf("\nHours: %x\t, Min: %x\t, Sec: %x\n",  satTime.hour, satTime.min, satTime.sec);
+	
+	return satTime;	
+}
 
 /* This function will decode packets that have come into the ground station */
 uint8_t Decode_Ground_Packet(uint8_t *packet)
@@ -15,6 +32,7 @@ uint8_t Decode_Ground_Packet(uint8_t *packet)
 		case (SAT_STATUS):
 			printf("Received a packet containing the status of the CubeSat\n");
 			// Handle the request here
+			Decode_CubeSat_Time(packet);
 			break;
 		case (SCI_DATA):
 			printf("Received a packet of science data\n");
