@@ -62,6 +62,8 @@ typedef struct time_of_day
 /********** Function Declarations **********/
 
 /*** Functions for the ground station side ***/
+/* This function will decode the time of the CubeSat by looking at the packet received */
+time_of_day Decode_CubeSat_Time (uint8_t *packet);
 
 /* This function will decode packets that have come into the ground station */
 uint8_t Decode_Ground_Packet(uint8_t *packet);
