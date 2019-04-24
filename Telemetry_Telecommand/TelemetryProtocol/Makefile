@@ -20,5 +20,5 @@ $(TESTO): $(TESTC)
 clean:
 	rm -rf  *.o test
 	
-make s: all ../bin/proxy
-	../bin/proxy 2223 ../access_control_list.txt
+make run: all 
+	./test
