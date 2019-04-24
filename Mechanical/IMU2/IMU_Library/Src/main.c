@@ -138,32 +138,37 @@ int main(void)
 
 	// Test reading and writing to a register
 	uint8_t output[5] = {0};
-	uint8_t reg = CREG_COM_SETTINGS;
-	UM7_Read_Data(&hspi1, output, 4, reg); 
-	
-	uint8_t newVal[4] = {0x00, 0x00, 0x00, 0x03};
-	UM7_Write_Data(&hspi1, newVal, 4, reg);
-	
-	uint8_t out2[4] = {0};
-	UM7_Read_Data(&hspi1, out2, 4, reg); 
+	UM7_Read_Data(&hspi1, output, 4, CREG_COM_SETTINGS); 
+	HAL_Delay(1);
+	uint8_t newVal[4] = {0x00, 0x00, 0x00, 0x30};
+	UM7_Write_Data(&hspi1, newVal, 4, CREG_COM_SETTINGS);
+	HAL_Delay(1);
+	uint8_t output2[4] = {0};
+	UM7_Read_Data(&hspi1, output2, 4, CREG_COM_SETTINGS); 
 	
 	uint8_t gyrRate = 150;
 	uint8_t magRate = 100;
 	
-	//
+	// Initialize the sensors to be able to read data
 	UM7_Init(&hspi1, gyrRate, magRate);
 	
-	uint8_t initTest[4] = {0};
-	reg = CREG_COM_RATES1;
-	//UM7_Read_Data(&hspi1, initTest, 4, reg); 
+	// Read the value of the initialized register
+	uint8_t initTest1[4] = {0};
+	UM7_Read_Data(&hspi1, initTest1, 4, CREG_COM_RATES1); 
+
+	uint8_t initTest3[4] = {0};
+	UM7_Read_Data(&hspi1, initTest3, 4, CREG_COM_RATES3);
 	
+	uint8_t health[4] = {0};
+	UM7_Read_Data(&hspi1, health, 4, DREG_HEALTH);
 	
+	// Read data from the magnetometer
 	float magData[3] = {0};
 	float gyrData[3] = {0};
 	int16_t rawData[1] = {0};
 	get_mag_data(&hspi1, magData);
 	
-	
+	// Read the magnetometer offset
 	uint8_t magOff[12] = {0};
 	get_mag_offsets(&hspi1, magOff);
 	
@@ -174,11 +179,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-			get_raw_data(&hspi1, rawData);
-			get_mag_data(&hspi1, magData);
-			get_gyr_data(&hspi1, gyrData);
-    /* USER CODE BEGIN 3 */
+		get_mag_data(&hspi1, magData);
+		HAL_Delay(10);
+		get_gyr_data(&hspi1, gyrData);
+		HAL_Delay(10);
+//    /* USER CODE END WHILE */
+
+//    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -242,7 +249,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
