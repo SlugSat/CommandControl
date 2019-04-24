@@ -203,10 +203,12 @@ void vprint(const char *fmt, va_list argp) {
 
 void my_printf(const char *fmt, ...) // custom printf() function
 {
+	/*
     va_list argp;
     va_start(argp, fmt);
     vprint(fmt, argp);
     va_end(argp);
+	*/
 }
 /* USER CODE END 4 */
 
