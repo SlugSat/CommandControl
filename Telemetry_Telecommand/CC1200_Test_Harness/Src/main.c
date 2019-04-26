@@ -112,7 +112,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+	HAL_Delay(50);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -190,24 +190,33 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test Expected Bytes: transmit 0x2F, idle 0x0F, receive 0x1F\r\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
+	readValue = ReadWriteCommandReg(CC1200_SFTX); // Idle
+	HAL_Delay(10);
+	readValue = ReadWriteCommandReg(CC1200_SFTX); // Idle
+	HAL_Delay(10);
+	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+	//HAL_Delay(1000);
+		
 	readValue = 0;
 	readValue = ReadWriteCommandReg(CC1200_SIDLE); // Idle
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 
+	
+	
 	memcpy(Msg1, Msg2, 100);
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: transmit status byte: 0x%x\r\n", readValue);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: switch to transmit: 0x%02x\r\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 	readValue = 0;
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 	readValue = ReadWriteCommandReg(CC1200_STX); // Transmit
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 
 	memcpy(Msg1, Msg2, 100);
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: idle status byte: 0x%x\r\n", readValue);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: switch to transmit: 0x%02x\r\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 //	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
@@ -239,7 +248,7 @@ int main(void)
 	uint8_t randRead = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); 
 		
 	memcpy(Msg1, Msg2, 100);
-	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from random register 0x%x: 0x%x\r\n", address, randRead);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x: 0x%x\r\n", address, randRead);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
 	
@@ -248,9 +257,9 @@ int main(void)
 	///////////////////////////////////////////////////////////////////////
 
 	address = CC1200_TXFIFO;
-	for(int i = 0; i < 10000; i++)
+	for(int i = 0; i < 1000; i++)
 	{
-		readValue = ReadWriteExtendedReg(0x00, address, i);
+		readValue = ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
 		HAL_Delay(1);
 //		memcpy(Msg1, Msg2, 100);
 //	  snprintf((char *)Msg1, sizeof(Msg1), " DATA:%x\n", i);
@@ -568,6 +577,8 @@ void CC1200_INIT(void)
 	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FREQOFF_CFG, SMARTRF_SETTING_FREQOFF_CFG);
 	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_MDMCFG2, SMARTRF_SETTING_MDMCFG2);
 	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FREQ2, SMARTRF_SETTING_FREQ2);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FREQ1, SMARTRF_SETTING_FREQ1);
+	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FREQ0, SMARTRF_SETTING_FREQ0);
 	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IF_ADC1, SMARTRF_SETTING_IF_ADC1);
 	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_IF_ADC0, SMARTRF_SETTING_IF_ADC0);
 	ReadWriteExtendedReg(CC1200_WRITE_BIT, CC1200_FS_DIG1, SMARTRF_SETTING_FS_DIG1);
