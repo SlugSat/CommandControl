@@ -36,7 +36,9 @@
 #define SMARTRF_SETTING_IF_MIX_CFG       0x1C
 #define SMARTRF_SETTING_FREQOFF_CFG      0x22
 #define SMARTRF_SETTING_MDMCFG2          0x0C
-#define SMARTRF_SETTING_FREQ2            0x57
+#define SMARTRF_SETTING_FREQ2            0x56
+#define SMARTRF_SETTING_FREQ1            0xCC
+#define SMARTRF_SETTING_FREQ0            0xCC
 #define SMARTRF_SETTING_IF_ADC1          0xEE
 #define SMARTRF_SETTING_IF_ADC0          0x10
 #define SMARTRF_SETTING_FS_DIG1          0x07
