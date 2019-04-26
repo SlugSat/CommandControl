@@ -112,7 +112,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	HAL_Delay(50);
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -160,6 +160,9 @@ int main(void)
 	char Msg1[100] = {0};
 	char Msg2[100] = {0};
 	
+	//readValue = ReadWriteCommandReg(CC1200_SRES); // Flush tx fifo
+	//HAL_Delay(500);
+	
 	snprintf((char *)Msg1, sizeof(Msg1), "\n\nSTARTING THE TRANSCEIVER TEST\n\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	memcpy(Msg1, Msg2, 100);
@@ -190,9 +193,9 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test Expected Bytes: transmit 0x2F, idle 0x0F, receive 0x1F\r\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-	readValue = ReadWriteCommandReg(CC1200_SFTX); // Idle
+	readValue = ReadWriteCommandReg(CC1200_SFTX); // Flush tx fifo
 	HAL_Delay(10);
-	readValue = ReadWriteCommandReg(CC1200_SFTX); // Idle
+	readValue = ReadWriteCommandReg(CC1200_SFTX); // Flush RXfifo
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 	//HAL_Delay(1000);
@@ -259,17 +262,14 @@ int main(void)
 	address = CC1200_TXFIFO;
 	for(int i = 0; i < 1000; i++)
 	{
-		readValue = ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
+		//readValue = ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
 		HAL_Delay(1);
 //		memcpy(Msg1, Msg2, 100);
 //	  snprintf((char *)Msg1, sizeof(Msg1), " DATA:%x\n", i);
 //	  HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	}
 	
-	
-	
-	
-	
+
 	memcpy(Msg1, Msg2, 100);
 	snprintf((char *)Msg1, sizeof(Msg1), "\n\nEND OF TRANSCEIVER TEST %x\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
@@ -428,61 +428,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 
-
-static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
-{
-    int i;
-    uint8_t dummy;
-    /* Communicate len number of bytes: if RX - the procedure sends 0x00 to push bytes from slave*/
-    if (addr & CC1200_READ_BIT) {
-        if (addr & CC1200_BURST_BIT) {
-            for (i = 0; i < len; i++) {
-								HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
-                while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-                HAL_SPI_Receive(&hspi1, pData, 1, 10);
-                pData++;
-				
-            }
-        } else {
-						HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
-            while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-            HAL_SPI_Receive(&hspi1, pData, 1, 10);
-        }
-    } else {
-        if (addr & CC1200_BURST_BIT) {
-            /* Communicate len number of bytes: if TX - the procedure doesn't overwrite pData */
-            for (i = 0; i < len; i++) {
-								HAL_SPI_Transmit(&hspi1,pData, 1, 10);
-                while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-								HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
-                pData++;
-            }
-        } else {
-						HAL_SPI_Transmit(&hspi1,pData, 1, 10);
-            while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-						HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
-        }
-    }
-}
-
-uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len)
-{
-	uint8_t addr;
-	uint8_t readValue  = 0;
-	addr = accessType | addrByte;
-	
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-	
-	HAL_SPI_Transmit(&hspi1,&addr, 1, 10);
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
-	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
-	trxReadWriteBurstSingle(accessType | addrByte, pData, len);
-		
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-
-	return (readValue);
-}
-
 uint8_t ReadWriteExtendedReg (uint8_t accessType, uint16_t address, uint8_t value)
 {
 	// Chip select low
@@ -524,7 +469,7 @@ uint8_t ReadWriteExtendedReg (uint8_t accessType, uint16_t address, uint8_t valu
 		HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);
 		while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
 
-		HAL_SPI_Transmit(&hspi1,&value, 1, 10);		// Write value
+		HAL_SPI_Transmit(&hspi1, &value, 1, 10);		// Write value
 	}
 	
 	// Chip select high	
@@ -598,6 +543,61 @@ void CC1200_INIT(void)
 }
 
 
+
+////////////////////////////// TI Reference Code, Not currently being used/////////////////////
+static void trxReadWriteBurstSingle(uint8_t addr, uint8_t *pData, int len)
+{
+    int i;
+    uint8_t dummy;
+    /* Communicate len number of bytes: if RX - the procedure sends 0x00 to push bytes from slave*/
+    if (addr & CC1200_READ_BIT) {
+        if (addr & CC1200_BURST_BIT) {
+            for (i = 0; i < len; i++) {
+								HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+                while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+                HAL_SPI_Receive(&hspi1, pData, 1, 10);
+                pData++;
+				
+            }
+        } else {
+						HAL_SPI_Transmit(&hspi1,0x0, 1, 10);
+            while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+            HAL_SPI_Receive(&hspi1, pData, 1, 10);
+        }
+    } else {
+        if (addr & CC1200_BURST_BIT) {
+            /* Communicate len number of bytes: if TX - the procedure doesn't overwrite pData */
+            for (i = 0; i < len; i++) {
+								HAL_SPI_Transmit(&hspi1,pData, 1, 10);
+                while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+								HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
+                pData++;
+            }
+        } else {
+						HAL_SPI_Transmit(&hspi1,pData, 1, 10);
+            while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+						HAL_SPI_Receive(&hspi1, &dummy, 1, 10);
+        }
+    }
+}
+
+uint8_t trx8BitRegAccess(uint8_t accessType, uint8_t addrByte, uint8_t *pData, int len)
+{
+	uint8_t addr;
+	uint8_t readValue  = 0;
+	addr = accessType | addrByte;
+	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+	HAL_SPI_Transmit(&hspi1,&addr, 1, 10);
+	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){};
+	HAL_SPI_Receive(&hspi1, &readValue, 1, 10);
+	trxReadWriteBurstSingle(accessType | addrByte, pData, len);
+		
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+
+	return (readValue);
+}
 
 /* USER CODE END 4 */
 
