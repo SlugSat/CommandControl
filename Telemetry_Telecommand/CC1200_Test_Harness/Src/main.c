@@ -222,14 +222,7 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: switch to transmit: 0x%02x\r\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-//	readValue = 0;
-//	readValue = ReadWriteCommandReg(CC1200_SRX); // Recieve
-//	HAL_Delay(10);
-//	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
-//	memcpy(Msg1, Msg2, 100);
-//	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
-//	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+
 
 	///////////////////////////////////////////////////////////////////////
 	// Configure all registers
@@ -269,9 +262,9 @@ int main(void)
 		HAL_Delay(1);
 		
 		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
-		memcpy(Msg1, Msg2, 100);
-		snprintf((char *)Msg1, sizeof(Msg1), "\nCommand strobe state: 0x%02x\n", readValue);
-		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+//		memcpy(Msg1, Msg2, 100);
+//		snprintf((char *)Msg1, sizeof(Msg1), "\nCommand strobe state: 0x%02x\n", readValue);
+//		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 		if (readValue == 0x0f)
 		{
 			HAL_Delay(1);
@@ -285,6 +278,29 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\nValue at register 0x%02x should be %u, is: %u\n", address, sendAmt - 1 , readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 
+	// Test receiving
+	HAL_Delay(100);
+	
+	readValue = ReadWriteCommandReg(CC1200_SFRX); // Flush RXfifo
+	HAL_Delay(10);
+	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+	readValue = 0;
+	readValue = ReadWriteCommandReg(CC1200_SRX); // Recieve
+	HAL_Delay(1000);
+	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: receive status byte: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	
+	address = CC1200_FIFO_NUM_RXBYTES;
+	readValue = ReadWriteExtendedReg(CC1200_READ_BIT, address, readValue);
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\nNumber of bytes in the RX fifo: 0x%x\r\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	
+	
+	
 	memcpy(Msg1, Msg2, 100);
 	snprintf((char *)Msg1, sizeof(Msg1), "\n\nEND OF TRANSCEIVER TEST %x\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
