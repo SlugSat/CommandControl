@@ -134,12 +134,12 @@ FRAM_Return FRAM_Read_Header(I2C_HandleTypeDef *i2c_handler, uint8_t memNum, uin
 	}
 	
 	//Break apart bytes into data
-	*currentWriteHead = DataBufferOut[1];													//Extract current write head
+	*currentWriteHead = DataBufferOut[1];													  //Extract current write head
 	for(int i=0; i<4; i++){
 		*currentWriteHeadAddress |= (DataBufferOut[i+2] << (3-i)*8);	//Rebuild write head address		
 	}
 	for(int i=0; i<TIME_BYTES; i++){
-		*startTime |= (DataBufferOut[i+7] << (TIME_BYTES-1-i)*8);		//Rebuild start time		
+		*startTime |= (DataBufferOut[i+7] << (TIME_BYTES-1-i)*8);		  //Rebuild start time		
 	}
 	for(int i=0; i<TIME_BYTES; i++){
 		*endTime |= (DataBufferOut[i+12] << (TIME_BYTES-1-i)*8);			//Rebuild end tie		
@@ -395,6 +395,8 @@ FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct Sc
 	for(int i=0; i<4; i++){
 		DataPack->Time |= (tOut[i+1] << (3-i)*8);
 	}
+	
+	//If we run off the end
 	
 	DataPack->Energy = tOut[0];
 
