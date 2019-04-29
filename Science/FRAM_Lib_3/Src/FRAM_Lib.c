@@ -405,6 +405,7 @@ FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct Sc
 	
 	if(DataPack->Time > stopTime){
 		FRAM_IO_Search_EndSearch();
+		return FRAM_SEARCH_ENDED;
 	}
 	
 	return FRAM_SUCCESS;

@@ -294,8 +294,8 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	uint8_t SEARCH_START[14] = "Search Start: ";
 	HAL_UART_Transmit(uart_handler,SEARCH_START,14,10);			
 
-	uint32_t TestStart = 35;
-	uint32_t TestEnd = 600;
+	uint32_t TestStart = 450;
+	uint32_t TestEnd = 15000;
 	
 	FRAM_Return SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler);
 	if(SearchReturn == FRAM_ERROR){
@@ -342,8 +342,9 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 		}
 		if(SearchOut ==FRAM_SEARCH_ENDED){
 			HAL_UART_Transmit(uart_handler,END_SEARCH,12,10);
+			break;
 		}
-		sprintf(StrOut,"%4d: Energy: %2d, Time: %5d\n",i , TestData.Energy, TestData.Time);
+		sprintf(StrOut,"%4d: Time: %5d, Energy: %2d\n",i , TestData.Time, TestData.Energy);
 		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 		i++;
 		
@@ -352,6 +353,104 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 		}
 	}
 
+	
+	
+		for(int i=0; i<1000; i=i+2){
+		GenerateTestData(&energy, &time, uart_handler);
+		if(FRAM_Data_Builder(&TestData, time, energy) != FRAM_SUCCESS){
+			HAL_UART_Transmit(uart_handler,ERROR,6,10);
+			
+		}else{
+//			sprintf(StrOut,"Data Pack: %d, %d\n",ScienceTestData[i], (uint8_t)ScienceTestData[i+1]);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+			if(FRAM_IO_Write(i2c_handler, &TestData, uart_handler) != FRAM_SUCCESS){
+				HAL_UART_Transmit(uart_handler,ERROR,6,10);
+			}
+		}
+	}	
+		
+	TestStart = 20000;
+	TestEnd = 25000;
+	
+	SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler);
+	if(SearchReturn == FRAM_ERROR){
+		HAL_UART_Transmit(uart_handler,ERROR,5,10);
+	}
+	else if(SearchReturn == FRAM_TIME_NOT_FOUND){
+		uint8_t NO_TIME[20] = "Time not found\n";
+		HAL_UART_Transmit(uart_handler,NO_TIME,15,10);		
+	}else{
+		HAL_UART_Transmit(uart_handler,SUCCESS,8,10);
+	}
+	
+	i = 0;
+	while(1){
+		SearchOut = FRAM_IO_Search_GetNextItem(i2c_handler, &TestData, uart_handler);
+		if(SearchOut == FRAM_ERROR){
+			HAL_UART_Transmit(uart_handler,ERROR,5,10);
+		}
+		if(SearchOut ==FRAM_SEARCH_ENDED){
+			HAL_UART_Transmit(uart_handler,END_SEARCH,12,10);
+			break;
+		}
+		sprintf(StrOut,"%4d: Time: %5d, Energy: %2d\n",i , TestData.Time, TestData.Energy);
+		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+		i++;
+		
+		if(i>1000){
+			break;
+		}
+	}
+	
+	
+	for(int i=0; i<1000; i=i+2){
+		GenerateTestData(&energy, &time, uart_handler);
+		if(FRAM_Data_Builder(&TestData, time, energy) != FRAM_SUCCESS){
+			HAL_UART_Transmit(uart_handler,ERROR,6,10);
+			
+		}else{
+//			sprintf(StrOut,"Data Pack: %d, %d\n",ScienceTestData[i], (uint8_t)ScienceTestData[i+1]);
+//			HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+			if(FRAM_IO_Write(i2c_handler, &TestData, uart_handler) != FRAM_SUCCESS){
+				HAL_UART_Transmit(uart_handler,ERROR,6,10);
+			}
+		}
+	}	
+		
+	TestStart = 50000;
+	TestEnd = 100000;
+	
+	SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler);
+	if(SearchReturn == FRAM_ERROR){
+		HAL_UART_Transmit(uart_handler,ERROR,5,10);
+	}
+	else if(SearchReturn == FRAM_TIME_NOT_FOUND){
+		uint8_t NO_TIME[20] = "Time not found\n";
+		HAL_UART_Transmit(uart_handler,NO_TIME,15,10);		
+	}else{
+		HAL_UART_Transmit(uart_handler,SUCCESS,8,10);
+	}
+	
+	i = 0;
+	while(1){
+		SearchOut = FRAM_IO_Search_GetNextItem(i2c_handler, &TestData, uart_handler);
+		if(SearchOut == FRAM_ERROR){
+			HAL_UART_Transmit(uart_handler,ERROR,5,10);
+		}
+		if(SearchOut ==FRAM_SEARCH_ENDED){
+			HAL_UART_Transmit(uart_handler,END_SEARCH,12,10);
+			break;
+		}
+		sprintf(StrOut,"%4d: Time: %5d, Energy: %2d\n",i , TestData.Time, TestData.Energy);
+		HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+		i++;
+		
+		if(i>1000){
+			break;
+		}
+	}
+	
+	
 	//Tests Complete
 	uint8_t Done[6] = "Done: ";
 	HAL_UART_Transmit(uart_handler,NEWLINE,1,10);
