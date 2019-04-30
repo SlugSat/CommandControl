@@ -205,7 +205,7 @@ int main(void)
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 
-	
+	#if 0
 	
 	memcpy(Msg1, Msg2, 100);
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: switch to idle: 0x%02x\r\n", readValue);
@@ -222,7 +222,7 @@ int main(void)
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: switch to transmit: 0x%02x\r\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
-
+	#endif
 
 	///////////////////////////////////////////////////////////////////////
 	// Configure all registers
@@ -255,23 +255,65 @@ int main(void)
 	readValue = 0;
 	//address = 0x00;
 	address = CC1200_TXFIFO;
-	uint32_t sendAmt = 100;
+	uint32_t sendAmt = 250
+	 ;
+	uint16_t count = 0;
+	uint16_t countErr = 0;
+	//char Msg1[100] = {0};
+	uint8_t txValuebefire = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
+		
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\r\n befire TX bytes:0x%02x\r\n", txValuebefire);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	for(int i = 0; i < sendAmt; i++)
 	{
-		ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
-		HAL_Delay(1);
-		
+		// Read num_tx_bytes
+		uint8_t txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
+		if (txValue < 128) 
+		{	
+			ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
+			HAL_Delay(1);
+		}
+		else
+		{
+			HAL_Delay(1);
+			continue;
+		}
+
 		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 //		memcpy(Msg1, Msg2, 100);
 //		snprintf((char *)Msg1, sizeof(Msg1), "\nCommand strobe state: 0x%02x\n", readValue);
 //		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-		if (readValue == 0x0f)
+				
+		//snprintf((char *)Msg1, sizeof(Msg1), "\r\nOkay num TX bytes:0x%x\r\n", txValue);
+		//HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		
+		
+		if (readValue == 0x7f)
+		{
+			countErr++;
+			ReadWriteCommandReg(CC1200_SFTX); // Flush if FIFO error
+		}
+		else if ((readValue & 0xf0) != 0x20)
 		{
 			HAL_Delay(1);
 			ReadWriteCommandReg(CC1200_STX);
+			memcpy(Msg1, Msg2, 100);
+				
+			snprintf((char *)Msg1, sizeof(Msg1), "\r\nStatus byte: 0x%02x\tNum TX bytes:0x%02x\r\n", readValue, txValue);
+			HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+			
+			count++;
+			
 			HAL_Delay(1);
-		}
+		} 
 	}
+	
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\nRestrobing TX: %u\tFIFO Errors: %u\n", count, countErr);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+
+	HAL_Delay(10);
 	
 	readValue = ReadWriteExtendedReg(CC1200_READ_BIT, address, readValue);
 	memcpy(Msg1, Msg2, 100);
@@ -302,7 +344,7 @@ int main(void)
 	
 	
 	memcpy(Msg1, Msg2, 100);
-	snprintf((char *)Msg1, sizeof(Msg1), "\n\nEND OF TRANSCEIVER TEST %x\n", readValue);
+	snprintf((char *)Msg1, sizeof(Msg1), "\n\nEND OF TRANSCEIVER TEST %02x\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
   /* USER CODE END 2 */
 
