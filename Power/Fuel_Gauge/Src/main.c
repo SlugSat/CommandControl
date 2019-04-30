@@ -48,25 +48,28 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef enum Fg_reg
-{
-	Status      = 0x00, // Maintains all flags related to alert thresholds and battery insertion or removal.
-	VCell       = 0x09, // VCell reports the voltage measured between BATT and CSP.
-	AvgVCell    = 0x19, // The AvgVCell register reports an average of the VCell register readings. 
-	Current     = 0x0A, // Voltage between the CSP and CSN pins, and would need to convert to current
-	AvgCurrent  = 0x0B, // The AvgCurrent register reports an average of Current register readings
-	RepSOC      = 0x06, // The Reported State of Charge of connected battery. Refer to AN6358 page 23 and 13
-	RepCap      = 0x05, // Reported Capacity. Refer to page 23 and 13 of AN6358.
-	TimeToEmpty = 0x11, // How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358 
-	DesignCap   = 0x18, // Capacity of battery inserted, not typically used for user requested capacity
-} FG_reg_t;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-//#define FG_SLAVE_ADDR (0x6C << 1)
-#define FG_SLAVE_ADDR (0x36 << 1)
 
+// configuration registers
+#define FG_SLAVE_ADDR 	(0x36 << 1) 
+#define DESIGN_CAP_REG 	0x18 // sets design capacity of the battery
+#define V_EMPTY_REG 		0x3A // sets empty voltage and recovery voltage thresholds
+#define	MODEL_CFG_REG		0xDB // sets options for the EZ algorithm dependant on battery model
+#define I_CHG_REG 			0x1E // sets charge termination based on current threshold
+#define CONF_REG				0x1D // enables/disables various features of the chip
+#define CONF2_REG				0xBB // enables/disables various features of the chip
+
+// output registers
+#define REP_CAP_REG			0x05
+#define REP_SOC_REG			0x06
+#define FULL_CAP_REG		0x10
+#define TTE_REG					0x11
+#define TTF_REG					0x20
+#define STAT_REG				0x00
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -77,7 +80,25 @@ typedef enum Fg_reg
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
+typedef struct fg_config_t {
+	uint16_t design_cap;
+	uint16_t v_empty;
+	uint16_t model_cfg;
+	uint16_t current_chg;
+	uint16_t config1;
+	uint16_t config2;
+} fg_config_t;
+
+static fg_config_t config = {	6700, 		// design capacity of 3350mAh
+															0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
+															0x8020, 	// model cfg set for lithium NCR/NCA cell
+															0x0780, 	// charge termination current = 0.3A
+															0x8214,	 	// config1
+															0x3658};	// config2
+
 
 /* USER CODE END PV */
 
@@ -85,8 +106,11 @@ I2C_HandleTypeDef hi2c1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len);
+void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
+void init(I2C_HandleTypeDef *hi2c, fg_config_t conf);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -123,11 +147,36 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 	
-	uint8_t recv[2];
-	uint8_t send = 0xD3;
+	// Initialize UART buffers
+	char message[100] = {0};
+	
+	// Initialize variables to track messages and errors
+	uint16_t recv[1] = {0};
+	uint8_t err_cnt = 0;
 
+	// Initialize the fuel gauge registers
+	init(&hi2c1, config);
+	
+	recv[0] = 0;
+	readReg(&hi2c1, DESIGN_CAP_REG, recv, 1);
+	if (*recv == 0x8020) {
+		err_cnt++;
+	}
+		
+	recv[0] = 0;
+	readReg(&hi2c1, V_EMPTY_REG, recv, 1);
+	if (*recv == 0x8020) {
+		err_cnt++;
+	}
+
+	// Create the message for the number of errors
+	snprintf(message, 100, "\nNumber of errors: %u\n", err_cnt);
+	//HAL_UART_Transmit(&huart1, (uint8_t *)message, 100, 10);
+	
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,12 +184,6 @@ int main(void)
   while (1)
   {
 		
-		HAL_I2C_Master_Transmit(&hi2c1, FG_SLAVE_ADDR, &send, 1, 10); 
-		HAL_I2C_Master_Receive(&hi2c1, FG_SLAVE_ADDR, recv, 2, 10); 
-		if (recv[0] == 0x02 && recv[1] == 0x10) {
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-		}
-		HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -219,6 +262,39 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -244,7 +320,37 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len)
+{
+	
+	uint8_t recv_buff[2] = {0};
+	
+	HAL_I2C_Master_Transmit(hi2c, FG_SLAVE_ADDR, &reg, 1, 10);
+	HAL_I2C_Master_Receive(hi2c, FG_SLAVE_ADDR, recv_buff, 2, 10);
+	
+	for (uint8_t i = 0; i < len; i++)
+	{
+		recv[i] |= recv_buff[1];
+		recv[i] <<= 8;
+		recv[i] |= recv_buff[0];
+	}
+}
 
+void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send)
+{
+	uint8_t send_buff[3] = {reg, (uint8_t)(*send & 0x00FF), (uint8_t)((*send >> 8) & 0x00FF)};
+	HAL_I2C_Master_Transmit(hi2c, FG_SLAVE_ADDR, send_buff, 3, 10);
+}
+
+void init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
+{
+	writeReg(hi2c, DESIGN_CAP_REG, &conf.design_cap);
+	writeReg(hi2c, V_EMPTY_REG, &conf.v_empty);
+	writeReg(hi2c, MODEL_CFG_REG, &conf.model_cfg);
+	writeReg(hi2c, I_CHG_REG, &conf.current_chg);
+	writeReg(hi2c, CONF_REG, &conf.config1);
+	writeReg(hi2c, CONF2_REG, &conf.config2);
+}
 /* USER CODE END 4 */
 
 /**
