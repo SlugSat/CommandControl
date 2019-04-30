@@ -50,15 +50,7 @@
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
-typedef struct fg_config
-{
-	uint16_t design_cap;
-	uint16_t v_empty;
-	uint16_t model_cfg;
-	uint16_t current_chg;
-	uint16_t config1;
-	uint16_t config2;
-} fg_config_t;
+
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
@@ -88,20 +80,33 @@ typedef struct fg_config
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
+typedef struct fg_config_t {
+	uint16_t design_cap;
+	uint16_t v_empty;
+	uint16_t model_cfg;
+	uint16_t current_chg;
+	uint16_t config1;
+	uint16_t config2;
+} fg_config_t;
+
 static fg_config_t config = {	6700, 		// design capacity of 3350mAh
 															0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
 															0x8020, 	// model cfg set for lithium NCR/NCA cell
 															0x0780, 	// charge termination current = 0.3A
 															0x8214,	 	// config1
 															0x3658};	// config2
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
-
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len);
 void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
@@ -142,31 +147,42 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 	
+	// Initialize UART buffers
+	char message[100] = {0};
+	
+	// Initialize variables to track messages and errors
 	uint16_t recv[1] = {0};
 	uint8_t err_cnt = 0;
 
+	// Initialize the fuel gauge registers
+	init(&hi2c1, config);
+	
+	recv[0] = 0;
+	readReg(&hi2c1, DESIGN_CAP_REG, recv, 1);
+	if (*recv == 0x8020) {
+		err_cnt++;
+	}
+		
+	recv[0] = 0;
+	readReg(&hi2c1, V_EMPTY_REG, recv, 1);
+	if (*recv == 0x8020) {
+		err_cnt++;
+	}
+
+	// Create the message for the number of errors
+	snprintf(message, 100, "\nNumber of errors: %u\n", err_cnt);
+	//HAL_UART_Transmit(&huart1, (uint8_t *)message, 100, 10);
+	
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
-		init(&hi2c1, config);
-		
-		*recv = 0;
-		readReg(&hi2c1, DESIGN_CAP_REG, recv, 1);
-		if (*recv == 0x8020) {
-			err_cnt++;
-		}
-		
-		*recv = 0;
-		readReg(&hi2c1, V_EMPTY_REG, recv, 1);
-		if (*recv == 0x8020) {
-			err_cnt++;
-		}
 		
     /* USER CODE END WHILE */
 
@@ -242,6 +258,39 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
