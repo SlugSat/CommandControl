@@ -4,35 +4,20 @@
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *  CC1200 SPI Test Harness
+	* 
+	* Wiring:
+	* Reset -- D7 (PA8)
+	* CSN   -- D8 (PA9)
+	* SCLK  -- D3 (PB3)
+	* MOSI  -- D4 (PB5)
+	* MISO  -- D5 (PB4)
+	*	
+	* Use this test harness to check the operation of the CC1200 module
+	*
+	* The following tests and settings can be configured:
+	*
   *
   ******************************************************************************
   */
@@ -57,6 +42,15 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+// Pins
+#define CSN GPIO_PIN_9
+#define RESET GPIO_PIN_8
+
+// Tests
+#define READ_WRITE_TEST
+//#define COMMAND_STROBE_TEST
+
 
 /* USER CODE END PD */
 
@@ -128,42 +122,33 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 	
-	
-	/* Start CC1200 SPI Test Harness
-	 * 
-	 * Wiring:
-	 * Reset -- D7 (PA8)
-	 * CSN   -- D8 (PA9)
-	 * SCLK  -- D3 (PB3)
-	 * MOSI  -- D4 (PB5)
-	 * MISO  -- D5 (PB4)
-	 */
-	 
+	///////////////////////////////////////////////////////////////////////
+	// CSN and RESET setup
+	///////////////////////////////////////////////////////////////////////
 	 
 	//Set CS high
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, CSN, GPIO_PIN_SET);
 
 	//Set reset high, low, high to begin
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, RESET, GPIO_PIN_SET);
 	HAL_Delay(10);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, RESET, GPIO_PIN_RESET);
 	HAL_Delay(10);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, RESET, GPIO_PIN_SET);
 	HAL_Delay(10);
 	
 	///////////////////////////////////////////////////////////////////////
 	// Start the test
 	///////////////////////////////////////////////////////////////////////
+	
 	uint16_t address = 0x2F02;
 	uint8_t value = 0xa;
 	uint8_t readValue;
-	char Msg1[100] = {0};
-	char Msg2[100] = {0};
+	char Msg1[70] = {0};
+	char Msg2[70] = {0};
 	
-	//readValue = ReadWriteCommandReg(CC1200_SRES); // Flush tx fifo
-	//HAL_Delay(500);
 	
-	snprintf((char *)Msg1, sizeof(Msg1), "\n\nSTARTING THE TRANSCEIVER TEST\n\n");
+	snprintf((char *)Msg1, sizeof(Msg1), "\n\nSTARTING THE CC1200 TRANSCEIVER TEST\n\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	memcpy(Msg1, Msg2, 100);
 	
@@ -171,6 +156,15 @@ int main(void)
 	///////////////////////////////////////////////////////////////////////
   // Test reading and writing to a configuration register
 	///////////////////////////////////////////////////////////////////////
+	
+	#ifdef READ_WRITE_TEST
+	
+	/*
+	Read the value at address 0x2F02 (configuration register CC1200_TOC_CFG) then set 
+	the value of this register to value 0xa.  Before the write this register should
+	be reset to 0xb.
+	*/
+	
 	// Read initial reg value
   readValue = ReadWriteExtendedReg (CC1200_READ_BIT, address, value); 
 		
@@ -185,11 +179,15 @@ int main(void)
 		
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nTest: read from register 0x%x after writing to the register: 0x%x\r\n", address, readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	#endif
 	
 	///////////////////////////////////////////////////////////////////////
 	// Test command strobes
 	///////////////////////////////////////////////////////////////////////
-  memcpy(Msg1, Msg2, 100);
+  
+	#ifdef COMMAND_STROBE_TEST
+	
+	memcpy(Msg1, Msg2, 100);
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test Expected Bytes: transmit 0x2F, idle 0x0F, receive 0x1F\r\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
@@ -204,8 +202,6 @@ int main(void)
 	readValue = ReadWriteCommandReg(CC1200_SIDLE); // Idle
 	HAL_Delay(10);
 	readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
-
-	#if 0
 	
 	memcpy(Msg1, Msg2, 100);
 	snprintf((char *)Msg1, sizeof(Msg1), "\r\nMode Test: switch to idle: 0x%02x\r\n", readValue);
@@ -269,32 +265,27 @@ int main(void)
 	{
 		// Read num_tx_bytes
 		uint8_t txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
-		if (txValue < 128) 
-		{	
-			ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
-			HAL_Delay(1);
-		}
-		else
-		{
-			HAL_Delay(1);
-			continue;
-		}
+//		if (txValue < 128) 
+//		{	
+//			ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
+//			HAL_Delay(1);
+//		}
+//		else
+//		{
+//			HAL_Delay(1);
+//			continue;
+//		}
 
 		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
-//		memcpy(Msg1, Msg2, 100);
-//		snprintf((char *)Msg1, sizeof(Msg1), "\nCommand strobe state: 0x%02x\n", readValue);
-//		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-				
-		//snprintf((char *)Msg1, sizeof(Msg1), "\r\nOkay num TX bytes:0x%x\r\n", txValue);
-		//HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 		
 		
-		if (readValue == 0x7f)
-		{
-			countErr++;
-			ReadWriteCommandReg(CC1200_SFTX); // Flush if FIFO error
-		}
-		else if ((readValue & 0xf0) != 0x20)
+//		if (readValue == 0x7f)
+//		{
+//			countErr++;
+//			ReadWriteCommandReg(CC1200_SFTX); // Flush if FIFO error
+//		}
+//		else 
+			if ((readValue & 0xf0) != 0x20)
 		{
 			HAL_Delay(1);
 			ReadWriteCommandReg(CC1200_STX);
