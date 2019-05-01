@@ -43,7 +43,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,7 +80,7 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
-UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 typedef struct fg_config_t {
@@ -100,13 +100,21 @@ static fg_config_t config = {	6700, 		// design capacity of 3350mAh
 															0x3658};	// config2
 
 
+// Multipliers are constants used to multiply register value in order to get final result
+#define resistSensor 0.01 // Ohms										
+float capacity_multiplier_mAH = (0.005)/resistSensor; //refer to row "Capacity"
+float current_multiplier_mV = (.0015625)/resistSensor; //refer to row "Current"
+float voltage_multiplier_V = .000078125; //refer to row "Voltage"
+float time_multiplier_Hours = 5.625/3600.0; //Least Significant Bit= 5.625 seconds, 3600 converts it to Hours. refer to AN6358 pg 13 figure 1.3 in row "Time"
+float percentage_multiplier = 1.0/256.0; //refer to row "Percentage"
+															
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_USART1_UART_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len);
 void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
@@ -147,12 +155,21 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
-  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 	
 	// Initialize UART buffers
-	char message[100] = {0};
+	char uartTest[100] = {0};
+	char clear[100] = {0};
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////// Create the message beginning the test ///////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	snprintf(uartTest, sizeof(uartTest), "\n-----Test Begin-----\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 1);
 	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////// Test the initialization and the value of the configuration registers //////////////////////////// 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialize variables to track messages and errors
 	uint16_t recv[1] = {0};
 	uint8_t err_cnt = 0;
@@ -160,22 +177,108 @@ int main(void)
 	// Initialize the fuel gauge registers
 	init(&hi2c1, config);
 	
+	// Test each configuration register after initialization
 	recv[0] = 0;
 	readReg(&hi2c1, DESIGN_CAP_REG, recv, 1);
-	if (*recv == 0x8020) {
+	if (recv[0] != 6700) {
 		err_cnt++;
 	}
 		
 	recv[0] = 0;
 	readReg(&hi2c1, V_EMPTY_REG, recv, 1);
-	if (*recv == 0x8020) {
+	if (recv[0] != 0x7D61) {
+		err_cnt++;
+	}
+	
+	recv[0] = 0;
+	readReg(&hi2c1, MODEL_CFG_REG, recv, 1);
+	if (recv[0] != 0x8020) {
+		err_cnt++;
+	}
+	
+	recv[0] = 0;
+	readReg(&hi2c1, I_CHG_REG, recv, 1);
+	if (recv[0] != 0x0780) {
+		err_cnt++;
+	}
+	
+	recv[0] = 0;
+	readReg(&hi2c1, CONF_REG, recv, 1);
+	if (recv[0] != 0x8214) {
+		err_cnt++;
+	}
+	
+	recv[0] = 0;
+	readReg(&hi2c1, CONF2_REG, recv, 1);
+	if (recv[0] != 0x3658) {
 		err_cnt++;
 	}
 
-	// Create the message for the number of errors
-	snprintf(message, 100, "\nNumber of errors: %u\n", err_cnt);
-	//HAL_UART_Transmit(&huart1, (uint8_t *)message, 100, 10);
+	// Create the message for the number of config registers that are not what they should be
+	snprintf(uartTest, 100, "\nConfig registers not equal to what they should after initialization: %u\n", err_cnt);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , 100, 10);
+	if (err_cnt == 6)
+	{
+		memcpy(uartTest, clear, 100);
+		snprintf(uartTest, sizeof(uartTest), "\n-----Error: Test End-----\n\n");
+		HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+		return 0;
+	}
 	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////// Test the registers with outputs of the fuel gauge //////////////////////////// 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Test the reported remaining capacity register
+	recv[0] = 0;
+	readReg(&hi2c1, REP_CAP_REG, recv, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nREP_CAP_REG (capacity in mAh): 0x%02x\n", recv[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the reported state-of-charge percentage output
+	recv[0] = 0;
+	readReg(&hi2c1, REP_SOC_REG, recv, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nREP_SOC_REG (state of charge in percent): %d%%\n", recv[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the  full capacity register
+	recv[0] = 0;
+	readReg(&hi2c1, FULL_CAP_REG, recv, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nFULL_CAP_REG (full capacity in mAh): 0x%02x\n", recv[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the estimated time to empty register
+	recv[0] = 0;
+	readReg(&hi2c1, TTE_REG, recv, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nTTE_REG (estimated time to empty): 0x%02x\n", recv[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the status register
+	recv[0] = 0;
+	readReg(&hi2c1, TTF_REG, recv, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nTTF_REG (estimated time to full): 0x%02x\n", recv[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the reported remaining capacity register
+	recv[0] = 0;
+	readReg(&hi2c1, STAT_REG, recv, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nSTAT_REG (status of fuel gauge): 0x%02x\n", recv[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	
+	
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////// Create the message ending the test ////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\n-----Test End-----\n\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
   /* USER CODE END 2 */
 
@@ -262,35 +365,35 @@ static void MX_I2C1_Init(void)
 }
 
 /**
-  * @brief USART1 Initialization Function
+  * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+static void MX_USART2_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART1_Init 0 */
+  /* USER CODE BEGIN USART2_Init 0 */
 
-  /* USER CODE END USART1_Init 0 */
+  /* USER CODE END USART2_Init 0 */
 
-  /* USER CODE BEGIN USART1_Init 1 */
+  /* USER CODE BEGIN USART2_Init 1 */
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
+  /* USER CODE BEGIN USART2_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
+  /* USER CODE END USART2_Init 2 */
 
 }
 
