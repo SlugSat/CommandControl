@@ -31,8 +31,8 @@
 #define SMARTRF_SETTING_FIFO_CFG         0x00
 #define SMARTRF_SETTING_FS_CFG           0x14
 #define SMARTRF_SETTING_PKT_CFG2         0x00
-#define SMARTRF_SETTING_PKT_CFG0         0x20
-#define SMARTRF_SETTING_PKT_LEN          0xFF
+//#define SMARTRF_SETTING_PKT_CFG0         0x20
+//#define SMARTRF_SETTING_PKT_LEN          0xFF
 #define SMARTRF_SETTING_IF_MIX_CFG       0x1C
 #define SMARTRF_SETTING_FREQOFF_CFG      0x22
 #define SMARTRF_SETTING_MDMCFG2          0x0C
@@ -55,5 +55,7 @@
 #define SMARTRF_SETTING_FS_VCO0          0xB5
 #define SMARTRF_SETTING_XOSC5            0x0E
 #define SMARTRF_SETTING_XOSC1            0x03
-
+//custuom configration values to have a fixed length 
+#define SMARTRF_SETTING_PKT_CFG0         0x00
+#define SMARTRF_SETTING_PKT_LEN          0x06
 #endif
