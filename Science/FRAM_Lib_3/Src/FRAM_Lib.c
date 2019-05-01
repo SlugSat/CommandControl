@@ -396,8 +396,7 @@ FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct Sc
 		DataPack->Time |= (tOut[i+1] << (3-i)*8);
 	}
 	
-	//If we run off the end
-	
+	//Store Energy
 	DataPack->Energy = tOut[0];
 
 //	sprintf(StrOut,"searchFram %d, searchAddress %d, E: %d, T: %d \n",searchFram,searchAddress,DataPack->Energy,DataPack->Time);
@@ -405,7 +404,7 @@ FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct Sc
 	
 	searchAddress = searchAddress + STORAGE_SIZE_BYTES;
 	
-	if(DataPack->Time > stopTime){
+	if(DataPack->Time > stopTime || DataPack->Time > stopTime){
 		FRAM_IO_Search_EndSearch();
 		return FRAM_SEARCH_ENDED;
 	}
