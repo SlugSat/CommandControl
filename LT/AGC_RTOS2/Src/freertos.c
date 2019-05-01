@@ -61,6 +61,7 @@
 #include "usart.h"
 
 #include "FRAM_Lib.h"
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -178,6 +179,11 @@ void StartScienceTask(void const * argument)
 {
   /* USER CODE BEGIN StartScienceTask */
 	
+	uint32_t lastTime = 1;
+	uint32_t time;
+	uint8_t energy;
+	struct ScienceDataPackage EntryData;
+	
 	FRAM_IO_Init(&hi2c1);
 	FRAM_Write_Headers(&hi2c1);
 	
@@ -186,7 +192,20 @@ void StartScienceTask(void const * argument)
   {
 		//Generate Data
 		
+		time = (uint32_t)(lastTime + (rand() % (300 + 1 - 1) + 1));
+		lastTime = time;
+		energy = (uint8_t)(rand() % (17 + 1 - 1) + 1);
+		
 		//Enter it
+		
+		if(FRAM_Data_Builder(&EntryData, time, energy) != FRAM_SUCCESS){
+			HAL_UART_Transmit(&huart2,ERROR,6,10);
+			
+		}else{
+			if(FRAM_IO_Write(&hi2c1, &EntryData, &huart2) != FRAM_SUCCESS){
+				HAL_UART_Transmit(&huart2,ERROR,6,10);
+			}
+		}
 		
     osDelay(1);
   }
