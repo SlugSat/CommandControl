@@ -57,6 +57,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
 #include "agc.h"
+#include "i2c.h"
+#include "usart.h"
+
+#include "FRAM_Lib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,6 +83,9 @@
 osThreadId AGCTaskHandle;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
+osThreadId ScienceTaskHandle;
+osThreadId TelemSciTaskHandle;
+osMutexId UART_MutexHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -86,6 +93,8 @@ void StartAGCTask(void const * argument);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
+void StartScienceTask(void const * argument);
+void StartDataRetrival(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -98,6 +107,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
        
   /* USER CODE END Init */
+
+  /* Create the mutex(es) */
+  /* definition and creation of UART_Mutex */
+  osMutexDef(UART_Mutex);
+  UART_MutexHandle = osMutexCreate(osMutex(UART_Mutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -115,6 +129,14 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* definition and creation of ScienceTask */
+  osThreadDef(ScienceTask, StartScienceTask, osPriorityIdle, 0, 128);
+  ScienceTaskHandle = osThreadCreate(osThread(ScienceTask), NULL);
+
+  /* definition and creation of TelemSciTask */
+  osThreadDef(TelemSciTask, StartDataRetrival, osPriorityIdle, 0, 128);
+  TelemSciTaskHandle = osThreadCreate(osThread(TelemSciTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadDef(AGCTask, StartAGCTask, osPriorityNormal, 0, 128);
@@ -143,6 +165,94 @@ void StartDefaultTask(void const * argument)
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_StartScienceTask */
+/**
+* @brief Function implementing the ScienceTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartScienceTask */
+void StartScienceTask(void const * argument)
+{
+  /* USER CODE BEGIN StartScienceTask */
+	
+	FRAM_IO_Init(&hi2c1);
+	FRAM_Write_Headers(&hi2c1);
+	
+  /* Infinite loop */
+  for(;;)
+  {
+		//Generate Data
+		
+		//Enter it
+		
+    osDelay(1);
+  }
+  /* USER CODE END StartScienceTask */
+}
+
+/* USER CODE BEGIN Header_StartDataRetrival */
+/**
+* @brief Function implementing the TelemSciTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartDataRetrival */
+void StartDataRetrival(void const * argument)
+{
+  /* USER CODE BEGIN StartDataRetrival */
+	uint8_t SUCCESS[9] = "Success\n";
+	uint8_t ERROR[6] = "Fail\n";
+	uint8_t NO_TIME[20] = "Time not found\n";
+	uint8_t END_SEARCH[14] = "Search Over\n";
+	uint8_t StrOut[50];
+	struct ScienceDataPackage TestData;
+	
+	FRAM_Return SearchOut;
+	FRAM_Return SearchReturn;
+	
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1000000);
+		//Search and transmit some data
+		
+	uint32_t TestStart = 1000;
+	uint32_t TestEnd = 10000;
+	
+	SearchReturn = FRAM_IO_Search_Start(&hi2c1, TestStart, TestEnd, &huart2);
+	if(SearchReturn == FRAM_ERROR){
+		HAL_UART_Transmit(&huart2,ERROR,5,10);
+	}
+	else if(SearchReturn == FRAM_TIME_NOT_FOUND){
+		HAL_UART_Transmit(&huart2,NO_TIME,15,10);		
+	}else{
+		HAL_UART_Transmit(&huart2,SUCCESS,8,10);
+	}
+	
+	uint16_t i = 0;
+	while(1){
+		SearchOut = FRAM_IO_Search_GetNextItem(&hi2c1, &TestData, &huart2);
+		if(SearchOut == FRAM_ERROR){
+			HAL_UART_Transmit(&huart2,ERROR,5,10);
+		}
+		if(SearchOut ==FRAM_SEARCH_ENDED){
+			HAL_UART_Transmit(&huart2,END_SEARCH,12,10);
+			break;
+		}
+		sprintf(StrOut,"%4d: Time: %5d, Energy: %2d\n",i , TestData.Time, TestData.Energy);
+		HAL_UART_Transmit(&huart2,StrOut,strlen(StrOut),10);
+		i++;
+		
+		if(i>1000){
+			break;
+		}
+	}
+		
+  }
+  /* USER CODE END StartDataRetrival */
 }
 
 /* Private application code --------------------------------------------------*/
