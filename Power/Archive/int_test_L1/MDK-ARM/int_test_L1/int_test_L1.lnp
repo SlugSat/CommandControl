@@ -1,0 +1,25 @@
+--cpu Cortex-M3
+"int_test_l1\startup_stm32l152xe.o"
+"int_test_l1\main.o"
+"int_test_l1\stm32l1xx_it.o"
+"int_test_l1\stm32l1xx_hal_msp.o"
+"int_test_l1\stm32l1xx_hal_tim.o"
+"int_test_l1\stm32l1xx_hal_tim_ex.o"
+"int_test_l1\stm32l1xx_hal.o"
+"int_test_l1\stm32l1xx_hal_rcc.o"
+"int_test_l1\stm32l1xx_hal_rcc_ex.o"
+"int_test_l1\stm32l1xx_hal_flash.o"
+"int_test_l1\stm32l1xx_hal_flash_ex.o"
+"int_test_l1\stm32l1xx_hal_flash_ramfunc.o"
+"int_test_l1\stm32l1xx_hal_gpio.o"
+"int_test_l1\stm32l1xx_hal_dma.o"
+"int_test_l1\stm32l1xx_hal_pwr.o"
+"int_test_l1\stm32l1xx_hal_pwr_ex.o"
+"int_test_l1\stm32l1xx_hal_cortex.o"
+"int_test_l1\system_stm32l1xx.o"
+"int_test_l1\powermodes.o"
+"int_test_l1\transitions.o"
+--library_type=microlib --strict --scatter "int_test_L1\int_test_L1.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "int_test_L1.map" -o int_test_L1\int_test_L1.axf
