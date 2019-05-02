@@ -53,15 +53,23 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+// I2C slave address
+#define FG_SLAVE_ADDR 	(0x36 << 1)
+
+// Bit masks
+#define POR								0x0002
+#define FSTAT_DNR					0x0001
+#define MODEL_CFG_REFRESH	0x8000
 
 // configuration registers
-#define FG_SLAVE_ADDR 	(0x36 << 1) 
 #define DESIGN_CAP_REG 	0x18 // sets design capacity of the battery
 #define V_EMPTY_REG 		0x3A // sets empty voltage and recovery voltage thresholds
 #define	MODEL_CFG_REG		0xDB // sets options for the EZ algorithm dependant on battery model
 #define I_CHG_REG 			0x1E // sets charge termination based on current threshold
 #define CONF_REG				0x1D // enables/disables various features of the chip
 #define CONF2_REG				0xBB // enables/disables various features of the chip
+#define DPACC_REG				0x46 // tracks change in battery state of charge (1/16% per LSB)
+#define DQACC_REG				0x45
 
 // output registers
 #define REP_CAP_REG			0x05
@@ -70,6 +78,16 @@
 #define TTE_REG					0x11
 #define TTF_REG					0x20
 #define STAT_REG				0x00
+#define FSTAT_REG				0x3D
+#define HIBCFG_REG			0xBA
+
+// Command register
+#define SOFT_WAKEUP_REG	0x60
+#define SOFT_WAKE				0x90
+
+// other
+#define resistSensor 	0.01 // Ohms
+#define CLEAR					0x00
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -88,6 +106,9 @@ typedef struct fg_config_t {
 	uint16_t v_empty;
 	uint16_t model_cfg;
 	uint16_t current_chg;
+	uint16_t hibcfg;
+	uint16_t dQAcc;
+	uint16_t dPAcc;
 	uint16_t config1;
 	uint16_t config2;
 } fg_config_t;
@@ -96,12 +117,13 @@ static fg_config_t config = {	6700, 		// design capacity of 3350mAh
 															0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
 															0x8020, 	// model cfg set for lithium NCR/NCA cell
 															0x0780, 	// charge termination current = 0.3A
+															6700/32,
+															(6700/32)*51200/6700,
 															0x8214,	 	// config1
 															0x3658};	// config2
 
 
 // Multipliers are constants used to multiply register value in order to get final result
-#define resistSensor 0.01 // Ohms										
 float capacity_multiplier_mAH = (0.005)/resistSensor; //refer to row "Capacity"
 float current_multiplier_mV = (.0015625)/resistSensor; //refer to row "Current"
 float voltage_multiplier_V = .000078125; //refer to row "Voltage"
@@ -116,7 +138,7 @@ static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len);
+void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
 void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
 void init(I2C_HandleTypeDef *hi2c, fg_config_t conf);
 /* USER CODE END PFP */
@@ -179,37 +201,37 @@ int main(void)
 	
 	// Test each configuration register after initialization
 	recv[0] = 0;
-	readReg(&hi2c1, DESIGN_CAP_REG, recv, 1);
+	readReg(&hi2c1, DESIGN_CAP_REG, recv);
 	if (recv[0] != 6700) {
 		err_cnt++;
 	}
 		
 	recv[0] = 0;
-	readReg(&hi2c1, V_EMPTY_REG, recv, 1);
+	readReg(&hi2c1, V_EMPTY_REG, recv);
 	if (recv[0] != 0x7D61) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, MODEL_CFG_REG, recv, 1);
+	readReg(&hi2c1, MODEL_CFG_REG, recv);
 	if (recv[0] != 0x8020) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, I_CHG_REG, recv, 1);
+	readReg(&hi2c1, I_CHG_REG, recv);
 	if (recv[0] != 0x0780) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, CONF_REG, recv, 1);
+	readReg(&hi2c1, CONF_REG, recv);
 	if (recv[0] != 0x8214) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, CONF2_REG, recv, 1);
+	readReg(&hi2c1, CONF2_REG, recv);
 	if (recv[0] != 0x3658) {
 		err_cnt++;
 	}
@@ -230,42 +252,42 @@ int main(void)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Test the reported remaining capacity register
 	recv[0] = 0;
-	readReg(&hi2c1, REP_CAP_REG, recv, 1);
+	readReg(&hi2c1, REP_CAP_REG, recv);
 	memcpy(uartTest, clear, 100);
 	snprintf(uartTest, sizeof(uartTest), "\nREP_CAP_REG (capacity in mAh): 0x%02x\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the reported state-of-charge percentage output
 	recv[0] = 0;
-	readReg(&hi2c1, REP_SOC_REG, recv, 1);
+	readReg(&hi2c1, REP_SOC_REG, recv);
 	memcpy(uartTest, clear, 100);
 	snprintf(uartTest, sizeof(uartTest), "\nREP_SOC_REG (state of charge in percent): %d%%\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the  full capacity register
 	recv[0] = 0;
-	readReg(&hi2c1, FULL_CAP_REG, recv, 1);
+	readReg(&hi2c1, FULL_CAP_REG, recv);
 	memcpy(uartTest, clear, 100);
 	snprintf(uartTest, sizeof(uartTest), "\nFULL_CAP_REG (full capacity in mAh): 0x%02x\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the estimated time to empty register
 	recv[0] = 0;
-	readReg(&hi2c1, TTE_REG, recv, 1);
+	readReg(&hi2c1, TTE_REG, recv);
 	memcpy(uartTest, clear, 100);
 	snprintf(uartTest, sizeof(uartTest), "\nTTE_REG (estimated time to empty): 0x%02x\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the status register
 	recv[0] = 0;
-	readReg(&hi2c1, TTF_REG, recv, 1);
+	readReg(&hi2c1, TTF_REG, recv);
 	memcpy(uartTest, clear, 100);
 	snprintf(uartTest, sizeof(uartTest), "\nTTF_REG (estimated time to full): 0x%02x\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the reported remaining capacity register
 	recv[0] = 0;
-	readReg(&hi2c1, STAT_REG, recv, 1);
+	readReg(&hi2c1, STAT_REG, recv);
 	memcpy(uartTest, clear, 100);
 	snprintf(uartTest, sizeof(uartTest), "\nSTAT_REG (status of fuel gauge): 0x%02x\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
@@ -423,7 +445,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len)
+void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv)
 {
 	
 	uint8_t recv_buff[2] = {0};
@@ -431,12 +453,9 @@ void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv, uint8_t len)
 	HAL_I2C_Master_Transmit(hi2c, FG_SLAVE_ADDR, &reg, 1, 10);
 	HAL_I2C_Master_Receive(hi2c, FG_SLAVE_ADDR, recv_buff, 2, 10);
 	
-	for (uint8_t i = 0; i < len; i++)
-	{
-		recv[i] |= recv_buff[1];
-		recv[i] <<= 8;
-		recv[i] |= recv_buff[0];
-	}
+		*recv |= recv_buff[1];
+		*recv <<= 8;
+		*recv |= recv_buff[0];
 }
 
 void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send)
@@ -447,12 +466,65 @@ void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send)
 
 void init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
 {
-	writeReg(hi2c, DESIGN_CAP_REG, &conf.design_cap);
-	writeReg(hi2c, V_EMPTY_REG, &conf.v_empty);
-	writeReg(hi2c, MODEL_CFG_REG, &conf.model_cfg);
-	writeReg(hi2c, I_CHG_REG, &conf.current_chg);
-	writeReg(hi2c, CONF_REG, &conf.config1);
-	writeReg(hi2c, CONF2_REG, &conf.config2);
+	/**** Check chip status ****/
+	uint16_t status = 0;
+	readReg(hi2c, STAT_REG, &status);
+	
+	// if POR (Power On Reset) bit is set no need to re-configure
+	
+	if (status & POR) {
+		
+		// Wait until FSTAT.DNR bit is unset indicating completion
+		// of startup operations
+		do {readReg(hi2c, FSTAT_REG, &status);}
+		while (status & FSTAT_DNR);
+		
+		/**** Initialize configuration ****/
+		
+		// store HiBCFG value
+		uint16_t HiBCFG = 0;
+		readReg(hi2c, HIBCFG_REG, &HiBCFG);
+		
+		// soft wake up command (step 1 of exiting hibernate mode)
+		uint16_t cmd = SOFT_WAKE;
+		writeReg(hi2c, SOFT_WAKEUP_REG, &cmd);
+		
+		// Clear HiBCFG and Soft WakeUp Registers
+		// (step 2 of exiting hibernate mode)
+		cmd = CLEAR;
+		writeReg(hi2c, HIBCFG_REG, &cmd);
+		writeReg(hi2c, SOFT_WAKEUP_REG, &cmd);
+		
+		// Configure OPTION 1 EZ Config
+		writeReg(hi2c, DESIGN_CAP_REG, &conf.design_cap);
+		writeReg(hi2c, V_EMPTY_REG, &conf.v_empty);
+		writeReg(hi2c, I_CHG_REG, &conf.current_chg);
+		writeReg(hi2c, CONF_REG, &conf.config1);
+		writeReg(hi2c, CONF2_REG, &conf.config2);
+		writeReg(hi2c, DQACC_REG, &conf.dQAcc);
+		writeReg(hi2c, DPACC_REG, &conf.dPAcc);
+		writeReg(hi2c, MODEL_CFG_REG, &conf.model_cfg);
+		
+		// Poll modelCFG refresh bit (MSb) until it is unset
+		do {readReg(hi2c, MODEL_CFG_REG, &status);}
+		while (status & MODEL_CFG_REFRESH);
+		
+		/**** Initialization is complete so we need to clear the POR bit ****/
+		
+		// Store the current status value
+		readReg(hi2c, STAT_REG, &status);
+		
+		// loop until POR bit has been successfully cleared
+		while (status & POR) { 
+			status &= 0xFFFD;
+			writeReg(hi2c, STAT_REG, &status);
+			HAL_Delay(1);
+			readReg(hi2c, STAT_REG, &status);
+		}
+	}
+	
+	// SUCCESS!!!!
+	
 }
 /* USER CODE END 4 */
 
