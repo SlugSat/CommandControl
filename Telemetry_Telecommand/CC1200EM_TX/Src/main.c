@@ -143,19 +143,17 @@ int main(void)
 	///////////////////////////////////////////////////////////////////////
   CC1200_INIT();
 	readValue = 0;
-	//address = 0x00;
 	address = CC1200_TXFIFO;
 	uint32_t sendAmt =114;
+	uint8_t txValue = 0;
 	
 	uint16_t count = 0;
-	uint16_t correct =0;
-	uint16_t weird =0;
 	uint16_t countErr = 0;
 
 	for(int i = 0; i < sendAmt; i++)
 	{
 		// Read num_tx_bytes
-		uint8_t txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
+		txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
 		if (txValue < 128) 
 		{	
 			ReadWriteExtendedReg(CC1200_WRITE_BIT, address, i);
@@ -187,6 +185,7 @@ int main(void)
 	
 	// Check for errors again to make sure everything transmits properly
 	// TO DO: make this code below into a while loop that checks if there are still bytes left in the TX FIFO
+	#if 1
 	for(int i = 0; i < sendAmt; i++)
 	{
 		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
@@ -207,7 +206,22 @@ int main(void)
 		} 
 		HAL_Delay(20);
 	}
-	
+	#else
+	txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
+	while (txValue != 0)
+	{
+		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
+		HAL_Delay(8);
+		
+		if ((readValue & 0xf0) != 0x20)
+		{
+			ReadWriteCommandReg(CC1200_STX);
+			count++;
+			HAL_Delay(1);
+		} 
+		txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);
+	}
+	#endif
 	
   /* USER CODE END 2 */
 
