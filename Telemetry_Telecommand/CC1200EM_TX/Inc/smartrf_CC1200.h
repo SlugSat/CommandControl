@@ -55,7 +55,8 @@
 #define SMARTRF_SETTING_FS_VCO0          0xB5
 #define SMARTRF_SETTING_XOSC5            0x0E
 #define SMARTRF_SETTING_XOSC1            0x03
-//custuom configration values to have a fixed length 
+
+// Custom configration values to have a fixed length packet
 #define SMARTRF_SETTING_PKT_CFG0         0x00
 #define SMARTRF_SETTING_PKT_LEN          0x06
 #endif
