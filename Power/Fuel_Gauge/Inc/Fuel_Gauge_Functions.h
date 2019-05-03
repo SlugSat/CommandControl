@@ -30,6 +30,11 @@
 #define STAT_REG				0x00
 #define FSTAT_REG				0x3D
 #define HIBCFG_REG			0xBA
+#define VOLTAGE_REG			0x09
+#define AVG_VOLTAGE_REG	0x19
+#define CURRENT_REG			0x0A
+#define AVG_CURRENT_REG	0x0B
+#define TEMP_REG				0x08
 
 /* Command Registers */
 #define SOFT_WAKEUP_REG	0x60
@@ -51,15 +56,6 @@ typedef struct fg_config_t {
 	uint16_t config1;
 	uint16_t config2;
 } fg_config_t;
-
-static fg_config_t config = {	6700, 		// design capacity of 3350mAh
-															0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
-															0x8020, 	// model cfg set for lithium NCR/NCA cell
-															0x0780, 	// charge termination current = 0.3A
-															6700/32,
-															(6700/32)*51200/6700,
-															0x8214,	 	// config1
-															0x3658};	// config2
 			
 															
 /* Function Prototypes */															
@@ -67,8 +63,14 @@ void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
 void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
 void init(I2C_HandleTypeDef *hi2c, fg_config_t conf);													
 															
-															
-
-
+float Get_Remaining_Capacity(I2C_HandleTypeDef *hi2c); // Remaining capacity of battery in mAh
+float Get_Charge_Percentage(I2C_HandleTypeDef *hi2c); // State-of-charge percentage
+float Get_Max_Capacity(I2C_HandleTypeDef *hi2c); // Reports the maximum capacity of the battery
+float Get_TTE(I2C_HandleTypeDef *hi2c); // Time to empty
+float Get_TTF(I2C_HandleTypeDef *hi2c); // Time to full
+uint16_t Get_Status(I2C_HandleTypeDef *hi2c); // Status of the fuel gauge
+float Get_Voltage(I2C_HandleTypeDef *hi2c, uint8_t average); // Voltage measured between BATT and CSP
+float Get_Current(I2C_HandleTypeDef *hi2c, uint8_t average);
+float Get_Temp(I2C_HandleTypeDef *hi2c);
 
 #endif // FUEL_GAUGE
