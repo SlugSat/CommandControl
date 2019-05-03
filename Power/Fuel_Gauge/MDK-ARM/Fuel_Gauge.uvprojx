@@ -407,6 +407,16 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>Fuel_Gauge_Functions.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\Fuel_Gauge_Functions.c</FilePath>
+            </File>
+            <File>
+              <FileName>Fuel_Gauge_Functions.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\Fuel_Gauge_Functions.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
