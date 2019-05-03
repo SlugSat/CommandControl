@@ -1,5 +1,13 @@
 #include "Fuel_Gauge_Functions.h"
 
+/* Multiplier constants used to multiply register value in order to get final result */
+float capacity_multiplier_mAH = (0.005)/resistSensor; //refer to row "Capacity"
+float current_multiplier_mV = (.0015625)/resistSensor; //refer to row "Current"
+float voltage_multiplier_V = .000078125; //refer to row "Voltage"
+float time_multiplier_Min = 5.625 / 3600; // 
+float percentage_multiplier = 1.0 / 256.0; // Multiply the capacity percentage sensor reading by this
+float temperature_multiplier = 1.0 / 256.0; // Multiply the temperature sensor  by this
+
 void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv)
 {
 	// Values are ent as bytes so make a buffer to get the bytes and then reassemble
@@ -28,8 +36,7 @@ void init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
 	uint16_t status = 0;
 	readReg(hi2c, STAT_REG, &status);
 	
-	// if POR (Power On Reset) bit is set no need to re-configure
-	
+	// if POR (Power On Reset) bit is set we need to configure registers
 	if (status & POR) 
 	{	
 		// Wait until FSTAT.DNR bit is unset indicating completion
@@ -40,8 +47,7 @@ void init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
 		/**** Initialize configuration ****/
 		
 		// store HiBCFG value
-		uint16_t HiBCFG = 0;
-		readReg(hi2c, HIBCFG_REG, &HiBCFG);
+		readReg(hi2c, HIBCFG_REG, &conf.hibcfg);
 		
 		// soft wake up command (step 1 of exiting hibernate mode)
 		uint16_t cmd = SOFT_WAKE;
@@ -67,8 +73,11 @@ void init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
 		do {readReg(hi2c, MODEL_CFG_REG, &status);}
 		while (status & MODEL_CFG_REFRESH);
 		
-		/**** Initialization is complete so we need to clear the POR bit ****/
+		// Write previously stored hibcfg value
+		writeReg(hi2c, HIBCFG_REG, &conf.hibcfg);
 		
+		/**** Initialization is complete so we need to clear the POR bit ****/
+
 		// Store the current status value
 		readReg(hi2c, STAT_REG, &status);
 		
@@ -85,3 +94,99 @@ void init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
 	// SUCCESS!!!!
 	
 }
+
+
+/* Functions to get specific data from certain registers */
+// Remaining capacity register
+float Get_Remaining_Capacity(I2C_HandleTypeDef *hi2c)
+{
+	uint16_t recv = 0;
+	readReg(hi2c, REP_CAP_REG, &recv);
+	float output = recv * capacity_multiplier_mAH; // State-of-charge percentage
+	return output;
+}
+
+// State-of-charge percentage
+float Get_Charge_Percentage(I2C_HandleTypeDef *hi2c) 
+{
+	uint16_t recv = 0;
+	readReg(hi2c, REP_SOC_REG, &recv);
+	float output = recv * percentage_multiplier; 
+	return output;
+}
+
+// Reports the maximum capacity of the battery
+float Get_Max_Capacity(I2C_HandleTypeDef *hi2c) 
+{
+	uint16_t recv = 0;
+	readReg(hi2c, FULL_CAP_REG, &recv);
+	float output = recv * capacity_multiplier_mAH; // Output in mAh
+	return output;
+}
+
+// Time to empty
+float Get_TTE(I2C_HandleTypeDef *hi2c) 
+{
+	uint16_t recv = 0;
+	readReg(hi2c, TTE_REG, &recv);
+	float output = recv * time_multiplier_Min; // Output in minutes
+	return output;
+}
+
+// Time to full
+float Get_TTF(I2C_HandleTypeDef *hi2c) 
+{
+	uint16_t recv = 0;
+	readReg(hi2c, TTF_REG, &recv);
+	float output = recv * time_multiplier_Min; // Output in minutes
+	return output;
+}
+
+// Status of the fuel gauge
+uint16_t Get_Status(I2C_HandleTypeDef *hi2c) 
+{
+	uint16_t recv = 0;
+	readReg(hi2c, STAT_REG, &recv);
+	return recv;
+}
+
+// Voltage measured between BATT and CSP
+float Get_Voltage(I2C_HandleTypeDef *hi2c, uint8_t average) 
+{
+	uint16_t recv = 0;
+	if (average)
+	{
+		readReg(hi2c, AVG_VOLTAGE_REG, &recv);
+	}
+	else
+	{
+		readReg(hi2c, VOLTAGE_REG, &recv);
+	}
+	float output = recv * voltage_multiplier_V; // Output in volts
+	return output;
+}
+
+float Get_Current(I2C_HandleTypeDef *hi2c, uint8_t average)
+{
+	uint16_t recv = 0;
+	if (average)
+	{
+		readReg(hi2c, AVG_CURRENT_REG, &recv);
+	}
+	else
+	{
+		readReg(hi2c, CURRENT_REG, &recv);
+	}
+	float output = (int16_t) recv * current_multiplier_mV;
+	return output;
+}
+
+float Get_Temp(I2C_HandleTypeDef *hi2c)
+{
+	uint16_t recv = 0;
+	readReg(hi2c, TEMP_REG, &recv);
+	float output = (int16_t) recv * temperature_multiplier;
+	return output;
+}
+
+

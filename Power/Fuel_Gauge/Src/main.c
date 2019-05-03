@@ -69,14 +69,15 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
-/* Multiplier constants used to multiply register value in order to get final result */
-float capacity_multiplier_mAH = (0.005)/resistSensor; //refer to row "Capacity"
-float current_multiplier_mV = (.0015625)/resistSensor; //refer to row "Current"
-float voltage_multiplier_V = .000078125; //refer to row "Voltage"
-float time_multiplier_Hours = 5.625/3600.0; //Least Significant Bit= 5.625 seconds, 3600 converts it to Hours. refer to AN6358 pg 13 figure 1.3 in row "Time"
-float percentage_multiplier = 1.0/256.0; //refer to row "Percentage"
-															
+static fg_config_t config = {	6700, 		// design capacity of 3350mAh
+															0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
+															0x8020, 	// model cfg set for lithium NCR/NCA cell
+															0x0780, 	// charge termination current = 0.3A
+															0x0000,
+															6700/32,
+															(6700/32)*44138/6700,
+															0x8214,	 	// config1
+															0x3658};	// config2									
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,7 +132,7 @@ int main(void)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////// Create the message beginning the test ///////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	snprintf(uartTest, sizeof(uartTest), "\n-----Test Begin-----\n");
+	snprintf(uartTest, sizeof(uartTest), "\n\n-----Test Begin-----\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 1);
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +151,7 @@ int main(void)
 	if (recv[0] != 6700) {
 		err_cnt++;
 	}
-		
+	
 	recv[0] = 0;
 	readReg(&hi2c1, V_EMPTY_REG, recv);
 	if (recv[0] != 0x7D61) {
@@ -159,10 +160,10 @@ int main(void)
 	
 	recv[0] = 0;
 	readReg(&hi2c1, MODEL_CFG_REG, recv);
-	if (recv[0] != 0x8020) {
+	if (recv[0] != 0x0020) {
 		err_cnt++;
 	}
-	
+
 	recv[0] = 0;
 	readReg(&hi2c1, I_CHG_REG, recv);
 	if (recv[0] != 0x0780) {
@@ -196,47 +197,85 @@ int main(void)
 	////////////// Test the registers with outputs of the fuel gauge //////////////////////////// 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Test the reported remaining capacity register
-	recv[0] = 0;
-	readReg(&hi2c1, REP_CAP_REG, recv);
+	float output = 0.0;
+	float outputV = 0.0;
+	output = Get_Remaining_Capacity(&hi2c1);
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\nREP_CAP_REG (capacity in mAh): 0x%02x\n", recv[0]);
+	snprintf(uartTest, sizeof(uartTest), "\nREP_CAP_REG (capacity in mAh): %f\n", output);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the reported state-of-charge percentage output
-	recv[0] = 0;
-	readReg(&hi2c1, REP_SOC_REG, recv);
+	output = Get_Charge_Percentage(&hi2c1);
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\nREP_SOC_REG (state of charge in percent): %d%%\n", recv[0]);
+	snprintf(uartTest, sizeof(uartTest), "\nREP_SOC_REG (state of charge in percent): %f%%\n", output);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the  full capacity register
-	recv[0] = 0;
-	readReg(&hi2c1, FULL_CAP_REG, recv);
+	output = Get_Max_Capacity(&hi2c1);
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\nFULL_CAP_REG (full capacity in mAh): 0x%02x\n", recv[0]);
+	snprintf(uartTest, sizeof(uartTest), "\nFULL_CAP_REG (full capacity in mAh): %f\n", output);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the estimated time to empty register
-	recv[0] = 0;
-	readReg(&hi2c1, TTE_REG, recv);
+	output = Get_TTE(&hi2c1);
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\nTTE_REG (estimated time to empty): 0x%02x\n", recv[0]);
+	snprintf(uartTest, sizeof(uartTest), "\nTTE_REG (estimated time to empty): %f\n", output);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the estimated time to full register
+	output = Get_TTF(&hi2c1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nTTF_REG (estimated time to full): %f\n", output);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
 	// Test the status register
-	recv[0] = 0;
-	readReg(&hi2c1, TTF_REG, recv);
+	recv[0] = Get_Status(&hi2c1);
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\nTTF_REG (estimated time to full): 0x%02x\n", recv[0]);
+	snprintf(uartTest, sizeof(uartTest), "\nStatus (status of fuel gauge): 0x%02x\n", recv[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
-	// Test the reported remaining capacity register
-	recv[0] = 0;
-	readReg(&hi2c1, STAT_REG, recv);
+	// Test the output voltage
+	output = Get_Voltage(&hi2c1, 0);
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\nSTAT_REG (status of fuel gauge): 0x%02x\n", recv[0]);
+	snprintf(uartTest, sizeof(uartTest), "\nVoltage (voltage in volts): %f\n", output);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
+	// Test the average output voltage
+	output = Get_Voltage(&hi2c1, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nAverage voltage (voltage in volts): %f\n", output);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the output current
+	output = Get_Current(&hi2c1, 0);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nCurrent (current in mA): %f\n", output);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the average output current
+	output = Get_Current(&hi2c1, 1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nAverage current (current in mA): %f\n", output);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	// Test the temperature
+	output = Get_Temp(&hi2c1);
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\nTemperature (in degrees celcius): %f\n", output);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	
+	memcpy(uartTest, clear, 100);
+	snprintf(uartTest, sizeof(uartTest), "\n\nVoltage and current every .2 seconds, 30 times\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+	for(int i = 0; i < 30; i++)
+	{
+		outputV = Get_Current(&hi2c1, 0);
+		output  = Get_Voltage(&hi2c1, 0);
+		memcpy(uartTest, clear, 100);
+		snprintf(uartTest, sizeof(uartTest), "\nVoltage (V): %f    Current (mA): %f\n", output, outputV);
+		HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
+		HAL_Delay(200);
+	}
 	
 	
 	
@@ -244,7 +283,7 @@ int main(void)
 	////////////// Create the message ending the test ////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	memcpy(uartTest, clear, 100);
-	snprintf(uartTest, sizeof(uartTest), "\n-----Test End-----\n\n");
+	snprintf(uartTest, sizeof(uartTest), "\n-----Test End-----\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) uartTest , sizeof(uartTest), 10);
 	
   /* USER CODE END 2 */
