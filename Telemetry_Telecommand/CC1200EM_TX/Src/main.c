@@ -48,6 +48,10 @@
 // Tests
 #define READ_WRITE_TEST
 //#define COMMAND_STROBE_TEST
+
+#define TX_TEST (0)
+#define RX_TEST (1)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -134,17 +138,22 @@ int main(void)
 	
 	uint16_t address = 0x2F02;
 	uint8_t value = 0xa;
-	uint8_t readValue;
-	char Msg1[70] = {0};
-	char Msg2[70] = {0};
+	uint8_t readValue = 0;
+	char Msg1[100] = {0};
+	char Msg2[100] = {0};
 
 	///////////////////////////////////////////////////////////////////////
 	// Test: send a packet continuously and receive with the dev board
 	///////////////////////////////////////////////////////////////////////
   CC1200_INIT();
+	
+	
+	
+	
+	#if TX_TEST
 	readValue = 0;
 	address = CC1200_TXFIFO;
-	uint32_t sendAmt =114;
+	uint32_t sendAmt = 6*50;
 	uint8_t txValue = 0;
 	
 	uint16_t count = 0;
@@ -162,7 +171,8 @@ int main(void)
 		else
 		{
 			HAL_Delay(1);
-			continue;
+			i--;
+			//continue;
 		}
 
 		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
@@ -172,7 +182,6 @@ int main(void)
 		{
 			countErr++;
 			ReadWriteCommandReg(CC1200_SFTX); // Flush if FIFO error
-			i--;
 			continue;
 		}
 		else if ((readValue & 0xf0) != 0x20)
@@ -184,32 +193,13 @@ int main(void)
 	}
 	
 	// Check for errors again to make sure everything transmits properly
-	// TO DO: make this code below into a while loop that checks if there are still bytes left in the TX FIFO
-	#if 1
-	for(int i = 0; i < sendAmt; i++)
-	{
-		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
-		HAL_Delay(8);
-		
-		if (readValue == 0x7f)
-		{
-			countErr++;
-			ReadWriteCommandReg(CC1200_SFTX); // Flush if FIFO error
-			i--;
-			continue;
-		}
-		else if ((readValue & 0xf0) != 0x20)
-		{
-			ReadWriteCommandReg(CC1200_STX);
-			count++;
-			HAL_Delay(1);
-		} 
-		HAL_Delay(20);
-	}
-	#else
 	txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);  
 	while (txValue != 0)
 	{
+		memcpy(Msg1, Msg2, 70);
+		snprintf((char *)Msg1, sizeof(Msg1), "\r\nNumber of bytes in the transmit buffer: 0x%02x\r\n", txValue);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		
 		readValue = ReadWriteCommandReg(CC1200_SNOP); // Seems to need HAL_Delay and a NOP to produce the correct status bit
 		HAL_Delay(8);
 		
@@ -222,6 +212,67 @@ int main(void)
 		txValue = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_TXBYTES, value);
 	}
 	#endif
+	
+	
+	// Test receiving
+	#if RX_TEST
+	
+	uint8_t rxBuffer[70] = {0}; // Initialize a buffer to read the data
+	ReadWriteCommandReg(CC1200_SFRX); // Flush RX FIFO
+	ReadWriteCommandReg(CC1200_SRX);  // Enter receive mode
+	
+	uint8_t doneCount = 0;
+	uint16_t numRXBytes = 0;
+	address = CC1200_RXFIFO;
+	
+	while (doneCount < 1) // less than 1 because we expect only one packet
+	{
+		// Get the number of bytes in the RX FIFO
+		numRXBytes = ReadWriteExtendedReg (CC1200_READ_BIT, CC1200_NUM_RXBYTES, value);  
+		memcpy(Msg1, Msg2, 100);
+		snprintf((char *)Msg1, 100, "\r\nNumber of bytes in the receive buffer: 0x%02x    State of CC1200: 0x%02x\r\n", numRXBytes, readValue);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		
+		// If there is a full packet, read it
+		if (numRXBytes >= 6)
+		{
+			doneCount++;
+			for (int i = 0; i < 6; i++)
+			{
+				rxBuffer[i * doneCount] = ReadWriteExtendedReg(CC1200_READ_BIT, address, 0);
+			}
+		}
+		
+		// Check the state of the chip in the event that an error occurred
+		readValue = ReadWriteCommandReg(CC1200_SNOP); 
+		HAL_Delay(8);
+		
+		if (readValue == 0x6f) // Flush if FIFO error
+		{
+			ReadWriteCommandReg(CC1200_SFRX); 
+		}
+		else if ((readValue & 0xf0) != 0x10) // Re-enter transmit mode if there was a FIFO error
+		{
+			ReadWriteCommandReg(CC1200_SRX);
+		}
+	}	
+	
+	// Print out each value read
+	memcpy(Msg1, Msg2, 100);
+	int j = 0;
+	int i = 0;
+	for (i = 0; i < 90; i += 15)
+	{
+		snprintf((char *) &Msg1[i], 15, "\r\nData: 0x%02x\r\n", rxBuffer[j++]);
+	}
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, 100*sizeof(uint8_t), 1);
+	#endif
+	
+	
+	// End the test
+	memcpy(Msg1, Msg2, 100);
+	snprintf((char *)Msg1, sizeof(Msg1), "\n\nEND OF TRANSCEIVER TEST \n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
 	
   /* USER CODE END 2 */
 
