@@ -113,7 +113,7 @@ int main(void)
 	
 	/* Initialize Variables */
 	system_function functions;
-
+	uint8_t firstTransition = 0;
 	/* Initialize the starting state of each of the systems that need power */
 	Initialize_Functions(&functions);
 
@@ -129,6 +129,10 @@ int main(void)
 	/* Enter the state machine */
 		while(1)
 		{
+			if (state != globalState)
+			{
+				firstTransition = 0;
+			}
 			globalState = state;
 			switch (state)
 			{
@@ -136,7 +140,11 @@ int main(void)
 				case (Detumble): 
 					Set_PowerModes(&functions, Detumble);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(Detumble);
 					tmp = state == Detumble ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
@@ -144,7 +152,11 @@ int main(void)
 				case (Kill): 
 					Set_PowerModes(&functions, Kill);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(Kill);
 					tmp = state == Kill ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
@@ -152,7 +164,11 @@ int main(void)
 				case (Normal): 
 					Set_PowerModes(&functions, Normal);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(Normal);
 					tmp = state == Normal ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
@@ -160,7 +176,11 @@ int main(void)
 				case (UltraLowPower): 
 					Set_PowerModes(&functions, UltraLowPower);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(UltraLowPower);
 					tmp = state == UltraLowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
@@ -168,7 +188,11 @@ int main(void)
 				case (LowPower): 
 					Set_PowerModes(&functions, LowPower);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(LowPower);
 					tmp = state == LowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
@@ -176,7 +200,11 @@ int main(void)
 				case (Eclipse): 
 					Set_PowerModes(&functions, Eclipse);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(Eclipse);
 					tmp = state == Eclipse ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
@@ -184,7 +212,11 @@ int main(void)
 				case (ScienceOnly): 
 					Set_PowerModes(&functions, ScienceOnly);
 					// Set rails high for this state
-					Output_Power_Pins(state);
+					if (firstTransition == 0)
+					{
+						Output_Power_Pins(state);
+						firstTransition = 1;
+					}
 					state = Transition(ScienceOnly);
 					tmp = state == ScienceOnly ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
