@@ -58,5 +58,5 @@
 
 // Custom configration values to have a fixed length packet
 #define SMARTRF_SETTING_PKT_CFG0         0x00
-#define SMARTRF_SETTING_PKT_LEN          0x06
+#define SMARTRF_SETTING_PKT_LEN          0x13
 #endif
