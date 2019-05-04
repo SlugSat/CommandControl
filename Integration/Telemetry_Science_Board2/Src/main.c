@@ -190,14 +190,14 @@ int main(void)
 			/* Log science data based on time mode */	
 			case (Science_Time): 
 				
-				// Write code here that would access the shared SPI FRAM and get if a science event should be logged
+				// Generate fake data and store it to the I2C FRAM
 			
 				state = Fetch;
 				break;
 			/* Log science data based on location mode */
 			case (Science_Location): 
 				
-				// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
+				// Generate fake data and store it to the I2C FRAM 
 				
 				state = Fetch;
 				break;
@@ -450,12 +450,14 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
 // Poll the housekeeping FRAM to check the location of the CubeSat
 uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
 {
+	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
 	return FAIL;
 }
 
 // Poll the housekeeping FRAM to check the if it is time to log a science event
 uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi)
 {
+	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on time
 	return FAIL;
 }
 
