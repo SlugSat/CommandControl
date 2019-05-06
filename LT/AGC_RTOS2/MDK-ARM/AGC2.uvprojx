@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32L152xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;  ../Drivers/STM32L1xx_HAL_Driver/Inc;  ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy;  ../Middlewares/Third_Party/FreeRTOS/Source/include;  ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;  ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;  ../Drivers/CMSIS/Device/ST/STM32L1xx/Include;  ../Drivers/CMSIS/Include;  ..\..\..\Science\FRAM_Lib_3\Src;  ..\..\..\Science\FRAM_Lib_3\Inc</IncludePath>
+              <IncludePath>../Inc;    ../Drivers/STM32L1xx_HAL_Driver/Inc;    ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy;    ../Middlewares/Third_Party/FreeRTOS/Source/include;    ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;    ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;    ../Drivers/CMSIS/Device/ST/STM32L1xx/Include;    ../Drivers/CMSIS/Include;    ..\..\..\Science\FRAM_Lib_3\Src;    ..\..\..\Science\FRAM_Lib_3\Inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

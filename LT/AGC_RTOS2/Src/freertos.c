@@ -61,6 +61,7 @@
 #include "usart.h"
 
 #include "FRAM_Lib.h"
+#include "FRAM_Tests.h"
 #include <stdlib.h>
 /* USER CODE END Includes */
 
@@ -81,21 +82,19 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-osThreadId AGCTaskHandle;
+//osThreadId AGCTaskHandle;
 /* USER CODE END Variables */
-osThreadId defaultTaskHandle;
+osThreadId AGCTaskHandle;
 osThreadId ScienceTaskHandle;
-osThreadId TelemSciTaskHandle;
 osMutexId UART_MutexHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-void StartAGCTask(void const * argument);
+//void StartAGCTask(void const * argument);
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void const * argument);
+void StartAGCTask(void const * argument);
 void StartScienceTask(void const * argument);
-void StartDataRetrival(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -127,21 +126,16 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
   /* definition and creation of ScienceTask */
-  osThreadDef(ScienceTask, StartScienceTask, osPriorityIdle, 0, 128);
+	osThreadDef(ScienceTask, StartScienceTask, osPriorityNormal, 0, 128);
   ScienceTaskHandle = osThreadCreate(osThread(ScienceTask), NULL);
-
-  /* definition and creation of TelemSciTask */
-  osThreadDef(TelemSciTask, StartDataRetrival, osPriorityIdle, 0, 128);
-  TelemSciTaskHandle = osThreadCreate(osThread(TelemSciTask), NULL);
-
-  /* USER CODE BEGIN RTOS_THREADS */
+  /* definition and creation of AGCTask */
   osThreadDef(AGCTask, StartAGCTask, osPriorityNormal, 0, 128);
   AGCTaskHandle = osThreadCreate(osThread(AGCTask), NULL);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  //osThreadDef(AGCTask, StartAGCTask, osPriorityNormal, 0, 128);
+  //AGCTaskHandle = osThreadCreate(osThread(AGCTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -149,24 +143,24 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartAGCTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the AGCTask thread.
   * @param  argument: Not used 
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
-{
+/* USER CODE END Header_StartAGCTask */
+//void StartAGCTask(void const * argument)
+//{
 
-  /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartDefaultTask */
-}
+//  /* USER CODE BEGIN StartAGCTask */
+//  /* Infinite loop */
+//  for(;;)
+//  {
+//    osDelay(1);
+//  }
+//  /* USER CODE END StartAGCTask */
+//}
 
 /* USER CODE BEGIN Header_StartScienceTask */
 /**
@@ -178,111 +172,39 @@ void StartDefaultTask(void const * argument)
 void StartScienceTask(void const * argument)
 {
   /* USER CODE BEGIN StartScienceTask */
-	
-	uint32_t lastTime = 1;
-	uint32_t time;
-	uint8_t energy;
-	struct ScienceDataPackage EntryData;
-	
-	FRAM_IO_Init(&hi2c1);
-	FRAM_Write_Headers(&hi2c1);
+	uint8_t SCIENCE[8] = "Science\n";
+	xSemaphoreTake(UART_MutexHandle, portMAX_DELAY);
+	HAL_UART_Transmit(&huart2,SCIENCE,8,10);
+	xSemaphoreGive(UART_MutexHandle);
+	FRAM_Test(&hi2c1,&huart2);
 	
   /* Infinite loop */
   for(;;)
   {
-		//Generate Data
-		
-		time = (uint32_t)(lastTime + (rand() % (300 + 1 - 1) + 1));
-		lastTime = time;
-		energy = (uint8_t)(rand() % (17 + 1 - 1) + 1);
-		
-		//Enter it
-		
-		if(FRAM_Data_Builder(&EntryData, time, energy) != FRAM_SUCCESS){
-			HAL_UART_Transmit(&huart2,ERROR,6,10);
-			
-		}else{
-			if(FRAM_IO_Write(&hi2c1, &EntryData, &huart2) != FRAM_SUCCESS){
-				HAL_UART_Transmit(&huart2,ERROR,6,10);
-			}
-		}
-		
     osDelay(1);
   }
   /* USER CODE END StartScienceTask */
 }
 
-/* USER CODE BEGIN Header_StartDataRetrival */
-/**
-* @brief Function implementing the TelemSciTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartDataRetrival */
-void StartDataRetrival(void const * argument)
-{
-  /* USER CODE BEGIN StartDataRetrival */
-	uint8_t SUCCESS[9] = "Success\n";
-	uint8_t ERROR[6] = "Fail\n";
-	uint8_t NO_TIME[20] = "Time not found\n";
-	uint8_t END_SEARCH[14] = "Search Over\n";
-	uint8_t StrOut[50];
-	struct ScienceDataPackage TestData;
-	
-	FRAM_Return SearchOut;
-	FRAM_Return SearchReturn;
-	
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1000000);
-		//Search and transmit some data
-		
-	uint32_t TestStart = 1000;
-	uint32_t TestEnd = 10000;
-	
-	SearchReturn = FRAM_IO_Search_Start(&hi2c1, TestStart, TestEnd, &huart2);
-	if(SearchReturn == FRAM_ERROR){
-		HAL_UART_Transmit(&huart2,ERROR,5,10);
-	}
-	else if(SearchReturn == FRAM_TIME_NOT_FOUND){
-		HAL_UART_Transmit(&huart2,NO_TIME,15,10);		
-	}else{
-		HAL_UART_Transmit(&huart2,SUCCESS,8,10);
-	}
-	
-	uint16_t i = 0;
-	while(1){
-		SearchOut = FRAM_IO_Search_GetNextItem(&hi2c1, &TestData, &huart2);
-		if(SearchOut == FRAM_ERROR){
-			HAL_UART_Transmit(&huart2,ERROR,5,10);
-		}
-		if(SearchOut ==FRAM_SEARCH_ENDED){
-			HAL_UART_Transmit(&huart2,END_SEARCH,12,10);
-			break;
-		}
-		sprintf(StrOut,"%4d: Time: %5d, Energy: %2d\n",i , TestData.Time, TestData.Energy);
-		HAL_UART_Transmit(&huart2,StrOut,strlen(StrOut),10);
-		i++;
-		
-		if(i>1000){
-			break;
-		}
-	}
-		
-  }
-  /* USER CODE END StartDataRetrival */
-}
-
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 void StartAGCTask(void const * argument) {
+	
+	uint8_t AGC[8] = "AGC\n";
+	xSemaphoreTake(UART_MutexHandle, portMAX_DELAY);
+	HAL_UART_Transmit(&huart2,AGC,4,10);
+	xSemaphoreGive(UART_MutexHandle);
+	
 	// initialize AGC stuff
+	xSemaphoreTake(UART_MutexHandle, portMAX_DELAY);
 	AGC_Init();
+	xSemaphoreGive(UART_MutexHandle);
 	
 	for (;;) {
 		// handle events as they come
+		xSemaphoreTake(UART_MutexHandle, portMAX_DELAY);
 		AGC_DoEvent();
+		xSemaphoreGive(UART_MutexHandle);
 	}
 }
 /* USER CODE END Application */
