@@ -146,6 +146,7 @@ int main(void)
 		//HAL_Delay(100);
 	}
 	
+	//Read back data
 	for(i=0; i<100; i++){
 		//data[0] = i;
 //		if( HAL_SPI_Receive(&hspi1, data, 1, 5) != HAL_OK){
