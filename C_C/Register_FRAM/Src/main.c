@@ -140,6 +140,12 @@ int main(void)
 		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
 			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
 		}
+//		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
+//			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
+//		}
+//		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
+//			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
+//		}
 		else{
 			//HAL_UART_Transmit(&huart2,SUCCESS,strlen(SUCCESS),10);
 		}
@@ -154,8 +160,8 @@ int main(void)
 		HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
 		}
 		else{
-			sprintf(StrOut,"%2d : %2d\n",i, data[0]);
-			HAL_UART_Transmit(&huart2,StrOut,strlen(StrOut),10);
+			//sprintf(StrOut,"%2d : %2d\n",i, data[0]);
+			//HAL_UART_Transmit(&huart2,StrOut,strlen(StrOut),10);
 			
 			if(data[0] == i){
 				correct++;
