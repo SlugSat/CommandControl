@@ -1,5 +1,6 @@
 #include "protocol.h"
 
+#include <limits.h>
 
 int main(int argc, char **argv)
 {
@@ -243,6 +244,53 @@ int main(int argc, char **argv)
 	Decode_Sat_Packet(packReqSci);
 	Decode_Sat_Packet(&packReqLoc);
 	Decode_Sat_Packet(packUpdateLoc);
+
+
+	printf("\n\nTesting going from a double to a byte and then recreating it\n");
 	
-	return 0;
+	double testDouble = 2458610.512340;
+	double outDouble = 0.0;
+	
+	uint8_t p[8];
+	
+	// Writes n floats to a packet of size n*4 bytes
+	unsigned int p_i = 0; // Packet index
+	uint64_t intermed = (uint64_t) testDouble; 
+	for(unsigned int b_i = 0;b_i < 8;b_i++) 
+	{ 	// Loop over bytes in float
+		//p[p_i++] = (uint8_t) (intermed & (0xff << 8*b_i)) >> (8*b_i);
+		p[p_i] = p[p_i] | ((intermed & (0xFF << 8*b_i)) >> (8*b_i));
+		p_i++;
+	}
+
+	uint64_t temp = 0;
+	// Reads n floats from a packet of size n*4 bytes
+	for(unsigned int b_i = 0 ; b_i < 8 ; b_i++) 
+	{ 	// Loop over bytes in float
+		temp = (uint64_t) temp | (p[b_i] << b_i);
+	}
+	outDouble = (double) temp;
+	
+	printf("Started (unsigned): %u\t(double): %f\n", (uint64_t) testDouble, testDouble);
+	printf("Double start: 0x%016x\n", testDouble);
+	printf("Uint64 start: 0x%016x\tEnd: 0x%016x\n", intermed, temp); 
+
+	printf("Started: %f\tOutput: %f\n", testDouble, outDouble);
+
+	printf("\n\n\n");
+	unsigned idx;
+	unsigned char *ptr = (unsigned char*) &testDouble;
+
+	for (idx=CHAR_BIT * sizeof(testDouble); idx-- ; ) {
+        	putc(
+        	( ptr[idx/CHAR_BIT] & (1u << (idx%CHAR_BIT) ) )
+        	? '1'
+        	: '0'
+        	, stdout
+        	);
+        }
+	// https://gregstoll.com/~gregstoll/floattohex/
+
+	
+	
 }
