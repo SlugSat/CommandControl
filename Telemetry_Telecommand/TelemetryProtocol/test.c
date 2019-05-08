@@ -322,16 +322,29 @@ int main(int argc, char **argv)
 	{ 	// Loop over bytes in float
 		temp <<= 8;
 		temp |= (uint64_t) testP[b_i];
-		printf("%d .\n", b_i);
+		printf("%d: %016lx\n", b_i, temp);
 	}
-	printf("HERE\n");
 	outDouble = (double) temp;
-	printf("THERE\n");
-	printf("Started: %f\tOutput: %f\n", testDouble, outDouble);
-	
-	
-	
-	
-	
+	uint64_t temp1 = 0x2583f2;
+	printf("Started: %lf\tOutput: %lf\n\n\n", (double) temp1, (double) outDouble);
+
+	union Date {
+		double date;
+		uint64_t udate;
+		uint8_t idate[8];
+	};
+
+	union Date D;
+	D.date = 2458610.512340;
+	//D.udate = 0x4142c1f941945b6c;
+
+	printf( "Double date : %lf\n", D.date);
+	   
+	printf( "Unsigned date : %016lx\n", D.udate);
+	for (int k = 7 ; k >= 0 ; k--)
+	{
+		printf("Byte: %d  Value: 0x%02x\n", k, D.idate[k]);
+	}		
+
 	
 }
