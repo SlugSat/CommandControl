@@ -279,18 +279,59 @@ int main(int argc, char **argv)
 
 	printf("\n\n\n");
 	unsigned idx;
-	unsigned char *ptr = (unsigned char*) &testDouble;
+/* 	unsigned char *ptr = (unsigned char*) &testDouble;
 
 	for (idx=CHAR_BIT * sizeof(testDouble); idx-- ; ) {
         	putc(
-        	( ptr[idx/CHAR_BIT] & (1u << (idx%CHAR_BIT) ) )
-        	? '1'
-        	: '0'
-        	, stdout
-        	);
-        }
+        	( ptr[idx/CHAR_BIT] & (1u << (idx%CHAR_BIT) ) ) ? '1' : '0', stdout);
+        } */
+	printf("\n\n");
+	printf("0100000101000010110000011111100101000001100101000101101101101100\n\n");	
+		
+	uint8_t testP[8] = {0};
+	unsigned char *ptr1 = (unsigned char*) &testDouble;
+	for (idx = CHAR_BIT * sizeof(testDouble); idx--; ) 
+	{
+		if ((ptr1[idx/CHAR_BIT] & (1u << (idx%CHAR_BIT))) == 0)
+		{
+			
+			//printf("%u: %u: 0\n", idx/CHAR_BIT, idx);
+			printf("0");
+		}
+		else
+		{
+			testP[idx/CHAR_BIT] = testP[idx/CHAR_BIT] | (1u << idx%CHAR_BIT);
+			//printf("%u: %u: 1\n", idx/CHAR_BIT, idx);
+			printf("1");
+		}
+    } 
+	printf("\n\n");
+	uint64_t hi = 0x4142C1F941945B6C;
+	printf("%02lx\n\n", hi);
+	for (int i = 7; i >= 0; i--)
+	{
+		printf("%02lx", testP[i]);
+	}
+	printf("\n\n");
 	// https://gregstoll.com/~gregstoll/floattohex/
-
+	// 4142C1F941945B6C
+	
+	temp = 0;
+	temp |= (uint64_t) testP[7];
+	for(int b_i = 6 ; b_i >= 0 ; b_i--) 
+	{ 	// Loop over bytes in float
+		temp <<= 8;
+		temp |= (uint64_t) testP[b_i];
+		printf("%d .\n", b_i);
+	}
+	printf("HERE\n");
+	outDouble = (double) temp;
+	printf("THERE\n");
+	printf("Started: %f\tOutput: %f\n", testDouble, outDouble);
+	
+	
+	
+	
 	
 	
 }
