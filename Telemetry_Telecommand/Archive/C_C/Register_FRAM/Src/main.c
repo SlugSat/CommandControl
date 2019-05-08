@@ -43,7 +43,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "SPI_FRAM.h"
 #include "string.h"
 
 /* USER CODE END Includes */
@@ -120,60 +120,32 @@ int main(void)
 
 	unsigned char SUCCESS[] = "Success\n";
 	unsigned char ERROR[] = "Fail\n";
-	uint8_t data[1] = {0};
+	uint8_t data[101] = {0};
+	uint8_t Readdata[101] = {0};
+	 for(int i =0;i<100;i++){
+				data[i]=1;
+				Readdata[i]=2;
+	 }
 	uint8_t correct = 0;
-	uint8_t StrOut[30];
+	char Msg1[100] = {0};
+	char Msg2[100] = {0};
 
-	uint8_t i =0;
+	snprintf((char *)Msg1, sizeof(Msg1), "\n\nSTARTING THE CC1200 TRANSCEIVER TEST\n\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	memcpy(Msg1, Msg2, 100);
+	 
+	SPI_FRAM_Write(hspi1,time,data,100);
+	SPI_FRAM_Read(hspi1, time, Readdata,100);
+	//Readdata[77]=8;
 	
-	//Clear Data
-	for(i=0; i<100; i++){
-		data[0] = 0;
-		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
-			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
-		}
-	}
-	
-	//Enter Data
-	for(i=0; i<100; i++){
-		data[0] = i;
-		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
-			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
-		}
-//		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
-//			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
-//		}
-//		if( HAL_SPI_Transmit(&hspi1, data, 1, 5) != HAL_OK){
-//			HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
-//		}
-		else{
-			//HAL_UART_Transmit(&huart2,SUCCESS,strlen(SUCCESS),10);
-		}
-		//HAL_Delay(100);
-	}
-	
-	//Read back data
-	for(i=0; i<100; i++){
-		//data[0] = i;
-//		if( HAL_SPI_Receive(&hspi1, data, 1, 5) != HAL_OK){
-		if( HAL_SPI_TransmitReceive(&hspi1, &i, data, 1, 5) != HAL_OK){
-		HAL_UART_Transmit(&huart2,ERROR,strlen(ERROR),10);
-		}
-		else{
-			//sprintf(StrOut,"%2d : %2d\n",i, data[0]);
-			//HAL_UART_Transmit(&huart2,StrOut,strlen(StrOut),10);
-			
-			if(data[0] == i){
+   for(int i =0;i<100;i++){
+			if(data[i]==Readdata[i]){
 				correct++;
 			}
-			
-		}
-		//HAL_Delay(100);
-	}
-
-	sprintf(StrOut,"%\n  %d / %d  correct\n",correct, i);
-	HAL_UART_Transmit(&huart2,StrOut,strlen(StrOut),10);
-	
+	 }
+  snprintf((char *)Msg1, sizeof(Msg1), "\n  %d / 100  correct\n",correct);
+	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+	memcpy(Msg1, Msg2, 100);
 
   /* USER CODE END 2 */
 
@@ -306,9 +278,20 @@ static void MX_USART2_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
