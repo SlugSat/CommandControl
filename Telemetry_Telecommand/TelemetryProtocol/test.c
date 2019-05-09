@@ -2,6 +2,11 @@
 
 #include <limits.h>
 
+
+
+uint64_t double_to_unsigned(double input);
+void double_to_bytes(double input, uint8_t *retArr);
+
 int main(int argc, char **argv)
 {
 	
@@ -346,5 +351,37 @@ int main(int argc, char **argv)
 		printf("Byte: %d  Value: 0x%02x\n", k, D.idate[k]);
 	}		
 
+       uint64_t output9 = double_to_unsigned(testDouble);
+       printf("\n\nOutput: 0x%016lx\n\n", output9);
 	
+
+	for(int k = 7; k >= 0; k--)
+	{	
+		printf("Byte: %d  Value: 0x%02x\n", k, D.idate[k]);
+	} 
+
+}
+
+uint64_t double_to_unsigned(double input)
+{
+        union Date {
+                double date;
+                uint64_t udate;
+        };
+        union Date D;
+        D.date = input;
+	printf("udate: 0x%016lx\n", D.udate);
+        return D.udate;
+}
+
+void double_to_bytes(double input, uint8_t *retArr)
+{	
+	union Date {
+		double date;
+		uint64_t udate;
+		uint8_t bdate[8];
+	};
+	union Date D;
+	D.date = input;
+	memcpy(retArr, D.bdate, 8);
 }
