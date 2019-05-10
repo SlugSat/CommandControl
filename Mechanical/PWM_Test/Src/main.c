@@ -40,7 +40,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdlib.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -72,9 +71,8 @@ TIM_HandleTypeDef htim4;
 
 // duty cycle variable in percentage
 static uint16_t duty_cycle = 100;
+static uint16_t duty_cycle2 = 100;
 
-// debounce variable
-static uint8_t button_state_h = 0;
 
 // adc value variable
 static uint16_t adc_val = 0;
@@ -139,39 +137,40 @@ int main(void)
 	HAL_TIM_Base_Start(&htim4);
 	
 	// starts PWM signal generation
-	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+	if (HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1) != HAL_OK) {
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	}
 	
+	if (HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2) != HAL_OK) {
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	}	
 	// set PWM signal frequency
-	PWM_Set_Frequency(&htim4, 1000);
+	PWM_Set_Frequency(&htim4, 10000);
 	
 	// initialize duty cycle
-	PWM_Set_Duty_Cycle(&htim4, duty_cycle);
+	PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
+	PWM_Set_Duty_Cycle(&htim4, duty_cycle2, TIM_CHANNEL_2);
+
 	
 	//========================================================
 	//								ADC Initialization functions
 	//========================================================
 	HAL_ADC_Start(&hadc1);
-	
-	uint16_t old_val = 0;
-	
+		
   while (1)
   {
-		// store button history for debouncing
-		button_state_h <<= 1;
-		button_state_h |= HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-
-		HAL_Delay(50);
+		HAL_Delay(10);
 		
+		// get raw adc input value
 		adc_val = HAL_ADC_GetValue(&hadc1);
 
+		// convert adc value to duty cycle percentage
 		duty_cycle = (adc_val * 100.0)/4096;
+		duty_cycle2 = 100 - ((adc_val * 100.0)/4096);
 			
-		PWM_Set_Duty_Cycle(&htim4, duty_cycle);
-		
-		if (button_state_h  == BUTTON_DOWN)
-		{			
-			// button event down
-		}
+		// set duty cycle accordingly
+		PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
+		PWM_Set_Duty_Cycle(&htim4, duty_cycle2, TIM_CHANNEL_2);
 		
     /* USER CODE END WHILE */
 
@@ -318,6 +317,10 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
@@ -339,11 +342,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
