@@ -2,11 +2,8 @@
 
 #include <limits.h>
 
+double JD_2_decdate(double JD);
 
-
-double bytes_to_double(uint8_t input[8]);
-uint64_t double_to_unsigned(double input);
-void double_to_bytes(double input, uint8_t *retArr);
 
 int main(int argc, char **argv)
 {
@@ -254,149 +251,69 @@ int main(int argc, char **argv)
 
 	printf("\n\nTesting going from a double to a byte and then recreating it\n");
 	
-	double testDouble = 2458610.512340;
+	double testDouble = 2458610.71462;//2458610.72067;// 2458610.512340;
 	double outDouble = 0.0;
+
+	double yearTest = 2457132.71462;//2457247.71462;
 	
-	uint8_t p[8];
+	outDouble = JD_2_decdate(yearTest);
 	
-	// Writes n floats to a packet of size n*4 bytes
-	unsigned int p_i = 0; // Packet index
-	uint64_t intermed = (uint64_t) testDouble; 
-	for(unsigned int b_i = 0;b_i < 8;b_i++) 
-	{ 	// Loop over bytes in float
-		//p[p_i++] = (uint8_t) (intermed & (0xff << 8*b_i)) >> (8*b_i);
-		p[p_i] = p[p_i] | ((intermed & (0xFF << 8*b_i)) >> (8*b_i));
-		p_i++;
-	}
+	printf("Output: %lf\n", outDouble);
 
-	uint64_t temp = 0;
-	// Reads n floats from a packet of size n*4 bytes
-	for(unsigned int b_i = 0 ; b_i < 8 ; b_i++) 
-	{ 	// Loop over bytes in float
-		temp = (uint64_t) temp | (p[b_i] << b_i);
-	}
-	outDouble = (double) temp;
-	
-	printf("Started (unsigned): %u\t(double): %f\n", (uint64_t) testDouble, testDouble);
-	printf("Double start: 0x%016x\n", testDouble);
-	printf("Uint64 start: 0x%016x\tEnd: 0x%016x\n", intermed, temp); 
+	double inter = outDouble - 2015;
+	printf("Days: %lf\n", inter);
 
-	printf("Started: %f\tOutput: %f\n", testDouble, outDouble);
+	unsigned days = inter * 365 + 1;
+	printf("Days: %u\n", days);
 
-	printf("\n\n\n");
-	unsigned idx;
-/* 	unsigned char *ptr = (unsigned char*) &testDouble;
+	double remaind = testDouble - (unsigned) testDouble;
+	unsigned daysss = (remaind - 0.5) * 365 + 1;
+	printf("days: %u\n", daysss);
 
-	for (idx=CHAR_BIT * sizeof(testDouble); idx-- ; ) {
-        	putc(
-        	( ptr[idx/CHAR_BIT] & (1u << (idx%CHAR_BIT) ) ) ? '1' : '0', stdout);
-        } */
-	printf("\n\n");
-	printf("0100000101000010110000011111100101000001100101000101101101101100\n\n");	
+	const unsigned long long base = 1000000; 
+	const unsigned long long halfbase = 500000; 
+	const unsigned secsPerDay = 86400; 
+
+	double remainder = testDouble - (unsigned) testDouble;
+
+	//"rounded" remainder after adding half a day 
+   	unsigned long long rndRemainder = (unsigned long long)(remainder * base + halfbase) % base; 
+ 
+	rndRemainder *= secsPerDay; 
+ 
+     	// "rounded" number of seconds 
+      	unsigned long long nsecs = (rndRemainder + halfbase) / base; 
+ 
+       	//hours: secs/3600 % 24, min: secs/60 % 60, secs secs % 60 
+        unsigned rtn = (nsecs/3600 % 24) * 10000 + (nsecs/60 % 60) * 100 + (nsecs % 60); 
+        
+	printf("Hours: %u\n", rtn); 
+
+
+
+
+}
+
+double JD_2_decdate(double JD)
+{
+	JD = JD - 2451545 + 0.5;
+	int year = 2000;
+	int days_per_year = 365;
+	while(1) {
+		if(((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0))) {
+			days_per_year = 366; // Leap year
+		}
+		else {
+			days_per_year = 365;
+		}
+		if (JD < days_per_year)
+		{
+			break;
+		}
 		
-	uint8_t testP[8] = {0};
-	unsigned char *ptr1 = (unsigned char*) &testDouble;
-	for (idx = CHAR_BIT * sizeof(testDouble); idx--; ) 
-	{
-		if ((ptr1[idx/CHAR_BIT] & (1u << (idx%CHAR_BIT))) == 0)
-		{
-			
-			//printf("%u: %u: 0\n", idx/CHAR_BIT, idx);
-			printf("0");
-		}
-		else
-		{
-			testP[idx/CHAR_BIT] = testP[idx/CHAR_BIT] | (1u << idx%CHAR_BIT);
-			//printf("%u: %u: 1\n", idx/CHAR_BIT, idx);
-			printf("1");
-		}
-    } 
-	printf("\n\n");
-	uint64_t hi = 0x4142C1F941945B6C;
-	printf("%02lx\n\n", hi);
-	for (int i = 7; i >= 0; i--)
-	{
-		printf("%02lx", testP[i]);
+		year++;
+		JD -= days_per_year;
 	}
-	printf("\n\n");
-	// https://gregstoll.com/~gregstoll/floattohex/
-	// 4142C1F941945B6C
 	
-	temp = 0;
-	temp |= (uint64_t) testP[7];
-	for(int b_i = 6 ; b_i >= 0 ; b_i--) 
-	{ 	// Loop over bytes in float
-		temp <<= 8;
-		temp |= (uint64_t) testP[b_i];
-		printf("%d: %016lx\n", b_i, temp);
-	}
-	outDouble = (double) temp;
-	uint64_t temp1 = 0x2583f2;
-	printf("Started: %lf\tOutput: %lf\n\n\n", (double) temp1, (double) outDouble);
-
-	union Date {
-		double date;
-		uint64_t udate;
-		uint8_t idate[8];
-	};
-
-	union Date D;
-	D.date = 2458610.512340;
-	//D.udate = 0x4142c1f941945b6c;
-
-	printf( "Double date : %lf\n", D.date);
-	   
-	printf( "Unsigned date : %016lx\n", D.udate);
-	for (int k = 7 ; k >= 0 ; k--)
-	{
-		printf("Byte: %d  Value: 0x%02x\n", k, D.idate[k]);
-	}		
-
-       uint64_t output9 = double_to_unsigned(testDouble);
-       printf("\n\nOutput: 0x%016lx\n\n", output9);
-	
-	uint8_t tP[8] = {0};
-	double_to_bytes(testDouble, tP); 
-	for(int k = 7; k >= 0; k--)
-	{	
-		printf("Byte: %d  Value: 0x%02x\n", k, D.idate[k]);
-	} 
-
-	double output8 = bytes_to_double(tP);
-	printf("Final test: %lf\n", output8);
-
-}
-
-uint64_t double_to_unsigned(double input)
-{
-        union Date {
-                double date;
-                uint64_t udate;
-        };
-        union Date D;
-        D.date = input;
-        return D.udate;
-}
-
-void double_to_bytes(double input, uint8_t *retArr)
-{	
-	union Date {
-		double date;
-		uint64_t udate;
-		uint8_t bdate[8];
-	};
-	union Date D;
-	D.date = input;
-	memcpy(retArr, D.bdate, 8);
-}
-
-double bytes_to_double(uint8_t input[8])
-{
-	union Date {
-		double date;
-		uint8_t bdate[8];
-	};
-	union Date D;
-	memcpy(D.bdate, input, 8);
-	return D.date;
+	return (double)year + JD/days_per_year;
 }
