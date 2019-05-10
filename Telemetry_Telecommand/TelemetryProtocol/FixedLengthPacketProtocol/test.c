@@ -2,6 +2,9 @@
 
 #include <limits.h>
 
+double JD_2_decdate(double JD);
+
+
 int main(int argc, char **argv)
 {
 	
@@ -248,12 +251,46 @@ int main(int argc, char **argv)
 
 	printf("\n\nTesting going from a double to a byte and then recreating it\n");
 	
-	double testDouble = 2458610.512340;
+	double testDouble = 2458610.71462;//2458610.72067;// 2458610.512340;
 	double outDouble = 0.0;
+
+	double yearTest = 2457132.71462;//2457247.71462;
 	
-	outDouble = JD_2_decdate(testDouble);
+	outDouble = JD_2_decdate(yearTest);
 	
 	printf("Output: %lf\n", outDouble);
+
+	double inter = outDouble - 2015;
+	printf("Days: %lf\n", inter);
+
+	unsigned days = inter * 365 + 1;
+	printf("Days: %u\n", days);
+
+	double remaind = testDouble - (unsigned) testDouble;
+	unsigned daysss = (remaind - 0.5) * 365 + 1;
+	printf("days: %u\n", daysss);
+
+	const unsigned long long base = 1000000; 
+	const unsigned long long halfbase = 500000; 
+	const unsigned secsPerDay = 86400; 
+
+	double remainder = testDouble - (unsigned) testDouble;
+
+	//"rounded" remainder after adding half a day 
+   	unsigned long long rndRemainder = (unsigned long long)(remainder * base + halfbase) % base; 
+ 
+	rndRemainder *= secsPerDay; 
+ 
+     	// "rounded" number of seconds 
+      	unsigned long long nsecs = (rndRemainder + halfbase) / base; 
+ 
+       	//hours: secs/3600 % 24, min: secs/60 % 60, secs secs % 60 
+        unsigned rtn = (nsecs/3600 % 24) * 10000 + (nsecs/60 % 60) * 100 + (nsecs % 60); 
+        
+	printf("Hours: %u\n", rtn); 
+
+
+
 
 }
 
