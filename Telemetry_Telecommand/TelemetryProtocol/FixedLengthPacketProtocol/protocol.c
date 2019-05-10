@@ -24,7 +24,7 @@ uint8_t Decode_CubeSat_Time (uint8_t *packet, time_of_day *satTime)
 uint8_t Decode_Ground_Packet(uint8_t *packet)
 {
 	// Decode the packet given to the ground station from the CubeSat
-	uint8_t command = (packet[2] & 0x07);
+	uint8_t command = (packet[8] & 0x07);
 	time_of_day satTime;
 	// First decode the opcode
 	switch (command)
@@ -230,130 +230,97 @@ uint8_t Decode_Sat_Packet(uint8_t *packet)
 }
 
 /* Create a packet responding to the status request from ground station */
-uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day SatTime)
+uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate)
 {
-	// Packets structure: HHHH H0MM MMMM 0SSS SSS0 0XXX
-	// H = hour, M = minute, S = seconds, XXX represents the command
+	// Packets structure: TIME(8 bytes) 0000 0XXX
+	
+	//Initialize the packet
+	uint8_t packet[10] = {0};
+
+	// Convert the date into bytes
+	double_to_bytes(julianDate, &packet[0]);
 	
 	// The command code filling in the XXX is 010
-	uint8_t packet[4] = {0};
-	
-	// HHHH H0MM
-	packet[0] = SatTime.hour << 3;
-	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
-	
-	// MMMM 0SSS
-	packet[1] = (SatTime.min & 0x0F) << 4;
-	packet[1] = packet[1] | ((SatTime.sec & 0x38) >> 3);
-	
-	// SSS0 0XXX
-	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | SAT_STATUS;
-	
-	packet[3] = status;
+	packet[8] = 0x02;
+
+	// Store the status 
+	packet[9] = status;
 	
 	// Return the packet to be used outside this function
-	memcpy(retPacket, packet, 4);
+	memcpy(retPacket, packet, 10);
 	
 	return SUCCESS;
 }
 
 /* Create a packet containing science payload data */
-uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLength, time_of_day SatTime)
+uint8_t Create_ScienceData(uint8_t *retPacket, ScienceDataPoint *data, uint16_t dataLength, double julianDate)
 {
-	// Packets structure: HHHH H0MM MMMM 0SSS SSS0 0XXX
-	// H = hour, M = minute, S = seconds, XXX represents the command
+	// Packets structure: TIME(8 bytes) 0000 0XXX
+	
+	// Initialize the packet
+	uint8_t packet[24] = {0};
+	
+	// Convert the date into bytes
+	double_to_bytes(julianDate, &packet[0]);
 	
 	// The command code filling in the XXX is 100
-	uint8_t packet[MAX_PACK_SIZE] = {0};
-	
-	// HHHH H0MM
-	packet[0] = SatTime.hour << 3;
-	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
-	
-	// MMMM 0SSS
-	packet[1] = (SatTime.min & 0x0F) << 4;
-	packet[1] = packet[1] | ((SatTime.sec & 0x38) >> 3);
-	
-	// SSS0 0XXX
-	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | SCI_DATA;
+	packet[8] = 0x04;
 	
 	// Store the science payload data
-	// The data input to this function is 3 bye value in the format of science payload data
-	// i.e. HHHH HMMM MMMS SSSS SDDD DDDD where H, m, and s are the time and D is the data value, 0-100
-	for (int i = 0, j = 3; i < dataLength; i++)
+	for (uint8_t i = 0; i < dataLength; i++)
 	{
-		packet[j + 0] = (data[i] & 0xFF0000) >> 16;
-		packet[j + 1] = (data[i] & 0x00FF00) >> 8;
-		packet[j + 2] = (data[i] & 0x0000FF) >> 0;
-		j += 3;
+		memcpy(&packet[9 + 5*i], &data[i], 5);
 	}
-	
 	// Return the packet to be used outside this function
-	memcpy(retPacket, packet, 3 + dataLength);
+	memcpy(retPacket, packet, 9 + 5*dataLength);
 	
 	return SUCCESS;
 }
 
 /* Acknowledgement of certain messages or responses */
-uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_day SatTime)
+uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, double julianDate)
 {
-	// Packets structure: HHHH H0MM MMMM 0SSS SSS0 0XXX
-	// H = hour, M = minute, S = seconds, XXX represents the command
+	// Packets structure: TIME(8 bytes) 0000 0XXX
+	
+	// Initialize the packet
+	uint8_t packet[10] = {0};
+	
+	// Convert the date into bytes
+	double_to_bytes(julianDate, &packet[0]);
 	
 	// The command code filling in the XXX is 111
-	uint8_t packet[4] = {0};
+	packet[8] = 0x07;
 	
-	// HHHH H0MM
-	packet[0] = SatTime.hour << 3;
-	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
-	
-	// MMMM 0SSS
-	packet[1] = (SatTime.min & 0x0F) << 4;
-	packet[1] = packet[1] | ((SatTime.sec & 0x38) >> 3);
-	
-	// SSS0 0XXX
-	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | SAT_ACK;
-	
-	// Store the hash of the command being acknowledged
-	packet[3] = hashValue;
+	// Store the hashValue
+	packet[9] = hashValue;	
 	
 	// Return the packet to be used outside this function
-	memcpy(retPacket, packet, 4);
+	memcpy(retPacket, packet, 10);
 	
 	return SUCCESS;
 }
 
 /* Create a packet with the current CubeSat's location (Keplerian Elements) */
-uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepElem2, uint8_t KepElem3, time_of_day SatTime)
+uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude, float altitude, double julianDate)
 {
-	// Packets structure: HHHH H0MM MMMM 0SSS SSS0 0XXX
-	// H = hour, M = minute, S = seconds, XXX represents the command
+	// Packets structure: TIME(8 bytes) 0000 0XXX
+
+	// Initialize the packet
+	uint8_t packet[21] = {0};
+	
+	// Convert the date into bytes
+	double_to_bytes(julianDate, &packet[0]);
 	
 	// The command code filling in the XXX is 101
-	uint8_t packet[6] = {0};
+	packet[8] = 0x05;
 	
-	// HHHH H0MM
-	packet[0] = SatTime.hour << 3;
-	packet[0] = packet[0] | ((SatTime.min & 0x30) >> 4);
-	
-	// MMMM 0SSS
-	packet[1] = (SatTime.min & 0x0F) << 4;
-	packet[1] = packet[1] | ((SatTime.sec & 0x38) >> 3);
-	
-	// SSS0 0XXX
-	packet[2] = ((SatTime.sec & 0x07) << 5);
-	packet[2] = packet[2] | SAT_LOCATION;
-	
-	// Store the Keplerian elements
-	packet[3] = KepElem1;
-	packet[4] = KepElem2;
-	packet[5] = KepElem3;
+	// Store the location data
+	float_to_bytes(latitude, &packet[9]);
+	float_to_bytes(longitude, &packet[13]);
+	float_to_bytes(altitude, &packet[17]);
 	
 	// Return the packet to be used outside this function
-	memcpy(retPacket, packet, 6);
+	memcpy(retPacket, packet, 21);
 	
 	return SUCCESS;
 }

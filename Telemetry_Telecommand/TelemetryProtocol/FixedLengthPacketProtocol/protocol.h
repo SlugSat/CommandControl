@@ -9,27 +9,19 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-//#include <readline/readline.h>
-//#include <readline/history.h>
-#include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <math.h>
 #include <time.h>
-// Files needed for sockets
-//#include <sys/types.h>
-//#include <sys/socket.h>
-//#include <netinet/in.h>
-//#include <netdb.h>
-//#include <arpa/inet.h>
-// Threading libraries
-//#include <pthread.h>
+
+#include "DateConversion.h"
 
 /********** Type defined structs and enums **********/
 
 // This struct will hold each of the times needed 
 typedef struct time_of_day
 {
+	uint16_t millisec;
 	uint8_t hour;
 	uint8_t min;
 	uint8_t sec;
@@ -37,6 +29,12 @@ typedef struct time_of_day
 	uint8_t day;
 	uint8_t year; // year since 1900
 } time_of_day;
+
+typedef struct ScienceDataPoint
+{
+	uint32_t Time;
+	uint8_t Energy;
+} ScienceDataPoint;
 
 
 /********** Defined macros **********/
@@ -93,16 +91,16 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 uint8_t Decode_Sat_Packet(uint8_t *packet);
 
 /* Create a packet responding to the stats request from ground station */
-uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, time_of_day SatTime);
+uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate);
 
 /* Create a packet containing science payload data */
-uint8_t Create_ScienceData(uint8_t *retPacket, uint32_t *data, uint16_t dataLength, time_of_day SatTime);
+uint8_t Create_ScienceData(uint8_t *retPacket, ScienceDataPoint *data, uint16_t dataLength, double julianDate);
 
 /* Acknowledgement of certain messages or responses */
-uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, time_of_day SatTime);
+uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, double julianDate);
 
 /* Create a packet with the current CubeSat's location (Keplerian Elements) */
-uint8_t Create_LocationData(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepElem2, uint8_t KepElem3, time_of_day SatTime);
+uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude, float altitude, double julianDate);
 
 
 #endif // PROTO_H
