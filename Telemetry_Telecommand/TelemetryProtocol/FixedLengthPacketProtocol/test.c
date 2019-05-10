@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	
 	/////////////////////////////////////////////////////////////////////////////
 	
-	uint8_t packet[3];
+	uint8_t packet[3] = {0};
 	uint8_t logType1 = 0;
 	time_of_day testTime1;
 	testTime1.hour = 20; // 0001 0100
@@ -156,75 +156,69 @@ int main(int argc, char **argv)
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////
-
 	/*This is for the cubesat side*/
-	/* creating  a packet responding to the status request from ground station */
-	//////////////////////////Testing cube sat status   //////////////////////
-	uint8_t packResponseStat[4];
-	uint8_t status  = 2; 
-	time_of_day satTime;
-	satTime.hour = 13; // 0000 1101//0d
-	satTime.min = 29; // 0001 1101//1D
-	satTime.sec = 02; // 0000 0010//02
-	uint8_t b = Create_Response_Status( packResponseStat,  status,  satTime);
+	/////////////////////////////////////////////////////////////////////////////
+	double julianDate = 2458610.512340;
+	ScienceDataPoint sdp[3];
+	for (int q = 0; q < 3; q++)
+	{
+		sdp[q].Time = 4*q + 1;
+		sdp[q].Energy = q+1;
+	}
+	printf("\n1:  %d  2: %d  3: %d\n\n", sdp[0].Energy, sdp[1].Energy, sdp[2].Energy);
+	//////////////////////////Testing cube sat status   //////////////////////	
+	uint8_t packResponseStat[24] = {0};
+	uint8_t status  = 7; 
+	uint8_t b = Create_Response_Status(packResponseStat, status, julianDate);
 	if (b)
 	{
 		printf("Respond with Satellite Status\n");
 		printf("\tThe packet should be:\t69 D0 42 02\n");
 		
 		printf("\tPacket created:\t\t");
-		for (int i = 0; i < 4; i++)	printf("%02X ", packResponseStat[i]);
+		for (int i = 0; i < 24; i++)	printf("%02X ", packResponseStat[i]);
 		printf("\n");
 	}
 	////////////////////////// testing ScienceData//////////////////////
-	uint8_t packSciData[18];//change this
-	uint32_t data[5]={996425292, 1555747228,429467295,487478373,555555555 }; 
-	uint16_t dataLength =15;
-	uint8_t c = Create_ScienceData(packSciData, data,  dataLength,  satTime);
+	uint8_t packSciData[24] = {0};//change this
+	uint16_t dataLength = 3;
+	uint8_t c = Create_ScienceData(packSciData, sdp, dataLength,  julianDate);
 	if (c)
 	{
 		printf("Respond with Science data\n");
 		printf("\tThe packet should be:\t69 D0 44 64 3E 4C BA D1 9C 99 26 9F 0E 54 65 1D 1A E3 \n");
 		
 		printf("\tPacket created:\t\t");
-		for (int i = 0; i < 18; i++)      printf("%02X ",packSciData[i]); 
+		for (int i = 0; i < 24; i++)      printf("%02X ",packSciData[i]); 
 		printf("\n");
 	}
 	/////////////////// testing Create Acknowledgement for cubesat///////////////
-	uint8_t packAckCube[4];
+	uint8_t packAckCube[24] = {0};
 	uint8_t hashValue  = 2; 
-	time_of_day satTime3;
-	satTime3.hour = 13; // 0000 1101 // 0d
-	satTime3.min = 29; // 0001 1101 // 1D
-	satTime3.sec = 02; // 0000 0010 // 02
-	uint8_t d = Create_Acknowledgement( packAckCube,  hashValue,  satTime3);
+	uint8_t d = Create_Acknowledgement( packAckCube,  hashValue,  julianDate);
 	if (d)
 	{
 		printf("Satellite Acknowledgement\n");
 		printf("\tThe packet should be:\t69 D0 47 02\n");
 		
 		printf("\tPacket created:\t\t");
-		for (int i = 0; i < 4; i++)	printf("%02X ", packAckCube[i]);
+		for (int i = 0; i < 24; i++)	printf("%02X ", packAckCube[i]);
 		printf("\n");
 	}
 	
 	/////////////////// testing Create location data for cubesat///////////////
-	uint8_t packLocCube[6];
-	uint8_t KepElem11 = 13; // 0000 1101 // 0d
-	uint8_t KepElem22 = 29; // 0001 1101 // 1D
-	uint8_t KepElem33 = 02; // 0000 0010 // 02 
-	time_of_day satTime4;
-	satTime4.hour = 20; 	// 0001 0100 // 14
-	satTime4.min = 35; 		// 0010 0011 // 23
-	satTime4.sec = 59; 		// 0011 1011 // 3B
-	uint8_t e = Create_LocationData( packLocCube,  KepElem11,  KepElem22,  KepElem33,  satTime4);
+	uint8_t packLocCube[24] = {0};
+	float KepElem11 = 13.0; 
+	float KepElem22 = 29.5; 
+	float KepElem33 = 200.12;  
+	uint8_t e = Create_LocationData(packLocCube,  KepElem11,  KepElem22,  KepElem33,  julianDate);
 	if (e)
 	{
 		printf("Respond with Location Data\n");
 		printf("\tThe packet should be:\tA2 37 65 0D 1D 02\n");
 		
 		printf("\tPacket created:\t\t");
-		for (int i = 0; i < 6; i++)	printf("%02X ", packLocCube[i]);
+		for (int i = 0; i < 24; i++)	printf("%02X ", packLocCube[i]);
 		printf("\n");
 	}
 	/////////////////////////////////////////////////////////////////////////////
@@ -251,7 +245,7 @@ int main(int argc, char **argv)
 
 	printf("\n\nTesting going from a double to a byte and then recreating it\n");
 	
-	double testDouble = 2458610.71462;//2458610.72067;// 2458610.512340;
+	double testDouble =  2458610.512340;// 2458610.71462;//2458610.72067;//
 	double outDouble = 0.0;
 
 	double yearTest = 2457132.71462;//2457247.71462;
@@ -289,7 +283,13 @@ int main(int argc, char **argv)
         
 	printf("Hours: %u\n", rtn); 
 
-
+	uint8_t testP[8] = {0};
+	double_to_bytes(testDouble, testP);
+	
+	for (int q = 7; q >= 0; q--)
+	{
+		printf("byte: %d\tvalue: 0x%02x\n", q, testP[q]);
+	}
 
 
 }

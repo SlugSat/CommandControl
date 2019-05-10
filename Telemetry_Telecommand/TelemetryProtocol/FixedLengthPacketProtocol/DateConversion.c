@@ -34,6 +34,33 @@ double bytes_to_double(uint8_t input[8])
 	return D.date;
 }
 
+
+// Convert from a float to a 4 byte value
+void float_to_bytes(float input, uint8_t *retArr)
+{
+	union Date {
+		float date;
+		uint64_t udate;
+		uint8_t bdate[4];
+	};
+	union Date D;
+	D.date = input;
+	memcpy(retArr, D.bdate, 4);
+}
+
+// Convert from 4 bytes into a float
+float bytes_to_float(uint8_t *input)
+{
+	union Location {
+		double date;
+		uint8_t bdate[4];
+	};
+	union Location D;
+	memcpy(D.bdate, input, 4);
+	return D.date;
+}
+
+
 double JD_2_year(double JD)
 {
 	JD = JD - 2451545 + 0.5;
