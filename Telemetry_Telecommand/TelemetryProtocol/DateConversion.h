@@ -11,8 +11,13 @@ uint64_t double_to_unsigned(double input);
 void double_to_bytes(double input, uint8_t *retArr);
 
 // Convert Julian date to a human readable date
-double JD_2_decdate(double JD);
+double JD_2_year(double JD);
 
+// Convert to the number of days in a year
+unsigned JD_2_days(double JD);
+
+// Convert Julian date to hours, minutes and seconds. The output is in the form of 6 decimal digits: HHMMSS
+unsigned JD_2_H_M_S(double JD);
 
 
 #endif // DATE_CONV
