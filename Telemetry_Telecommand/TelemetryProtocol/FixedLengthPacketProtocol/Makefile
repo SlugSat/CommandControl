@@ -1,8 +1,8 @@
 TESTO = test.o
 TESTC = test.c
-PROTO = protocol.o
-PROTOC = protocol.c
-PROTOH = protocol.h
+PROTO = Telemetry_Packet_Protocol.o
+PROTOC = Telemetry_Packet_Protocol.c
+PROTOH = Telemetry_Packet_Protocol.h
 CONV = DateConversion.o
 CONVC = DateConversion.c
 OBJS = $(PROTO) $(TESTO) $(CONV)

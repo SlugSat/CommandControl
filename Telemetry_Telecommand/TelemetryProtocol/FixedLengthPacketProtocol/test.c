@@ -1,4 +1,4 @@
-#include "protocol.h"
+#include "Telemetry_Packet_Protocol.h"
 
 #include <limits.h>
 
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 	ScienceDataPoint sdp[3];
 	for (int q = 0; q < 3; q++)
 	{
-		sdp[q].Time = 4*q + 1;
+		sdp[q].Time = 1234.567;
 		sdp[q].Energy = q+1;
 	}
 	printf("\n1:  %d  2: %d  3: %d\n\n", sdp[0].Energy, sdp[1].Energy, sdp[2].Energy);
@@ -225,10 +225,10 @@ int main(int argc, char **argv)
 
 	// Test decoding certain types of packets
 	printf("\n*Now Testing Decoding Packets from the CubeSat:*\n");
-	Decode_Ground_Packet(packResponseStat);
-	Decode_Ground_Packet(packSciData);
-	Decode_Ground_Packet(packAckCube);
-	Decode_Ground_Packet(packLocCube);
+	Decode_Ground_Packet(packResponseStat, 0);
+	Decode_Ground_Packet(packSciData, 0);
+	Decode_Ground_Packet(packAckCube, 0);
+	Decode_Ground_Packet(packLocCube, 0);
 
 	printf("\n*Now Testing Decoding Packets from the Ground Station:*\n");
 	
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 
 	double yearTest = 2457132.71462;//2457247.71462;
 	
-	outDouble = JD_2_decdate(yearTest);
+	outDouble = JD_2_year(yearTest);
 	
 	printf("Output: %lf\n", outDouble);
 
@@ -275,11 +275,11 @@ int main(int argc, char **argv)
  
 	rndRemainder *= secsPerDay; 
  
-     	// "rounded" number of seconds 
-      	unsigned long long nsecs = (rndRemainder + halfbase) / base; 
+	// "rounded" number of seconds 
+	unsigned long long nsecs = (rndRemainder + halfbase) / base; 
  
-       	//hours: secs/3600 % 24, min: secs/60 % 60, secs secs % 60 
-        unsigned rtn = (nsecs/3600 % 24) * 10000 + (nsecs/60 % 60) * 100 + (nsecs % 60); 
+	//hours: secs/3600 % 24, min: secs/60 % 60, secs secs % 60 
+	unsigned rtn = (nsecs/3600 % 24) * 10000 + (nsecs/60 % 60) * 100 + (nsecs % 60); 
         
 	printf("Hours: %u\n", rtn); 
 
@@ -291,29 +291,15 @@ int main(int argc, char **argv)
 		printf("byte: %d\tvalue: 0x%02x\n", q, testP[q]);
 	}
 
-
-}
-
-double JD_2_decdate(double JD)
-{
-	JD = JD - 2451545 + 0.5;
-	int year = 2000;
-	int days_per_year = 365;
-	while(1) {
-		if(((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0))) {
-			days_per_year = 366; // Leap year
-		}
-		else {
-			days_per_year = 365;
-		}
-		if (JD < days_per_year)
-		{
-			break;
-		}
-		
-		year++;
-		JD -= days_per_year;
+	float hi = 1234.567;
+	uint8_t testF[4] = {0};
+	float_to_bytes(hi, testF);
+	printf("\n\n");
+	for (int q = 3; q >= 0; q--)
+	{
+		printf("byte: %d\tvalue: 0x%02x\n", q, testF[q]);
 	}
+	printf("Float: %f\n", bytes_to_float(testF));
 	
-	return (double)year + JD/days_per_year;
+
 }
