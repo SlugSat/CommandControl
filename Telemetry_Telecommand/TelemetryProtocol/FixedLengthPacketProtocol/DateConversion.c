@@ -1,5 +1,7 @@
 #include "DateConversion.h"
 
+#include <stdio.h>
+
 uint64_t double_to_unsigned(double input)
 {
 	union Date {
@@ -52,7 +54,7 @@ void float_to_bytes(float input, uint8_t *retArr)
 float bytes_to_float(uint8_t *input)
 {
 	union Location {
-		double date;
+		float date;
 		uint8_t bdate[4];
 	};
 	union Location D;
