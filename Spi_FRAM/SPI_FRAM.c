@@ -6,21 +6,26 @@
   * @param  pRxData: pointer to reception data buffer to be
   * @param  size: size of the data you are expecting (# of bytes)
   */
-void SPI_FRAM_Read( uint16_t address, uint8_t *pRxData,uint8_t size)
+void SPI_FRAM_Read( uint16_t address, uint8_t *pRxData, uint8_t size)
 {
 	// Chip select low
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-	uint8_t opcode = 3;
-	uint8_t addrHI = address>>8;
-	uint8_t addrLO = (uint8_t) address;
-	HAL_SPI_Transmit(&hspi1,&opcode, 1, 10);
-	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);
-	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);	
+
+	// initialize read command
+	uint8_t read_command = {READ_OP, 			// read operation code
+							address>>8,			// MSB of address
+							(uint8_t)address}; 	// LSB of address
+
+	// initiate read operation
+	HAL_SPI_Transmit(&hspi1, read_command, READ_CMD_LEN, 10);	
+
+	// recieve data from appropriate register
 	for(int i = size - 1; i >= 0; i--)
 	{
 		HAL_SPI_Receive(&hspi1, &pRxData[i], 1, 10);
 	}
-		// Chip select high
+
+	// Chip select high
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 
 }
@@ -34,22 +39,26 @@ void SPI_FRAM_Write( uint16_t address, uint8_t *pTxData,uint8_t size)
 {
 	// Chip select low
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-	//the wren command sets write enable latch. wel shall be set with the wren command before writting operation..
-	uint8_t wren = 6;
-	uint8_t wrdi = 4;//to reset write enable latch after writting
-	uint8_t opcode = 2;
-	uint8_t addrHI = address>>8;
-	uint8_t addrLO = (uint8_t) address;
-	//WREN command
-	HAL_SPI_Transmit(&hspi1,&wren, 1, 10);
-	HAL_SPI_Transmit(&hspi1,&opcode, 1, 10);
-	HAL_SPI_Transmit(&hspi1,&addrHI, 1, 10);
-	HAL_SPI_Transmit(&hspi1,&addrLO, 1, 10);	
+
+	// initialize write command bytes
+	uint8_t write_command = {WREN_OP, 			// enable write operation
+							 WRITE_OP,			// write operation code
+							 address>>8,		// MSB of address
+							 (uint8_t)address}; // LSB of address
+
+
+	// initiate write operation
+	HAL_SPI_Transmit(&hspi1, write_command, CMD_LEN, 10);
+
 	for(int i = size - 1; i >= 0; i--)
 	{
 		HAL_SPI_Transmit(&hspi1, &pTxData[i], 1, 10);
 	}
-	HAL_SPI_Transmit(&hspi1,&wrdi, 1, 10);
+
+	// terminate write operation
+	uint8_t wrdi = WRDI_OP; 
+	HAL_SPI_Transmit(&hspi1, &wrdi, 1, 10);
+
 	// Chip select high
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 }
