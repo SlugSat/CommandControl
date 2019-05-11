@@ -94,6 +94,8 @@ void Error_Handler(void);
 #define SPI_FRAM_MOSI_GPIO_Port GPIOB
 #define SP_CC_RESET_Pin GPIO_PIN_7
 #define SP_CC_RESET_GPIO_Port GPIOC
+#define Kill_to_PModes_Int_Pin GPIO_PIN_9
+#define Kill_to_PModes_Int_GPIO_Port GPIOA
 #define SPI_CC_CS_Pin GPIO_PIN_6
 #define SPI_CC_CS_GPIO_Port GPIOB
 #define I2C_FRAM_SCL_Pin GPIO_PIN_8

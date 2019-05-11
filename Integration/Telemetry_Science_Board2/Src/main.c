@@ -46,6 +46,7 @@
 #include "CC1200_SPI_functions.h"
 #include "FRAM_Lib.h"
 #include "Telemetry_Packet_Protocol.h"
+#include "DateConversion.h"
 
 /* USER CODE END Includes */
 
@@ -135,6 +136,12 @@ int main(void)
 	States state;
 	state = Init;
 	
+	char msg1[100] = {0};
+	char msg2[100] = {0};
+	
+	/* Initialization code goes here */
+	CC1200_INIT(&hspi1);
+	state = Fetch;
 	
   /* USER CODE END 2 */
 
@@ -144,12 +151,6 @@ int main(void)
   {
 		switch (state)
 		{
-			/* In Detumble mode */
-			case (Init): 
-				// Initialize connected peripherals that need to be initialized
-				CC1200_INIT(&hspi1);
-				state = Fetch;
-				break;
 			/* Fetch a packet, location data, or science events mode */
 			case (Fetch): 
 				// Poll buffers and FRAM to check if an event has occurred
@@ -172,8 +173,8 @@ int main(void)
 				HAL_Delay(3000); // Poll every 3 seconds
 				break;
 			/* Decode a packet and respond accordingly mode */
-			case (Decode): 
-				;
+			case (Decode):; // Semi colon because cant declare right after case statement 
+				
 				uint8_t packet[7];
 			
 				// Get the packet in the RX FIFO
@@ -183,7 +184,7 @@ int main(void)
 				}
 				
 				// Decode the packet and take action based on the packet
-				Decode_Ground_Packet(packet);
+				Decode_Sat_Packet(packet);
 				
 				state = Fetch;
 				break;
@@ -221,10 +222,10 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /**Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage 
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /**Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -237,7 +238,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /**Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -413,6 +414,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SP_CC_RESET_GPIO_Port, SP_CC_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Kill_to_PModes_Int_GPIO_Port, Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI_CC_CS_GPIO_Port, SPI_CC_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SP_CC_RESET_Pin */
@@ -421,6 +425,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SP_CC_RESET_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Kill_to_PModes_Int_Pin */
+  GPIO_InitStruct.Pin = Kill_to_PModes_Int_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Kill_to_PModes_Int_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SPI_CC_CS_Pin */
   GPIO_InitStruct.Pin = SPI_CC_CS_Pin;
