@@ -2,7 +2,7 @@
 //please make sure that you have designated GPIO A9 as the chip select
 //you are only allowed to use macros for adresses in both functions
 
-#include "stm32l1xx_hal.h"
+#include "main.h"
 
 // Constants
 #define WRITE_CMD_LEN	(4) 
