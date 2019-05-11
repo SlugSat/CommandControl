@@ -1,12 +1,18 @@
 //This is the library that lets you use the SPI FRAM.
 //please make sure that you have designated GPIO A9 as the chip select
 //you are only allowed to use macros for adresses in both functions
+
 #include "stm32l1xx_hal.h"
+
+// Constants
+#define WRITE_CMD_LEN			(4) 
+#define READ_CMD_LEN			(3) 
+
 //opcodes
-#define Write_Opcode        (2)
-#define Read_Opcode         (3)
-#define Wrdi_opcode         (4)
-#define Wren_opcode         (6)
+#define WRITE_OP        (2)
+#define READ_OP         (3)
+#define WRDI_OP         (4)
+#define WREN_OP         (6)
 
 //adresses
 #define SPI_latitude_addr            (0)
