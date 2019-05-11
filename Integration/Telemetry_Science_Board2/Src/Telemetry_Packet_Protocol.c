@@ -345,13 +345,18 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 void Handle_Kill_Packet(uint8_t *packet)
 {
 	// Send an Ack
+	Create_Acknowledgement(packet, 0, 2458615.42743); 
+
 	// Send interrupt to power modes to kill the system
-	
+	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
+	HAL_Delay(10);
+	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
 }
 
 void Handle_LogSci_Packet(uint8_t *packet)
 {
 	// Write to SPI FRAM in the location for a logged science event
+
 	// Write the time that the data should be logged at.
 	// Send an Ack
 }

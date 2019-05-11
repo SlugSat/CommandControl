@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include "DateConversion.h"
+#include "main.h"
 
 /********** Type defined structs and enums **********/
 
@@ -36,9 +37,9 @@ typedef struct ScienceDataPoint
 
 
 /********** Defined macros **********/
-#define MAX_PACK_SIZE (1024)
-#define SUCCESS (1)
-#define FAIL (0)
+#define MAX_PACK_SIZE 	(1024)
+#define SUCCESS 	  	(1)
+#define FAIL 		  	(0)
 
 #define SAT_STATUS 		(0x2)
 #define SCI_DATA   		(0x4)
