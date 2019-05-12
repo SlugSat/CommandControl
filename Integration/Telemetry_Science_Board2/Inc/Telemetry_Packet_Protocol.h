@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include "DateConversion.h"
+#include "CC1200_SPI_functions.h"
 #include "main.h"
 
 /********** Type defined structs and enums **********/
@@ -38,8 +39,9 @@ typedef struct ScienceDataPoint
 
 /********** Defined macros **********/
 #define MAX_PACK_SIZE 	(1024)
-#define SUCCESS 	  	(1)
-#define FAIL 		  	(0)
+#define FIXED_PACK_SIZE (24)
+#define SUCCESS 	  		(1)
+#define FAIL 		  			(0)
 
 #define SAT_STATUS 		(0x2)
 #define SCI_DATA   		(0x4)
@@ -53,7 +55,7 @@ typedef struct ScienceDataPoint
 #define REQ_SCI_DATA	(0x40)
 #define REQ_SCI_DATA2	(0x44)
 #define REQ_LOCATION 	(0x50)
-#define KILL			(0xF0)
+#define KILL					(0xF0)
 
 
 /********** Function Declarations **********/
@@ -87,7 +89,7 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 /*** Functions for the CubeSat side ***/
 
 /* This function will decode packets that have come into the CubeSat */
-uint8_t Decode_Sat_Packet(uint8_t *packet);
+uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 
 /* Create a packet responding to the stats request from ground station */
 uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate);
@@ -111,7 +113,7 @@ void Handle_Sat_Location(uint8_t *packet);
 
 
 /*** Functions for handling packets sent by the ground station to the CubeSat***/
-void Handle_Kill_Packet(uint8_t *packet);
+void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 void Handle_LogSci_Packet(uint8_t *packet);
 void Handle_ReqStatus_Packet(uint8_t *packet);
 void Handle_ReqSciData_Packet(uint8_t *packet);
