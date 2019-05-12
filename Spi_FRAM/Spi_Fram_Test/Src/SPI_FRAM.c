@@ -9,7 +9,7 @@
 void SPI_FRAM_Read( SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size)
 {
 	// Chip select low
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
 
 	// initialize read command
 	uint8_t read_command[READ_CMD_LEN] = {READ_OP, 			// read operation code
@@ -47,8 +47,18 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
 																					(uint8_t)address}; 				// LSB of address
 
 	// initiate write operation
-	HAL_SPI_Transmit(hspi, write_command, WRITE_CMD_LEN, 10);
+	HAL_SPI_Transmit(hspi, &write_command[0], 1, 10);
 
+	// Chip select high
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_SET);
+																					
+	HAL_Delay(1);																				
+	
+// Chip select low
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
+																					
+	HAL_SPI_Transmit(hspi, &write_command[1], 3, 10);																					
+																					
 	for(int i = size - 1; i >= 0; i--)
 	{
 		HAL_SPI_Transmit(hspi, &pTxData[i], 1, 10);
@@ -59,5 +69,5 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
 	HAL_SPI_Transmit(hspi, &wrdi, 1, 10);
 
 	// Chip select high
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_SET);
 }
