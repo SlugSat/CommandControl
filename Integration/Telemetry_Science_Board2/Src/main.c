@@ -46,7 +46,7 @@
 #include "string.h"
 #include "CC1200_SPI_functions.h"
 //#include "FRAM_Lib.h"
-//#include "Telemetry_Packet_Protocol.h"
+#include "Telemetry_Packet_Protocol.h"
 //#include "DateConversion.h"
 
 /* USER CODE END Includes */
@@ -171,8 +171,6 @@ int main(void)
 	do 
 	{
 		readValue = ReadWriteCommandReg(&hspi1, CC1200_SNOP); // Check the state of the CC1200
-
-		
 		
 		HAL_Delay(500);
 		memcpy(msg1, msg2, 100);
@@ -183,12 +181,7 @@ int main(void)
 		HAL_Delay(10);
 	} while ((readValue & 0x10) != 0x10);
 
-
-	
-	
-	
-	
-	
+	uint8_t packet[FIXED_PACK_SIZE + 1] = {0};
 	state = Fetch;
 	
   /* USER CODE END 2 */
@@ -226,18 +219,22 @@ int main(void)
 			/* Decode a packet and respond accordingly mode */
 			case (Decode):; // Semi colon because cant declare right after case statement 
 				
-//				uint8_t packet[7];
-//			
-//				// Get the packet in the RX FIFO
-//				for (int i = 0; i < 19; i++)
-//				{
-//					packet[i] = ReadWriteExtendedReg(&hspi1, CC1200_READ_BIT, CC1200_RXFIFO, 0);
-//				}
-//				
-//				// Decode the packet and take action based on the packet
-//				Decode_Sat_Packet(packet);
+				// Get the packet in the RX FIFO
+				for (int i = 0; i < FIXED_PACK_SIZE; i++)
+				{
+					packet[i] = 0;
+					packet[i] = ReadWriteExtendedReg(&hspi1, CC1200_READ_BIT, CC1200_RXFIFO, 0);
+				}
+				memcpy(msg1, msg2, 100);
+				snprintf((char *)msg1, 100, "\nPacket: 0x%02x 0x%02x 0x%02x 0x%02x\n", packet[0], packet[1], packet[2], packet[3]);
+				HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+				
+				// Decode the packet and take action based on the packet
+				Decode_Sat_Packet(packet, &hspi1, &huart2);
 				
 				state = Fetch;
+				ReadWriteCommandReg(&hspi1, CC1200_SFRX); // Flush RX FIFO
+				ReadWriteCommandReg(&hspi1, CC1200_SRX);
 				break;
 			/* Log science data based on time mode */	
 			case (Science_Time): 

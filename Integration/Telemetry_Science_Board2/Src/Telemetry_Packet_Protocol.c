@@ -1,6 +1,5 @@
 #include "Telemetry_Packet_Protocol.h"
 
-
 #define DEBUG (1)
 
 /***** Functions for the ground station side *****/
@@ -189,8 +188,10 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 /***** Functions for the CubeSat side *****/
 
 /* This function will decode packets that have come into the CubeSat */
-uint8_t Decode_Sat_Packet(uint8_t *packet)
+uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
+	char msg1[100] = {0};
+	
 	// Decode the packet given to the CubeSat from the ground station
 	uint16_t command = (packet[0] & 0xFF);
 	
@@ -198,21 +199,21 @@ uint8_t Decode_Sat_Packet(uint8_t *packet)
 	switch (command)
 	{
 		case (REQ_LOG):
-			printf("Received a command to log a science event now\n");
+			//printf("Received a command to log a science event now\n");
 			// Handle the request here
 			Handle_LogSci_Packet(packet);
 			break;
 		case (REQ_LOG_TIME):
-			printf("Received a command to log a science event\n");
+			//printf("Received a command to log a science event\n");
 			// Handle the request here
 			break;
 		case (REQ_STATUS):
-			printf("Received a request for the status of the CubeSat\n");
+			//printf("Received a request for the status of the CubeSat\n");
 			// Handle the request here
 			Handle_ReqStatus_Packet(packet);
 			break;
 		case (UPDATE_KEP):
-			printf("Received a command to update the CubeSat's location with Keplerian elements\n");
+			//printf("Received a command to update the CubeSat's location with Keplerian elements\n");
 			// Handle the request here
 			Handle_UpdateKep_Packet(packet);
 			break;
@@ -222,19 +223,20 @@ uint8_t Decode_Sat_Packet(uint8_t *packet)
 			Handle_ReqSciData_Packet(packet);
 			break;
 		case (REQ_SCI_DATA2):
-			printf("Received a request for a chunk of science data\n");
+			//printf("Received a request for a chunk of science data\n");
 			// Handle the request here
 			Handle_ReqSciData_Packet(packet);
 			break;
 		case (REQ_LOCATION):
-			printf("Received a request for the CubeSat's location\n");
+			//printf("Received a request for the CubeSat's location\n");
 			// Handle the request here
 			Handle_ReqLoc_Packet(packet);
 			break;
 		case (KILL):
-			printf("Received a kill command\n");
+			snprintf(msg1, 100, "\nGot a kill packet\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
-			Handle_Kill_Packet(packet);
+			Handle_Kill_Packet(packet, hspi, huart);
 			break;
 		default:
 			fprintf(stderr, "Invalid packet command received\n");
@@ -342,11 +344,47 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 /*** Functions for handling packets sent by the ground station to the CubeSat***/
 
-void Handle_Kill_Packet(uint8_t *packet)
+void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
+	ReadWriteCommandReg(hspi, CC1200_SFTX);
+	
+	char msg1[100] = {0};
+	uint8_t ackPacket[24] = {0};
 	// Send an Ack
-	Create_Acknowledgement(packet, 0, 2458615.42743); 
+	Create_Acknowledgement(ackPacket, 0, 2458615.42743); 
+	
+	uint8_t mode = 0;
 
+	for (int i = 0; i < FIXED_PACK_SIZE; i++)
+	{
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+	}
+	
+	snprintf(msg1, 100, "\nAck put into the RX fifo\n");
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+	
+	HAL_Delay(5000);
+	
+	// Go into transmit mode
+	do
+	{
+		ReadWriteCommandReg(hspi, CC1200_STX);
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+	} while ((mode & 0x20) != 0x20);
+	
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	while(txValue != 0)
+	{
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+		if ((mode & 0x20) != 0x20)
+		{
+			ReadWriteCommandReg(hspi, CC1200_STX);
+		}
+		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	}
+	
 	// Send interrupt to power modes to kill the system
 	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
 	HAL_Delay(10);

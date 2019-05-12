@@ -457,6 +457,11 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32l1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>Test_Commands.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Test_Commands.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
