@@ -208,7 +208,8 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			// Handle the request here
 			break;
 		case (REQ_STATUS):
-			//printf("Received a request for the status of the CubeSat\n");
+			snprintf(msg1, 100, "\nGot a status packet\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
 			Handle_ReqStatus_Packet(packet, hspi, huart, fram_hspi);
 			break;
@@ -228,9 +229,10 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			Handle_ReqSciData_Packet(packet);
 			break;
 		case (REQ_LOCATION):
-			//printf("Received a request for the CubeSat's location\n");
+			snprintf(msg1, 100, "\nGot a req location packet\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
-			Handle_ReqLoc_Packet(packet);
+			Handle_ReqLoc_Packet(packet, hspi, huart, fram_hspi);
 			break;
 		case (KILL):
 			snprintf(msg1, 100, "\nGot a kill packet\n");
@@ -406,9 +408,11 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 {
 	// The status that will be used for the flat sat is the battery level
 	uint8_t battLevel;
-	SPI_FRAM_Read(*fram_hspi, SPI_BATT_LEVEL_ADDR, &battLevel, 1);
+	SPI_FRAM_Read(fram_hspi, SPI_BATT_LEVEL_ADDR, &battLevel, 1);
 	
-	uint8_t statusPacket[FIXED_PACK_SIZE];
+	battLevel = 50;
+	
+	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
 	Create_Response_Status(statusPacket, battLevel, 2458615.42743);
 	
 	char msg1[100] = {0};
@@ -417,7 +421,7 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	// Fill up the TX fifo
 	for (int i = 0; i < FIXED_PACK_SIZE; i++)
 	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, statusPacket[i]);
 	}
 	
 	// Debugging
@@ -455,10 +459,56 @@ void Handle_ReqSciData_Packet(uint8_t *packet)
 	// Go to transmit mode, send the data down to earth
 }
 
-void Handle_ReqLoc_Packet(uint8_t *packet)
+void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// Access SPI FRAM to get the latitude, longitude, and altitude
 	// Create a packet that will go back to the ground station
+	// The status that will be used for the flat sat is the battery level
+	uint8_t battLevel;
+	SPI_FRAM_Read(fram_hspi, SPI_BATT_LEVEL_ADDR, &battLevel, 1);
+	
+	battLevel = 50;
+	
+	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
+	Create_Response_Status(statusPacket, battLevel, 2458615.42743);
+	
+	char msg1[100] = {0};
+	uint8_t mode = 0;
+
+	// Fill up the TX fifo
+	for (int i = 0; i < FIXED_PACK_SIZE; i++)
+	{
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, statusPacket[i]);
+	}
+	
+	// Debugging
+	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+	
+	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
+	
+	// Go into transmit mode
+	do
+	{
+		ReadWriteCommandReg(hspi, CC1200_STX);
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+	} while ((mode & 0x20) != 0x20);
+	
+	// Go back to transmit mode as long as there are bytes in the buffer
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	while(txValue != 0)
+	{
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+		if ((mode & 0x20) != 0x20)
+		{
+			ReadWriteCommandReg(hspi, CC1200_STX);
+		}
+		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	}
+	
+	
 }
 
 
@@ -468,6 +518,13 @@ void Handle_UpdateKep_Packet(uint8_t *packet)
 	// Store them into the shared SPI FRAM.
 	// Send an interrupt to the mechanical board
 }
+
+
+
+
+
+
+
 
 
 
