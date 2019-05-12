@@ -145,7 +145,7 @@ int main(void)
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}	
 	// set PWM signal frequency
-	PWM_Set_Frequency(&htim4, 10000);
+	PWM_Set_Frequency(&htim4, 1000);
 	
 	// initialize duty cycle
 	PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
