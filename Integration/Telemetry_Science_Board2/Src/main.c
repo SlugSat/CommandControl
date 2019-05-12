@@ -231,7 +231,7 @@ int main(void)
 				HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
 				
 				// Decode the packet and take action based on the packet
-				Decode_Sat_Packet(packet, &hspi1, &huart2);
+				Decode_Sat_Packet(packet, &hspi1, &huart2, &hspi2);
 				
 				state = Fetch;
 				ReadWriteCommandReg(&hspi1, CC1200_SFRX); // Flush RX FIFO

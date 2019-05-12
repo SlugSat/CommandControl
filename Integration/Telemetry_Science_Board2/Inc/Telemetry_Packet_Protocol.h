@@ -47,9 +47,9 @@ typedef struct ScienceDataPoint
 #define SAT_STATUS 		(0x2)
 #define SCI_DATA   		(0x4)
 #define SAT_LOCATION 	(0x5)
-#define SAT_ACK 		(0x7)
+#define SAT_ACK 			(0x7)
 
-#define REQ_LOG 		(0x10)
+#define REQ_LOG 			(0x10)
 #define REQ_LOG_TIME	(0x14)
 #define REQ_STATUS 		(0x20)
 #define UPDATE_KEP 		(0x30)
@@ -118,7 +118,7 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 void Handle_LogSci_Packet(uint8_t *packet);
 void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 void Handle_ReqSciData_Packet(uint8_t *packet);
-void Handle_ReqLoc_Packet(uint8_t *packet);
+void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 void Handle_UpdateKep_Packet(uint8_t *packet);
 
 #endif // PROTO_H
