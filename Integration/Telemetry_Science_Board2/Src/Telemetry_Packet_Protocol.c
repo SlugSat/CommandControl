@@ -188,7 +188,7 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 /***** Functions for the CubeSat side *****/
 
 /* This function will decode packets that have come into the CubeSat */
-uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
+uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	char msg1[100] = {0};
 	
@@ -210,7 +210,7 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 		case (REQ_STATUS):
 			//printf("Received a request for the status of the CubeSat\n");
 			// Handle the request here
-			Handle_ReqStatus_Packet(packet);
+			Handle_ReqStatus_Packet(packet, hspi, huart, fram_hspi);
 			break;
 		case (UPDATE_KEP):
 			//printf("Received a command to update the CubeSat's location with Keplerian elements\n");
@@ -342,6 +342,8 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 	return SUCCESS;
 }
 
+
+
 /*** Functions for handling packets sent by the ground station to the CubeSat***/
 
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
@@ -349,7 +351,7 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 	ReadWriteCommandReg(hspi, CC1200_SFTX);
 	
 	char msg1[100] = {0};
-	uint8_t ackPacket[24] = {0};
+	uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
 	// Send an Ack
 	Create_Acknowledgement(ackPacket, 0, 2458615.42743); 
 	
@@ -360,7 +362,7 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
 	}
 	
-	snprintf(msg1, 100, "\nAck put into the RX fifo\n");
+	snprintf(msg1, 100, "\nAck put into the TX fifo\n");
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
 	HAL_Delay(5000);
@@ -373,6 +375,7 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 		HAL_Delay(20);
 	} while ((mode & 0x20) != 0x20);
 	
+	// Go back to transmit mode as long as there are bytes in the buffer
 	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
 	while(txValue != 0)
 	{
@@ -399,10 +402,50 @@ void Handle_LogSci_Packet(uint8_t *packet)
 	// Send an Ack
 }
 
-void Handle_ReqStatus_Packet(uint8_t *packet)
+void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
-	// Decode packet to see what type of status is requested
-	// Go to transmit mode > Send a packet with the requested status
+	// The status that will be used for the flat sat is the battery level
+	uint8_t battLevel;
+	SPI_FRAM_Read(*fram_hspi, SPI_BATT_LEVEL_ADDR, &battLevel, 1);
+	
+	uint8_t statusPacket[FIXED_PACK_SIZE];
+	Create_Response_Status(statusPacket, battLevel, 2458615.42743);
+	
+	char msg1[100] = {0};
+	uint8_t mode = 0;
+
+	// Fill up the TX fifo
+	for (int i = 0; i < FIXED_PACK_SIZE; i++)
+	{
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+	}
+	
+	// Debugging
+	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+	
+	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
+	
+	// Go into transmit mode
+	do
+	{
+		ReadWriteCommandReg(hspi, CC1200_STX);
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+	} while ((mode & 0x20) != 0x20);
+	
+	// Go back to transmit mode as long as there are bytes in the buffer
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	while(txValue != 0)
+	{
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+		if ((mode & 0x20) != 0x20)
+		{
+			ReadWriteCommandReg(hspi, CC1200_STX);
+		}
+		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	}
 }
 
 void Handle_ReqSciData_Packet(uint8_t *packet)
