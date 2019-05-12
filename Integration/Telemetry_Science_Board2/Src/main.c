@@ -43,23 +43,25 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "string.h"
 #include "CC1200_SPI_functions.h"
-#include "FRAM_Lib.h"
-#include "Telemetry_Packet_Protocol.h"
-#include "DateConversion.h"
+//#include "FRAM_Lib.h"
+//#include "Telemetry_Packet_Protocol.h"
+//#include "DateConversion.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 /* Define states and system function variables */
-typedef enum States {Init, Fetch, Decode, Science_Time, Science_Location} States;
+typedef enum States {Fetch, Decode, Science_Time, Science_Location} States;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define SUCCESS (1)
+#define FAIL 		(0)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -126,21 +128,67 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init(); // Used for debugging
-  MX_SPI1_Init(); // Connected to CC1200
-  MX_SPI2_Init(); // Connected to SPI FRAM
-  MX_I2C1_Init(); // Connected to I2C FRAM
+  MX_USART2_UART_Init();
+  MX_SPI1_Init();
+  MX_SPI2_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 	
 	// Initialize the initial state
 	States state;
-	state = Init;
+	state = Fetch;
 	
 	char msg1[100] = {0};
 	char msg2[100] = {0};
 	
+	snprintf((char *)msg1, 100, "\n\n-----Start the test-----\n\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+	
 	/* Initialization code goes here */
+	//Set CS high
+	HAL_GPIO_WritePin(GPIOA, SPI_CC_CS_Pin, GPIO_PIN_SET);
+
+	//Set reset high, low, high to begin
+	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
+	
+	uint8_t readValue;
+	
+	readValue = ReadWriteCommandReg(&hspi1, CC1200_SNOP); // Check the state of the CC1200
+	memcpy(msg1, msg2, 100);
+	snprintf((char *)msg1, 100, "\nState of the CC1200: 0x%02x\n", readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+	
 	CC1200_INIT(&hspi1);
+	//ReadWriteCommandReg(&hspi1, CC1200_SFTX); // Flush RX FIFO
+	ReadWriteCommandReg(&hspi1, CC1200_SFRX); // Flush RX FIFO
+	ReadWriteCommandReg(&hspi1, CC1200_SRX);  // Enter receive mode
+	
+	do 
+	{
+		readValue = ReadWriteCommandReg(&hspi1, CC1200_SNOP); // Check the state of the CC1200
+
+		
+		
+		HAL_Delay(500);
+		memcpy(msg1, msg2, 100);
+		snprintf((char *)msg1, 100, "\nState of the CC1200: 0x%02x\n", readValue);
+		HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+		
+		ReadWriteCommandReg(&hspi1, CC1200_SRX);
+		HAL_Delay(10);
+	} while ((readValue & 0x10) != 0x10);
+
+
+	
+	
+	
+	
+	
 	state = Fetch;
 	
   /* USER CODE END 2 */
@@ -149,6 +197,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		memcpy(msg1, msg2, 100);
+		snprintf((char *)msg1, 100, "\nState: 0x%02x\n", state);
+		HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
 		switch (state)
 		{
 			/* Fetch a packet, location data, or science events mode */
@@ -175,16 +226,16 @@ int main(void)
 			/* Decode a packet and respond accordingly mode */
 			case (Decode):; // Semi colon because cant declare right after case statement 
 				
-				uint8_t packet[7];
-			
-				// Get the packet in the RX FIFO
-				for (int i = 0; i < 19; i++)
-				{
-					packet[i] = ReadWriteExtendedReg(&hspi1, CC1200_READ_BIT, CC1200_RXFIFO, 0);
-				}
-				
-				// Decode the packet and take action based on the packet
-				Decode_Sat_Packet(packet);
+//				uint8_t packet[7];
+//			
+//				// Get the packet in the RX FIFO
+//				for (int i = 0; i < 19; i++)
+//				{
+//					packet[i] = ReadWriteExtendedReg(&hspi1, CC1200_READ_BIT, CC1200_RXFIFO, 0);
+//				}
+//				
+//				// Decode the packet and take action based on the packet
+//				Decode_Sat_Packet(packet);
 				
 				state = Fetch;
 				break;
@@ -310,7 +361,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -408,37 +459,16 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SP_CC_RESET_GPIO_Port, SP_CC_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin|SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Kill_to_PModes_Int_GPIO_Port, Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SPI_CC_CS_GPIO_Port, SPI_CC_CS_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : SP_CC_RESET_Pin */
-  GPIO_InitStruct.Pin = SP_CC_RESET_Pin;
+  /*Configure GPIO pins : SP_CC_RESET_Pin SPI_CC_CS_Pin Kill_to_PModes_Int_Pin */
+  GPIO_InitStruct.Pin = SP_CC_RESET_Pin|SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SP_CC_RESET_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : Kill_to_PModes_Int_Pin */
-  GPIO_InitStruct.Pin = Kill_to_PModes_Int_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Kill_to_PModes_Int_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SPI_CC_CS_Pin */
-  GPIO_InitStruct.Pin = SPI_CC_CS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SPI_CC_CS_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
@@ -446,9 +476,32 @@ static void MX_GPIO_Init(void)
 // Poll the receive buffer to check if a packet was received
 uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
 {
+	// Check the state of the chip in the event that an error occurred
+	uint8_t readValue = ReadWriteCommandReg(hspi, CC1200_SNOP); 
+	HAL_Delay(8);
+	
+	if ((readValue & 0x60) == 0x60) // Flush if FIFO error
+	{
+		ReadWriteCommandReg(hspi, CC1200_SFRX); 
+		HAL_Delay(10);
+	}
+	
+	if ((readValue & 0x10) != 0x10) // Re-enter transmit mode if there was a FIFO error
+	{
+		ReadWriteCommandReg(hspi, CC1200_SRX);
+	}
+
 	// Poll the receive buffer
-	uint8_t rxBytes = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	if (rxBytes == 0)
+	uint8_t rxBytes = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_RXBYTES, 0);
+	
+	// Debugging
+	readValue = ReadWriteCommandReg(hspi, CC1200_SNOP); 
+	char msg1[100] = {0};
+	snprintf((char *)msg1, 100, "\n\nNumber of bytes in the receive buffer: 0x%02x    State of CC1200: 0x%02x\r\n", rxBytes, readValue);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+	
+	
+	if (rxBytes <= 24)
 	{
 		return FAIL;
 	}
