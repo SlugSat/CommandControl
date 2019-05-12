@@ -160,7 +160,7 @@ FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartT
  * @brief  
  * @note  None.
  * @author Zee Moffatt */
-FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *DataPack, UART_HandleTypeDef *uart_handler);
+FRAM_Return FRAM_IO_Search_GetNextItem(I2C_HandleTypeDef *i2c_handler, struct ScienceDataPackage *DataPack);
 
 /**
  * @file

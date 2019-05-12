@@ -336,7 +336,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	FRAM_Return SearchOut;
 	int i = 0;
 	while(1){
-		SearchOut = FRAM_IO_Search_GetNextItem(i2c_handler, &TestData, uart_handler);
+		SearchOut = FRAM_IO_Search_GetNextItem(i2c_handler, &TestData);
 		if(SearchOut == FRAM_ERROR){
 			HAL_UART_Transmit(uart_handler,ERROR,5,10);
 		}
