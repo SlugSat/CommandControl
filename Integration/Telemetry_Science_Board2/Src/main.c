@@ -47,6 +47,7 @@
 #include "CC1200_SPI_functions.h"
 //#include "FRAM_Lib.h"
 #include "Telemetry_Packet_Protocol.h"
+#include "SPI_FRAM.h"
 //#include "DateConversion.h"
 
 /* USER CODE END Includes */

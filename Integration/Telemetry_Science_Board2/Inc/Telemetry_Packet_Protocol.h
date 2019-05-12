@@ -14,6 +14,7 @@
 
 #include "DateConversion.h"
 #include "CC1200_SPI_functions.h"
+#include "SPI_FRAM.h"
 #include "main.h"
 
 /********** Type defined structs and enums **********/
@@ -89,7 +90,7 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 /*** Functions for the CubeSat side ***/
 
 /* This function will decode packets that have come into the CubeSat */
-uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
+uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 
 /* Create a packet responding to the stats request from ground station */
 uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate);
@@ -115,7 +116,7 @@ void Handle_Sat_Location(uint8_t *packet);
 /*** Functions for handling packets sent by the ground station to the CubeSat***/
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 void Handle_LogSci_Packet(uint8_t *packet);
-void Handle_ReqStatus_Packet(uint8_t *packet);
+void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 void Handle_ReqSciData_Packet(uint8_t *packet);
 void Handle_ReqLoc_Packet(uint8_t *packet);
 void Handle_UpdateKep_Packet(uint8_t *packet);
