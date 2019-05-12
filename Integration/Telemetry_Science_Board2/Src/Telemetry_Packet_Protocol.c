@@ -229,7 +229,7 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			Handle_ReqSciData_Packet(packet);
 			break;
 		case (REQ_LOCATION):
-			snprintf(msg1, 100, "\nGot a req location packet\n");
+			snprintf(msg1, 100, "\nGot a req location packet\n\n");
 			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
 			Handle_ReqLoc_Packet(packet, hspi, huart, fram_hspi);
@@ -408,7 +408,7 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 {
 	// The status that will be used for the flat sat is the battery level
 	uint8_t battLevel;
-	SPI_FRAM_Read(fram_hspi, SPI_BATT_LEVEL_ADDR, &battLevel, 1);
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1);
 	
 	battLevel = 50;
 	
@@ -463,50 +463,83 @@ void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 {
 	// Access SPI FRAM to get the latitude, longitude, and altitude
 	// Create a packet that will go back to the ground station
-	// The status that will be used for the flat sat is the battery level
-	uint8_t battLevel;
-	SPI_FRAM_Read(fram_hspi, SPI_BATT_LEVEL_ADDR, &battLevel, 1);
 	
-	battLevel = 50;
+	// The location data is currently being generated via the mechanical simulation
+	// The location is the longitude, latitude, and altitude each as a floating point 
+	float longitude, latitude, altitude;
+	uint8_t floatBytes[4] = {0};
 	
-	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
-	Create_Response_Status(statusPacket, battLevel, 2458615.42743);
+	// Test writing a value to the FRAM first
+//	float test = 1234.567;
+//	uint8_t testW[4] = {0};
+//	float_to_bytes(test, testW);
+//	SPI_FRAM_Write(fram_hspi, SPI_FRAM_LATITUDE_ADDR, testW, 4);
+//	HAL_Delay(50);
+	
+	// Get the latitude
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LATITUDE_ADDR, floatBytes, 4);
+	latitude = bytes_to_float(floatBytes);
+//	if (floatBytes[0] == 0x25 && floatBytes[1] == 0x52 && floatBytes[2] == 0x9a && floatBytes[3] == 0x44)
+//	{
+//		char goodMsg[50] = {0};
+//		snprintf(goodMsg, 50, "\nLat Good\n");
+//		HAL_UART_Transmit(huart, (uint8_t *) goodMsg, sizeof(goodMsg), 1);
+//	}
+	
+	// Get the longitude
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LONGITUDE_ADDR, floatBytes, 4);
+	longitude = bytes_to_float(floatBytes);
+	
+	// Get the altitude
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_ALTITUDE_ADDR, floatBytes, 4);
+	altitude = bytes_to_float(floatBytes);
+	
+	// Create the packet with the current location
+	uint8_t locationPacket[FIXED_PACK_SIZE] = {0};
+	Create_LocationData(locationPacket, latitude, longitude, altitude, 2458615.42743);
 	
 	char msg1[100] = {0};
+	char msg2[100] = {0};
 	uint8_t mode = 0;
-
-	// Fill up the TX fifo
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
-	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, statusPacket[i]);
-	}
+	HAL_Delay(10);
 	
 	// Debugging
-	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
+	snprintf(msg1, 100, "\nLat: %f   Longit: %f    Alt: %f\n", latitude, longitude, altitude);
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
-	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
+
 	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
+//	// Fill up the TX fifo
+//	for (int i = 0; i < FIXED_PACK_SIZE; i++)
+//	{
+//		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, locationPacket[i]);
+//	}
+//	
+//	memcpy(msg1, msg2, 100);
+//	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
+//	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+//	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
+//	
+//	// Go into transmit mode
+//	do
+//	{
+//		ReadWriteCommandReg(hspi, CC1200_STX);
+//		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+//		HAL_Delay(20);
+//	} while ((mode & 0x20) != 0x20);
+//	
+//	// Go back to transmit mode as long as there are bytes in the buffer
+//	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+//	while(txValue != 0)
+//	{
+//		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+//		HAL_Delay(20);
+//		if ((mode & 0x20) != 0x20)
+//		{
+//			ReadWriteCommandReg(hspi, CC1200_STX);
+//		}
+//		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+//	}
 	
 	
 }

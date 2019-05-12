@@ -148,6 +148,7 @@ int main(void)
 	/* Initialization code goes here */
 	//Set CS high
 	HAL_GPIO_WritePin(GPIOA, SPI_CC_CS_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_SET);
 
 	//Set reset high, low, high to begin
 	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_SET);
@@ -396,7 +397,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
   hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -459,7 +460,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin|SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : SPI_FRAM_CS_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPI_FRAM_CS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SP_CC_RESET_Pin SPI_CC_CS_Pin Kill_to_PModes_Int_Pin */
   GPIO_InitStruct.Pin = SP_CC_RESET_Pin|SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin;
