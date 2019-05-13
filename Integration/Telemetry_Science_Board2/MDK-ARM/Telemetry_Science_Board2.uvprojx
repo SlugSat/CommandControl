@@ -467,6 +467,16 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32l1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>FRAM_Tests.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\FRAM_Tests.c</FilePath>
+            </File>
+            <File>
+              <FileName>FRAM_Tests.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\FRAM_Tests.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
