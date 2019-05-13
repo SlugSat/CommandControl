@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32L152xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;        ../Drivers/STM32L1xx_HAL_Driver/Inc;        ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy;        ../Drivers/CMSIS/Device/ST/STM32L1xx/Include;        ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;         ../Drivers/STM32L1xx_HAL_Driver/Inc;         ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy;         ../Drivers/CMSIS/Device/ST/STM32L1xx/Include;         ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -443,6 +443,16 @@
               <FilePath>..\Src\DateConversion.c</FilePath>
             </File>
             <File>
+              <FileName>Test_Commands.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Test_Commands.h</FilePath>
+            </File>
+            <File>
+              <FileName>SPI_FRAM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SPI_FRAM.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>
@@ -458,14 +468,14 @@
               <FilePath>../Src/stm32l1xx_hal_msp.c</FilePath>
             </File>
             <File>
-              <FileName>Test_Commands.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\Test_Commands.h</FilePath>
+              <FileName>FRAM_Tests.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\FRAM_Tests.c</FilePath>
             </File>
             <File>
-              <FileName>SPI_FRAM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\SPI_FRAM.c</FilePath>
+              <FileName>FRAM_Tests.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\FRAM_Tests.h</FilePath>
             </File>
           </Files>
         </Group>
