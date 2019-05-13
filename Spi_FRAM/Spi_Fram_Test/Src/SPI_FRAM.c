@@ -54,7 +54,7 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
 																					
 	HAL_Delay(1);																				
 	
-// Chip select low
+	// Chip select low
 	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
 																					
 	HAL_SPI_Transmit(hspi, &write_command[1], 3, 10);																					
@@ -64,6 +64,12 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
 		HAL_SPI_Transmit(hspi, &pTxData[i], 1, 10);
 	}
 
+	// Chip select high
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_SET);																			
+	HAL_Delay(1);																				
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
+	
 	// terminate write operation
 	uint8_t wrdi = WRDI_OP; 
 	HAL_SPI_Transmit(hspi, &wrdi, 1, 10);

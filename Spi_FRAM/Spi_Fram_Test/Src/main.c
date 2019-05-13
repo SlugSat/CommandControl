@@ -132,13 +132,24 @@ int main(void)
 	
 	uint8_t battLevel, pmState, numdataPoints, solarVector, ltStatus, mechState, numUsers, powerStatus;
 	double logTime, julianTime;
-	float longitude, latitude, altitude;
-	
-	#if 0 // Write to FRAM Test
+	volatile float longitude, latitude, altitude;
 	uint8_t longU[4] = {0};
 	uint8_t longD[8] = {0};
 	
-	longitude = 20.3;
+//	longitude = 234.54;
+//	float_to_bytes(longitude, longU);
+//	SPI_FRAM_Write(&hspi1, SPI_FRAM_LONGITUDE_ADDR, longU, 4);
+//	HAL_Delay(1);
+//	
+//	memcpy(msg, msgClear, 200);
+//	snprintf(msg, 200, "\nLongitude: %f\n", longitude); 
+//	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	
+	#if 0 // Write to FRAM Test
+	//uint8_t longU[4] = {0};
+	//uint8_t longD[8] = {0};
+	
+	longitude = 234.3;
 	float_to_bytes(longitude, longU);
 	SPI_FRAM_Write(&hspi1, SPI_FRAM_LONGITUDE_ADDR, longU, 4);
 	HAL_Delay(1);
@@ -196,21 +207,22 @@ int main(void)
 	#endif
 	
 	HAL_Delay(10);
-	uint8_t readVal[4] = {0};
+	uint8_t readVal[4] = {1, 2, 3, 4};
 	uint8_t readDouble[8] = {0};
 	
-	// Longitude
-	SPI_FRAM_Read(&hspi1, SPI_FRAM_LONGITUDE_ADDR, readVal, 4);
-	longitude = bytes_to_float(readVal);
-	memcpy(msg, msgClear, 200);
-	snprintf(msg, 200, "\nLongitude: %f\n", longitude); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
 	
 	// Latitude
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_LATITUDE_ADDR, readVal, 4);
 	latitude = bytes_to_float(readVal);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nLatitude: %f\n", latitude); 
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	
+	// Longitude
+	SPI_FRAM_Read(&hspi1, SPI_FRAM_LONGITUDE_ADDR, readVal, 4);
+	longitude = bytes_to_float(readVal);
+	memcpy(msg, msgClear, 200);
+	snprintf(msg, 200, "\nLongitude: %f\n", longitude); 
 	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
 	
 	// Altitude
