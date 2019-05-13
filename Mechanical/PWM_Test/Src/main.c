@@ -190,7 +190,6 @@ int main(void)
 		if (calc_rpm)
 		{
 			rpm = hall_cnt * 60;
-			
 			calc_rpm = FALSE;
 			hall_cnt = 0;
 		}
