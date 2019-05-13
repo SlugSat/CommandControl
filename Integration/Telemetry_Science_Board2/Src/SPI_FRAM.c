@@ -6,7 +6,7 @@
   * @param  pRxData: pointer to reception data buffer to be
   * @param  size: size of the data you are expecting (# of bytes)
   */
-void SPI_FRAM_Read(SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size)
+void SPI_FRAM_Read( SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size)
 {
 	// Chip select low
 	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
@@ -64,6 +64,12 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
 		HAL_SPI_Transmit(hspi, &pTxData[i], 1, 10);
 	}
 
+	// Chip select high
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_SET);																			
+	HAL_Delay(1);																				
+	// Chip select low
+	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
+	
 	// terminate write operation
 	uint8_t wrdi = WRDI_OP; 
 	HAL_SPI_Transmit(hspi, &wrdi, 1, 10);

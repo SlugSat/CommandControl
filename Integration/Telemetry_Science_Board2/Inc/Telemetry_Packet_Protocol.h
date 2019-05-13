@@ -74,7 +74,7 @@ uint8_t Decode_Ground_Packet(uint8_t *packet, uint8_t hashValue);
 uint8_t Create_Kill_Packet(uint8_t *retPacket);
 
 /* Create a log science event packet */
-uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_day *StartTime);
+uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, double StartTime);
 
 /* Create a request for the status of the CubeSat */ 
 uint8_t Create_Request_Status(uint8_t *retPacket);
@@ -117,10 +117,10 @@ void Handle_Sat_Location(uint8_t *packet);
 
 /*** Functions for handling packets sent by the ground station to the CubeSat***/
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
-void Handle_LogSci_Packet(uint8_t *packet);
+void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 void Handle_ReqSciData_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
 void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
-void Handle_UpdateKep_Packet(uint8_t *packet);
+void Handle_UpdateKep_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi);
 
 #endif // PROTO_H
