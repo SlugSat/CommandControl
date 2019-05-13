@@ -57,8 +57,8 @@ float bytes_to_float(uint8_t *input)
 		float date;
 		uint8_t bdate[4];
 	};
-	union Location D;
-	memcpy(D.bdate, input, 4);
+	volatile union Location D;
+	memcpy(D.bdate, input, sizeof(union Location));
 	return D.date;
 }
 
