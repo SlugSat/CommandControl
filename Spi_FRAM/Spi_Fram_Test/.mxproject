@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/narking/Desktop/CC_Repo/CommandControl/Spi_FRAM/Spi_Fram_Test/Inc
+HeaderPath=C:/Users/sneuschm/Documents/SlugSat/CommandControl/Spi_FRAM/Spi_Fram_Test/Inc
 HeaderFiles=stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;
-SourcePath=C:/Users/narking/Desktop/CC_Repo/CommandControl/Spi_FRAM/Spi_Fram_Test/Src
+SourcePath=C:/Users/sneuschm/Documents/SlugSat/CommandControl/Spi_FRAM/Spi_Fram_Test/Src
 SourceFiles=stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
