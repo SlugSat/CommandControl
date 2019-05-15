@@ -277,7 +277,7 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			fprintf(stderr, "Invalid packet command received\n");
 			return FAIL; // Packet cold not be decoded	
 	}
-	
+	ReadWriteCommandReg(hspi, CC1200_SFTX);
 	return command;
 }
 
@@ -383,6 +383,7 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
+	// Create an Ack
 	uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
 	// Send an Ack
 	Create_Acknowledgement(ackPacket, 0, 2458615.42743); 
@@ -430,7 +431,7 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	uint8_t battLevel;
 	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1);
 	
-	battLevel = 50;
+	//battLevel = 50;
 	
 	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
 	Create_Response_Status(statusPacket, battLevel, 2458615.42743);

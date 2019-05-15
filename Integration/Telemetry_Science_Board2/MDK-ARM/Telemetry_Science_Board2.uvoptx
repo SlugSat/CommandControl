@@ -152,9 +152,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>307</LineNumber>
+          <LineNumber>405</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134220178</Address>
+          <Address>134229792</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -163,14 +163,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\Telemetry_Packet_Protocol.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Telemetry_Science_Board2\../Src/Telemetry_Packet_Protocol.c\307</Expression>
+          <Expression>\\Telemetry_Science_Board2\../Src/Telemetry_Packet_Protocol.c\405</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>356</LineNumber>
+          <LineNumber>400</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134229452</Address>
+          <Address>134229780</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -179,9 +179,48 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\Telemetry_Packet_Protocol.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Telemetry_Science_Board2\../Src/Telemetry_Packet_Protocol.c\356</Expression>
+          <Expression>\\Telemetry_Science_Board2\../Src/Telemetry_Packet_Protocol.c\400</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>15</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>..\Src\Telemetry_Packet_Protocol.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>406</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>..\Src\Telemetry_Packet_Protocol.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
         </Bp>
       </Breakpoint>
+      <WatchWindow1>
+        <Ww>
+          <count>0</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>packet</ItemText>
+        </Ww>
+      </WatchWindow1>
       <Tracepoint>
         <THDelay>0</THDelay>
       </Tracepoint>
