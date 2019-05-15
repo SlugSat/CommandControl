@@ -12,8 +12,8 @@ void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTy
 	{
 		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
 	}
-
-	snprintf(msg1, 100, "\nPut packet into the TX FIFO\n");
+uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	snprintf(msg1, 100, "\nPut packet into the TX FIFO: %u\n", txValue);
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	HAL_Delay(6000);
 	
@@ -22,13 +22,17 @@ void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTy
 	{
 		ReadWriteCommandReg(hspi, CC1200_STX);
 		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		snprintf(msg1, 100, "\nMode: 0x%02x\n", mode);
+		HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 		HAL_Delay(20);
 	} while ((mode & 0x20) != 0x20);
 	
 	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
 	while(txValue != 0)
 	{
+		snprintf(msg1, 100, "\nMode: 0x%02x\n", mode);
+		HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
 		HAL_Delay(20);
 		if ((mode & 0x20) != 0x20)
