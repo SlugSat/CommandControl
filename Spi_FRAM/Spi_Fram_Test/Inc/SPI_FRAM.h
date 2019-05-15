@@ -5,6 +5,7 @@
 //you are only allowed to use macros for adresses in both functions
 
 #include "main.h"
+#include <string.h>
 
 // Constants
 #define WRITE_CMD_LEN	(4)
@@ -31,7 +32,11 @@
 #define SPI_FRAM_POWER_STAT_ADDR     			(900) 
 #define SPI_FRAM_MECH_STATE_ADDR					(1000)
 
-void SPI_FRAM_Read(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pRxData,uint8_t size);
+void SPI_FRAM_Read(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pRxData,uint8_t size, UART_HandleTypeDef *huart);
 
-void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,uint8_t size);
+void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,uint8_t size, UART_HandleTypeDef *huart);
+
+void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
+
+void Free_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 #endif // SPI_FRAM_LIB
