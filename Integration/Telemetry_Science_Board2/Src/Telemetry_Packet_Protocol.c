@@ -12,9 +12,7 @@ void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTy
 	{
 		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
 	}
-uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	snprintf(msg1, 100, "\nPut packet into the TX FIFO: %u\n", txValue);
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+
 	HAL_Delay(6000);
 	
 	// Go into transmit mode
@@ -22,17 +20,13 @@ uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTE
 	{
 		ReadWriteCommandReg(hspi, CC1200_STX);
 		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		snprintf(msg1, 100, "\nMode: 0x%02x\n", mode);
-		HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 		HAL_Delay(20);
 	} while ((mode & 0x20) != 0x20);
 	
 	// Go back to transmit mode as long as there are bytes in the buffer
-	txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
 	while(txValue != 0)
 	{
-		snprintf(msg1, 100, "\nMode: 0x%02x\n", mode);
-		HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
 		HAL_Delay(20);
 		if ((mode & 0x20) != 0x20)
@@ -389,9 +383,6 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
-	// Flush the TX FIFO
-	ReadWriteCommandReg(hspi, CC1200_SFTX);
-
 	uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
 	// Send an Ack
 	Create_Acknowledgement(ackPacket, 0, 2458615.42743); 
