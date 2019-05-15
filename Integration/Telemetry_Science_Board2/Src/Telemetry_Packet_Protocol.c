@@ -2,6 +2,43 @@
 
 #define DEBUG (0)
 
+/***** General functions used to send and receive packets on the satellite or the ground station *****/
+void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
+{
+	char msg1[100] = {0};
+	uint8_t mode = 0;
+	
+	for (int i = 0; i < packetLength; i++)
+	{
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+	}
+
+	HAL_Delay(6000);
+	
+	// Go into transmit mode
+	do
+	{
+		ReadWriteCommandReg(hspi, CC1200_STX);
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+	} while ((mode & 0x20) != 0x20);
+	
+	// Go back to transmit mode as long as there are bytes in the buffer
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	while(txValue != 0)
+	{
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+		if ((mode & 0x20) != 0x20)
+		{
+			ReadWriteCommandReg(hspi, CC1200_STX);
+		}
+		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	}
+	snprintf(msg1, 100, "\nFinished Transmission               \n");
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+}
+
 /***** Functions for the ground station side *****/
 
 /* This function will decode the time of the CubeSat by looking at the packet received */
@@ -304,7 +341,7 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, double jul
 	double_to_bytes(julianDate, &packet[0]);
 	
 	// The command code filling in the XXX is 111
-	packet[8] = SAT_ACK;
+	packet[8] = 0x07;
 	
 	// Store the hashValue
 	packet[9] = hashValue;	
@@ -346,64 +383,21 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
-	//ReadWriteCommandReg(hspi, CC1200_SFTX);
-	
-	char msg1[100] = {0};
 	uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
 	// Send an Ack
 	Create_Acknowledgement(ackPacket, 0, 2458615.42743); 
 	
-	uint8_t mode = 0;
-
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(ackPacket, FIXED_PACK_SIZE, hspi, huart);
+	
+	// Continually send an interrupt to the power modes to kill the system
+	//for (uint32_t i = 0; i < 100; i++)
 	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, ackPacket[i]);
+		HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
+		HAL_Delay(10);
+		HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
+		HAL_Delay(1000);
 	}
-	
-	snprintf(msg1, 100, "\nAck put into the TX fifo\n");
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	HAL_Delay(7000);
-	
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	
-	snprintf(msg1, 100, "\nmode: 0x%02x    Bytes: %u\n", mode, txValue);
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	 txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	
-	snprintf(msg1, 100, "\nmode: 0x%02x    Bytes: %u\n", mode, txValue);
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
-	
-	snprintf(msg1, 100, "\nTransmission end: %u                 \n", txValue);
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	// Send interrupt to power modes to kill the system
-	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
-	HAL_Delay(10);
-	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
 }
 
 void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
@@ -425,38 +419,8 @@ void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 		// Send an Ack
 		Create_Acknowledgement(ackPacket, 0, 2458615.42743); // The double value should be the current time
 		
-		uint8_t mode = 0;
-
-		for (int i = 0; i < FIXED_PACK_SIZE; i++)
-		{
-			ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
-		}
-		
-		snprintf(msg1, 100, "\nAck put into the TX fifo                  \n");
-		HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-		
-		HAL_Delay(5000);
-		
-		// Go into transmit mode
-		do
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-			mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-			HAL_Delay(20);
-		} while ((mode & 0x20) != 0x20);
-		
-		// Go back to transmit mode as long as there are bytes in the buffer
-		uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-		while(txValue != 0)
-		{
-			mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-			HAL_Delay(20);
-			if ((mode & 0x20) != 0x20)
-			{
-				ReadWriteCommandReg(hspi, CC1200_STX);
-			}
-			txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-		}
+		// Transmit the packet back to the ground station
+		CC1200_Transmit_Packet(ackPacket, FIXED_PACK_SIZE, hspi, huart);
 	}
 }
 
@@ -466,46 +430,13 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	uint8_t battLevel;
 	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1);
 	
-	//battLevel = 50;
+	battLevel = 50;
 	
 	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
 	Create_Response_Status(statusPacket, battLevel, 2458615.42743);
 	
-	char msg1[100] = {0};
-	uint8_t mode = 0;
-
-	// Fill up the TX fifo
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
-	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, statusPacket[i]);
-	}
-	
-	// Debugging
-	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
-	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(statusPacket, FIXED_PACK_SIZE, hspi, huart);
 }
 
 void Handle_ReqSciData_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart)
@@ -556,41 +487,8 @@ void Handle_ReqSciData_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, I2C_Hand
 	uint8_t sciDataPacket[FIXED_PACK_SIZE] = {0};
 	Create_ScienceData(sciDataPacket, sdp, 3, 2458615.42743);
 	
-	char msg1[100] = {0};
-	uint8_t mode = 0;
-
-	// Fill up the TX fifo
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
-	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, sciDataPacket[i]);
-	}
-	
-	// Debugging
-	snprintf(msg1, 100, "\nScience data put in the TX fifo\n");
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
-	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(sciDataPacket, FIXED_PACK_SIZE, hspi, huart);
 	
 }
 
@@ -621,45 +519,14 @@ void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	Create_LocationData(locationPacket, latitude, longitude, altitude, 2458615.42743);
 	
 	char msg1[100] = {0};
-	char msg2[100] = {0};
-	uint8_t mode = 0;
 	HAL_Delay(10);
 	
 	// Debugging
 	snprintf(msg1, 100, "\nLat: %f   Longit: %f    Alt: %f\n", latitude, longitude, altitude);
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
-	// Fill up the TX fifo
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
-	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, locationPacket[i]);
-	}
-	
-	memcpy(msg1, msg2, 100);
-	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
-	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(locationPacket, FIXED_PACK_SIZE, hspi, huart);
 }
 
 

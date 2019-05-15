@@ -33,6 +33,7 @@ typedef struct time_of_day
 	uint8_t year; // year since 1900
 } time_of_day;
 
+// This is a science data point that was logged by the science payload system
 typedef struct ScienceDataPoint
 {
 	uint32_t Time;
@@ -62,6 +63,9 @@ typedef struct ScienceDataPoint
 
 
 /********** Function Declarations **********/
+
+/*** General functions used to send and receive packets on the satellite or the ground station ***/
+void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 
 /*** Functions for the ground station side ***/
 /* This function will decode the time of the CubeSat by looking at the packet received */

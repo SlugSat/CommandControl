@@ -19,5 +19,4 @@ void CC1200_INIT(SPI_HandleTypeDef *hspi);
 
 
 
-
 #endif // CC1200_SPI_H
