@@ -304,7 +304,7 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, double jul
 	double_to_bytes(julianDate, &packet[0]);
 	
 	// The command code filling in the XXX is 111
-	packet[8] = 0x07;
+	packet[8] = SAT_ACK;
 	
 	// Store the hashValue
 	packet[9] = hashValue;	
@@ -346,7 +346,7 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
-	ReadWriteCommandReg(hspi, CC1200_SFTX);
+	//ReadWriteCommandReg(hspi, CC1200_SFTX);
 	
 	char msg1[100] = {0};
 	uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
@@ -357,13 +357,18 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 
 	for (int i = 0; i < FIXED_PACK_SIZE; i++)
 	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, ackPacket[i]);
 	}
 	
 	snprintf(msg1, 100, "\nAck put into the TX fifo\n");
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
-	HAL_Delay(5000);
+	HAL_Delay(7000);
+	
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	
+	snprintf(msg1, 100, "\nmode: 0x%02x    Bytes: %u\n", mode, txValue);
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
 	// Go into transmit mode
 	do
@@ -373,8 +378,14 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 		HAL_Delay(20);
 	} while ((mode & 0x20) != 0x20);
 	
+
+	
 	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	 txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	
+	snprintf(msg1, 100, "\nmode: 0x%02x    Bytes: %u\n", mode, txValue);
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+	
 	while(txValue != 0)
 	{
 		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
@@ -385,6 +396,9 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 		}
 		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
 	}
+	
+	snprintf(msg1, 100, "\nTransmission end: %u                 \n", txValue);
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
 	// Send interrupt to power modes to kill the system
 	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
@@ -452,7 +466,7 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	uint8_t battLevel;
 	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1);
 	
-	battLevel = 50;
+	//battLevel = 50;
 	
 	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
 	Create_Response_Status(statusPacket, battLevel, 2458615.42743);

@@ -537,7 +537,7 @@ uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
 	static int i = 0;
-	if ((i++ % 30) == 1) 
+	if ((i++ % 30) == 20) 
 	{
 		return SUCCESS;
 	}
