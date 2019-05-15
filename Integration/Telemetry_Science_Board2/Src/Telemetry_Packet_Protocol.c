@@ -7,16 +7,15 @@ void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTy
 {
 	char msg1[100] = {0};
 	uint8_t mode = 0;
-
+	
 	for (int i = 0; i < packetLength; i++)
 	{
 		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
 	}
-	
-	snprintf(msg1, 100, "\nPacket put into the TX fifo\n");
+
+	snprintf(msg1, 100, "\nPut packet into the TX FIFO\n");
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	HAL_Delay(5000);
+	HAL_Delay(6000);
 	
 	// Go into transmit mode
 	do
@@ -38,6 +37,8 @@ void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTy
 		}
 		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
 	}
+	snprintf(msg1, 100, "\nFinished Transmission               \n");
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 }
 
 /***** Functions for the ground station side *****/
@@ -395,7 +396,7 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 	CC1200_Transmit_Packet(ackPacket, FIXED_PACK_SIZE, hspi, huart);
 	
 	// Continually send an interrupt to the power modes to kill the system
-	for (uint32_t i = 0; i < 100; i++)
+	//for (uint32_t i = 0; i < 100; i++)
 	{
 		HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
 		HAL_Delay(10);
