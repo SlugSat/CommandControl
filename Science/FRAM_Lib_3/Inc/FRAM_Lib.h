@@ -149,7 +149,7 @@ FRAM_Return FRAM_IO_Write_To_Address(I2C_HandleTypeDef *i2c_handler, struct Scie
  * @brief  
  * @note  None.
  * @author Zee Moffatt */
-FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartTime, uint32_t EndTime, UART_HandleTypeDef *uart_handler);
+FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartTime, uint32_t EndTime);
 
 /**
  * @file

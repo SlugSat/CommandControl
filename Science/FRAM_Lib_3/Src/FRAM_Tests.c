@@ -19,7 +19,7 @@ uint8_t Failures = 0;
 
 /* Helper Functions -------------------------------------------------------- */
 static uint32_t lastTime = 1;
-void GenerateTestData(uint8_t *energy, uint32_t *time, UART_HandleTypeDef *uart_handler){
+void GenerateTestData(uint8_t *energy, uint32_t *time){
 	*time = (uint32_t)(lastTime + (rand() % (300 + 1 - 1) + 1));
 	lastTime = *time;
   *energy = (uint8_t)(rand() % (17 + 1 - 1) + 1);
@@ -248,7 +248,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	uint8_t energy;
 	uint32_t time;
 	for(int i=0; i<1000; i=i+2){
-		GenerateTestData(&energy, &time, uart_handler);
+		GenerateTestData(&energy, &time);
 		if(FRAM_Data_Builder(&TestData, time, energy) != FRAM_SUCCESS){
 			HAL_UART_Transmit(uart_handler,ERROR,6,10);
 			
@@ -297,7 +297,7 @@ void FRAM_Test(I2C_HandleTypeDef *i2c_handler, UART_HandleTypeDef *uart_handler)
 	uint32_t TestStart = 35;
 	uint32_t TestEnd = 600;
 	
-	FRAM_Return SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd, uart_handler);
+	FRAM_Return SearchReturn = FRAM_IO_Search_Start(i2c_handler, TestStart, TestEnd);
 	if(SearchReturn == FRAM_ERROR){
 		HAL_UART_Transmit(uart_handler,ERROR,5,10);
 	}
