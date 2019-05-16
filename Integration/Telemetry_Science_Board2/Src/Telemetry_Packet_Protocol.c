@@ -1,6 +1,43 @@
 #include "Telemetry_Packet_Protocol.h"
 
-#define DEBUG (1)
+#define DEBUG (0)
+
+/***** General functions used to send and receive packets on the satellite or the ground station *****/
+void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
+{
+	char msg1[100] = {0};
+	uint8_t mode = 0;
+	
+	for (int i = 0; i < packetLength; i++)
+	{
+		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+	}
+
+	HAL_Delay(6000);
+	
+	// Go into transmit mode
+	do
+	{
+		ReadWriteCommandReg(hspi, CC1200_STX);
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+	} while ((mode & 0x20) != 0x20);
+	
+	// Go back to transmit mode as long as there are bytes in the buffer
+	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	while(txValue != 0)
+	{
+		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
+		HAL_Delay(20);
+		if ((mode & 0x20) != 0x20)
+		{
+			ReadWriteCommandReg(hspi, CC1200_STX);
+		}
+		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
+	}
+	snprintf(msg1, 100, "\nFinished Transmission               \n");
+	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+}
 
 /***** Functions for the ground station side *****/
 
@@ -30,25 +67,25 @@ uint8_t Decode_Ground_Packet(uint8_t *packet, uint8_t hashValue)
 			printf("Received a packet containing the status of the CubeSat\n");
 			// Handle the request here
 			julianDate = Decode_CubeSat_Time(packet);
-			Handle_Sat_Status(packet);
+			//Handle_Sat_Status(packet);
 			break;
 		case (SCI_DATA):
 			printf("Received a packet of science data\n");
 			// Handle the request here
 			julianDate = Decode_CubeSat_Time(packet);
-			Handle_Sat_Sci(packet);
+			//Handle_Sat_Sci(packet);
 			break;
 		case (SAT_LOCATION):
 			printf("Received a packet with the CubeSat's location\n");
 			// Handle the request here
 			julianDate = Decode_CubeSat_Time(packet);
-			Handle_Sat_Location(packet);
+			//Handle_Sat_Location(packet);
 			break;
 		case (SAT_ACK):
 			printf("Received an Acknowledgement\n");
 			// Handle the request here
 			julianDate = Decode_CubeSat_Time(packet);
-			if (Handle_Sat_Ack(packet, hashValue) == 1)
+			if (/*Handle_Sat_Ack(packet, hashValue) == 1*/ 0)
 			{
 				return command | 0xF0;
 			}
@@ -74,11 +111,11 @@ uint8_t Create_Kill_Packet(uint8_t *retPacket)
 }
 
 /* Create a log science event packet */
-uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_day *StartTime)
+uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, double StartTime)
 {	
-	uint8_t packet[3] = {0};
+	uint8_t packet[9] = {0};
 	
-	// 1st byte is 00010X00 where X is the value of logtype, 1 or 0
+	// 1st byte is 0001 0X00 where X is the value of logtype, 1 or 0
 	
 	if (logType == 0) // log now
 	{
@@ -88,17 +125,9 @@ uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_
 	{
 		packet[0] = REQ_LOG_TIME;
 		
-		// Packet               [0]       [1]       [2]
-		// Packet structure: 0001 010H HHHH MMMM MMSS SSSS	
-		// H = hour, M = minute, S = seconds
-		
-		packet[0] = packet[0] | ((StartTime->hour & 0x10) >> 5);
-		packet[1] = (StartTime->hour & 0x0F) << 4; 
-		
-		uint8_t temp = (StartTime->min & 0x3C) >> 2;
-		packet[1] = packet[1] | temp;
-		temp = (StartTime->min & 0x03) << 6;
-		packet[2] = temp | (StartTime->sec & 0x3F);
+		// Packet          
+		// Packet structure: 0001 0100 TIME (8 byte julian date)
+		double_to_bytes(StartTime, &packet[1]);
 	}
 	else
 	{
@@ -107,7 +136,7 @@ uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, time_of_
 	}
 
 	// Return the packet to be used outside this function
-	memcpy(retPacket, packet, 3);
+	memcpy(retPacket, packet, 8);
 	
 	return SUCCESS;
 }
@@ -188,7 +217,7 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 /***** Functions for the CubeSat side *****/
 
 /* This function will decode packets that have come into the CubeSat */
-uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
+uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi, I2C_HandleTypeDef *hi2c)
 {
 	char msg1[100] = {0};
 	
@@ -199,13 +228,16 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	switch (command)
 	{
 		case (REQ_LOG):
-			//printf("Received a command to log a science event now\n");
+			snprintf(msg1, 100, "\nGot a request to log a science event now\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
-			Handle_LogSci_Packet(packet);
+			Handle_LogSci_Packet(packet, hspi, huart, fram_hspi);
 			break;
 		case (REQ_LOG_TIME):
-			//printf("Received a command to log a science event\n");
+			snprintf(msg1, 100, "\nGot a request to log a science event\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
+			Handle_LogSci_Packet(packet, hspi, huart, fram_hspi);
 			break;
 		case (REQ_STATUS):
 			snprintf(msg1, 100, "\nGot a status packet\n");
@@ -214,19 +246,20 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			Handle_ReqStatus_Packet(packet, hspi, huart, fram_hspi);
 			break;
 		case (UPDATE_KEP):
-			//printf("Received a command to update the CubeSat's location with Keplerian elements\n");
 			// Handle the request here
-			Handle_UpdateKep_Packet(packet);
+			Handle_UpdateKep_Packet(packet, hspi, huart, fram_hspi);
 			break;
 		case (REQ_SCI_DATA):
-			printf("Received a request for science data\n");
+			snprintf(msg1, 100, "\nGot a request for science data by time\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
-			Handle_ReqSciData_Packet(packet);
+			Handle_ReqSciData_Packet(packet, hspi, hi2c, huart);
 			break;
 		case (REQ_SCI_DATA2):
-			//printf("Received a request for a chunk of science data\n");
+			snprintf(msg1, 100, "\nGot a request for science data by chunk\n");
+			HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 			// Handle the request here
-			Handle_ReqSciData_Packet(packet);
+			Handle_ReqSciData_Packet(packet, hspi, hi2c, huart);
 			break;
 		case (REQ_LOCATION):
 			snprintf(msg1, 100, "\nGot a req location packet\n\n");
@@ -244,7 +277,7 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			fprintf(stderr, "Invalid packet command received\n");
 			return FAIL; // Packet cold not be decoded	
 	}
-	
+	ReadWriteCommandReg(hspi, CC1200_SFTX);
 	return command;
 }
 
@@ -350,58 +383,46 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
-	ReadWriteCommandReg(hspi, CC1200_SFTX);
-	
-	char msg1[100] = {0};
+	// Create an Ack
 	uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
 	// Send an Ack
 	Create_Acknowledgement(ackPacket, 0, 2458615.42743); 
 	
-	uint8_t mode = 0;
-
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(ackPacket, FIXED_PACK_SIZE, hspi, huart);
+	
+	// Continually send an interrupt to the power modes to kill the system
+	//for (uint32_t i = 0; i < 100; i++)
 	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, packet[i]);
+		HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
+		HAL_Delay(10);
+		HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
+		HAL_Delay(1000);
 	}
-	
-	snprintf(msg1, 100, "\nAck put into the TX fifo\n");
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	HAL_Delay(5000);
-	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
-	
-	// Send interrupt to power modes to kill the system
-	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
-	HAL_Delay(10);
-	HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
 }
 
-void Handle_LogSci_Packet(uint8_t *packet)
+void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// Write to SPI FRAM in the location for a logged science event
-
-	// Write the time that the data should be logged at.
-	// Send an Ack
+	
+	if ((packet[0] & 0x04) == 0x04)// Only log science events that happen in the future
+	{
+		double julianDate = bytes_to_double(&packet[1]);
+		
+		SPI_FRAM_Write(fram_hspi, SPI_FRAM_LOG_DATA_TIME_ADDR, &packet[1], 8);
+		
+		char msg1[100] = {0};
+		uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
+		
+		snprintf(msg1, 100, "\nTime to log: %lf\n", bytes_to_double(&packet[1]));
+		HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
+		
+		// Send an Ack
+		Create_Acknowledgement(ackPacket, 0, 2458615.42743); // The double value should be the current time
+		
+		// Transmit the packet back to the ground station
+		CC1200_Transmit_Packet(ackPacket, FIXED_PACK_SIZE, hspi, huart);
+	}
 }
 
 void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
@@ -410,53 +431,66 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	uint8_t battLevel;
 	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1);
 	
-	battLevel = 50;
+	//battLevel = 50;
 	
 	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
 	Create_Response_Status(statusPacket, battLevel, 2458615.42743);
 	
-	char msg1[100] = {0};
-	uint8_t mode = 0;
-
-	// Fill up the TX fifo
-	for (int i = 0; i < FIXED_PACK_SIZE; i++)
-	{
-		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, statusPacket[i]);
-	}
-	
-	// Debugging
-	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
-	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-	
-	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
-	
-	// Go into transmit mode
-	do
-	{
-		ReadWriteCommandReg(hspi, CC1200_STX);
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-	} while ((mode & 0x20) != 0x20);
-	
-	// Go back to transmit mode as long as there are bytes in the buffer
-	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	while(txValue != 0)
-	{
-		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-		HAL_Delay(20);
-		if ((mode & 0x20) != 0x20)
-		{
-			ReadWriteCommandReg(hspi, CC1200_STX);
-		}
-		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-	}
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(statusPacket, FIXED_PACK_SIZE, hspi, huart);
 }
 
-void Handle_ReqSciData_Packet(uint8_t *packet)
+void Handle_ReqSciData_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart)
 {
 	// Decode packet to see which data points to get. 
 	// Access I2C FRAM and read the proper data points
 	// Go to transmit mode, send the data down to earth
+		
+	char msg2[100] = {0};
+	uint32_t startTime = ((((uint32_t)packet[1]) << 16) | (((uint32_t)packet[2]) << 8) | ((uint32_t) packet[3]));
+	uint8_t chunk = packet[4];
+	uint8_t endTime = startTime + chunk;
+	
+	struct ScienceDataPoint sdp[chunk];
+	
+	FRAM_IO_Search_Start(hi2c, startTime, endTime, huart);
+
+	
+	// Get each of the data points
+	struct ScienceDataPackage dataPoint;
+	FRAM_Return out = FRAM_IO_Search_GetNextItem(hi2c, &dataPoint);
+//	snprintf(msg2, 100, "\nTime: 0x%08x    Energy: 0x%02x\n", dataPoint.Time, dataPoint.Energy);
+//	HAL_UART_Transmit(huart, (uint8_t *) msg2, sizeof(msg2), 1);
+	
+	for (int16_t i = 0; i < chunk; i++) 
+	{
+		if (out == FRAM_SEARCH_ENDED)
+		{
+			snprintf(msg2, 100, "\nFRAM_SEARCH_ENDED: %d\n", i);
+			HAL_UART_Transmit(huart, (uint8_t *) msg2, sizeof(msg2), 1);
+			break;
+		}
+		memcpy(&sdp[i], &dataPoint, 5);
+		out = FRAM_IO_Search_GetNextItem(hi2c, &dataPoint);
+	}
+
+	// Debugging
+	snprintf(msg2, 100, "\nTime: 0x%08x    Energy: 0x%02x\n", sdp[0].Time, sdp[0].Energy);
+	HAL_UART_Transmit(huart, (uint8_t *) msg2, sizeof(msg2), 1);
+	
+	snprintf(msg2, 100, "\nTime: 0x%08x    Energy: 0x%02x\n", sdp[1].Time, sdp[1].Energy);
+	HAL_UART_Transmit(huart, (uint8_t *) msg2, sizeof(msg2), 1);
+	
+	snprintf(msg2, 100, "\nTime: 0x%08x    Energy: 0x%02x\n", sdp[2].Time, sdp[2].Energy);
+	HAL_UART_Transmit(huart, (uint8_t *) msg2, sizeof(msg2), 1);
+	
+	// Create the science payload packet
+	uint8_t sciDataPacket[FIXED_PACK_SIZE] = {0};
+	Create_ScienceData(sciDataPacket, sdp, 3, 2458615.42743);
+	
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(sciDataPacket, FIXED_PACK_SIZE, hspi, huart);
+	
 }
 
 void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
@@ -469,22 +503,9 @@ void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	float longitude, latitude, altitude;
 	uint8_t floatBytes[4] = {0};
 	
-	// Test writing a value to the FRAM first
-//	float test = 1234.567;
-//	uint8_t testW[4] = {0};
-//	float_to_bytes(test, testW);
-//	SPI_FRAM_Write(fram_hspi, SPI_FRAM_LATITUDE_ADDR, testW, 4);
-//	HAL_Delay(50);
-	
 	// Get the latitude
 	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LATITUDE_ADDR, floatBytes, 4);
 	latitude = bytes_to_float(floatBytes);
-//	if (floatBytes[0] == 0x25 && floatBytes[1] == 0x52 && floatBytes[2] == 0x9a && floatBytes[3] == 0x44)
-//	{
-//		char goodMsg[50] = {0};
-//		snprintf(goodMsg, 50, "\nLat Good\n");
-//		HAL_UART_Transmit(huart, (uint8_t *) goodMsg, sizeof(goodMsg), 1);
-//	}
 	
 	// Get the longitude
 	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LONGITUDE_ADDR, floatBytes, 4);
@@ -499,68 +520,35 @@ void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	Create_LocationData(locationPacket, latitude, longitude, altitude, 2458615.42743);
 	
 	char msg1[100] = {0};
-	char msg2[100] = {0};
-	uint8_t mode = 0;
 	HAL_Delay(10);
 	
 	// Debugging
 	snprintf(msg1, 100, "\nLat: %f   Longit: %f    Alt: %f\n", latitude, longitude, altitude);
 	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
 	
-
-	
-//	// Fill up the TX fifo
-//	for (int i = 0; i < FIXED_PACK_SIZE; i++)
-//	{
-//		ReadWriteExtendedReg(hspi, CC1200_WRITE_BIT, CC1200_TXFIFO, locationPacket[i]);
-//	}
-//	
-//	memcpy(msg1, msg2, 100);
-//	snprintf(msg1, 100, "\nResponse put in the TX fifo\n");
-//	HAL_UART_Transmit(huart, (uint8_t *) msg1, sizeof(msg1), 1);
-//	HAL_Delay(5000); // Delay so that we can switch to a different mode in SMARTRF to receive packets
-//	
-//	// Go into transmit mode
-//	do
-//	{
-//		ReadWriteCommandReg(hspi, CC1200_STX);
-//		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-//		HAL_Delay(20);
-//	} while ((mode & 0x20) != 0x20);
-//	
-//	// Go back to transmit mode as long as there are bytes in the buffer
-//	uint8_t txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-//	while(txValue != 0)
-//	{
-//		mode = ReadWriteCommandReg(hspi, CC1200_SNOP);
-//		HAL_Delay(20);
-//		if ((mode & 0x20) != 0x20)
-//		{
-//			ReadWriteCommandReg(hspi, CC1200_STX);
-//		}
-//		txValue = ReadWriteExtendedReg (hspi, CC1200_READ_BIT, CC1200_NUM_TXBYTES, 0);
-//	}
-	
-	
+	// Transmit the packet back to the ground station
+	CC1200_Transmit_Packet(locationPacket, FIXED_PACK_SIZE, hspi, huart);
 }
 
 
-void Handle_UpdateKep_Packet(uint8_t *packet)
+void Handle_UpdateKep_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// Read new keplerian elements. 
 	// Store them into the shared SPI FRAM.
-	// Send an interrupt to the mechanical board
+	// Send an interrupt to the mechanical board to read the new location data
+	
+	// Not needed by SlugSat 2018-2019. Should be implemented next year to update
+	// the position of the CubeSat in the event that the CubeSat has a faulty position
 }
 
 
 
 
 
-
-
-
-
-
+// Not needed by SlugSat 2018-2019. Should be implemented next year.
+// Implement these functions so that the ground station can handle and 
+// decode packets sent to it by the CubeSat.
+# if 0
 /* These functions will print out the response from the CubeSat */
 void Handle_Sat_Status(uint8_t *packet)
 {
@@ -601,3 +589,4 @@ void Handle_Sat_Location(uint8_t *packet)
 {
 	
 }
+#endif

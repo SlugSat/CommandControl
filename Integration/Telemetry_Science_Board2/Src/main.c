@@ -45,7 +45,8 @@
 /* USER CODE BEGIN Includes */
 #include "string.h"
 #include "CC1200_SPI_functions.h"
-//#include "FRAM_Lib.h"
+#include "FRAM_Lib.h"
+#include "FRAM_Tests.h"
 #include "Telemetry_Packet_Protocol.h"
 #include "SPI_FRAM.h"
 //#include "DateConversion.h"
@@ -83,6 +84,7 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi);
 uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi);
 uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi);
 
+void Log_Science_Data(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -165,6 +167,14 @@ int main(void)
 	snprintf((char *)msg1, 100, "\nState of the CC1200: 0x%02x\n", readValue);
 	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
 	
+	// Initialize the I2C FRAM
+	//Wipe_Memory(&hi2c1, 0, 1);
+	//Wipe_Memory(&hi2c1, 1, 1);
+
+	FRAM_IO_Init(&hi2c1);
+	FRAM_Write_Headers(&hi2c1);
+	
+	
 	CC1200_INIT(&hspi1);
 	//ReadWriteCommandReg(&hspi1, CC1200_SFTX); // Flush RX FIFO
 	ReadWriteCommandReg(&hspi1, CC1200_SFRX); // Flush RX FIFO
@@ -183,7 +193,7 @@ int main(void)
 		HAL_Delay(10);
 	} while ((readValue & 0x10) != 0x10);
 
-	uint8_t packet[FIXED_PACK_SIZE + 1] = {0};
+	uint8_t packet[FIXED_PACK_SIZE] = {0};
 	state = Fetch;
 	
   /* USER CODE END 2 */
@@ -216,7 +226,7 @@ int main(void)
 				{
 					state = Fetch;
 				}
-				HAL_Delay(3000); // Poll every 3 seconds
+				HAL_Delay(1500); // Poll every 3 seconds
 				break;
 			/* Decode a packet and respond accordingly mode */
 			case (Decode):; // Semi colon because cant declare right after case statement 
@@ -228,11 +238,11 @@ int main(void)
 					packet[i] = ReadWriteExtendedReg(&hspi1, CC1200_READ_BIT, CC1200_RXFIFO, 0);
 				}
 				memcpy(msg1, msg2, 100);
-				snprintf((char *)msg1, 100, "\nPacket: 0x%02x 0x%02x 0x%02x 0x%02x\n", packet[0], packet[1], packet[2], packet[3]);
+				snprintf((char *)msg1, 100, "\nPacket: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", packet[0], packet[1], packet[2], packet[3], packet[4], packet[5]);
 				HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
 				
 				// Decode the packet and take action based on the packet
-				Decode_Sat_Packet(packet, &hspi1, &huart2, &hspi2);
+				Decode_Sat_Packet(packet, &hspi1, &huart2, &hspi2, &hi2c1);
 				
 				state = Fetch;
 				ReadWriteCommandReg(&hspi1, CC1200_SFRX); // Flush RX FIFO
@@ -242,6 +252,7 @@ int main(void)
 			case (Science_Time): 
 				
 				// Generate fake data and store it to the I2C FRAM
+				Log_Science_Data(&hi2c1, &huart2);
 			
 				state = Fetch;
 				break;
@@ -249,7 +260,8 @@ int main(void)
 			case (Science_Location): 
 				
 				// Generate fake data and store it to the I2C FRAM 
-				
+				Log_Science_Data(&hi2c1, &huart2);
+			
 				state = Fetch;
 				break;
 			/* An error occurred */
@@ -510,7 +522,7 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
 	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
 	
 	
-	if (rxBytes <= 24)
+	if (rxBytes <= FIXED_PACK_SIZE)
 	{
 		return FAIL;
 	}
@@ -524,6 +536,11 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
 uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
+	static int i = 0;
+	if ((i++ % 30) == 20) 
+	{
+		return SUCCESS;
+	}
 	return FAIL;
 }
 
@@ -533,6 +550,30 @@ uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi)
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on time
 	return FAIL;
 }
+
+
+
+
+
+void Log_Science_Data(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart)
+{
+	static uint32_t time;
+	uint8_t energy;
+	
+	struct ScienceDataPackage fakeDataPoint;
+	
+	for (int i = 0; i < 500; i++)
+	{
+		// Generate test data points
+		GenerateTestData(&energy, &time);	
+		// Build data into a package
+		FRAM_Data_Builder(&fakeDataPoint, time, energy);
+		// Write the data point into the FRAM
+		FRAM_IO_Write(hi2c, &fakeDataPoint, huart);
+	}	
+	
+}
+
 
 /* USER CODE END 4 */
 
