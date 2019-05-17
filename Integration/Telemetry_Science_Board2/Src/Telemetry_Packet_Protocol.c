@@ -3,6 +3,14 @@
 #define DEBUG (0)
 
 /***** General functions used to send and receive packets on the satellite or the ground station *****/
+/**
+  * @brief Transmit a packet
+  * @param The packet to be transmitted
+	* @param The length of the packet
+	* @param The SPI connected to the CC1200
+	* @param The UART connected to the terminal for debugging purposes
+  * @retval None
+  */
 void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	char msg1[100] = {0};
@@ -41,7 +49,11 @@ void CC1200_Transmit_Packet(uint8_t *packet, uint16_t packetLength, SPI_HandleTy
 
 /***** Functions for the ground station side *****/
 
-/* This function will decode the time of the CubeSat by looking at the packet received */
+/**
+  * @brief Decode the time of the CubeSat by looking at the packet received
+  * @param The packet from the satellite
+  * @retval The julian date expression of time on the satellite
+  */
 double Decode_CubeSat_Time (uint8_t *packet)
 {
 	// Packet header structure: First 8 bytes are time data
@@ -52,7 +64,12 @@ double Decode_CubeSat_Time (uint8_t *packet)
 	return julianDate;	
 }
 
-/* This function will decode packets that have come into the ground station */
+/**
+  * @brief This function will decode packets that have come into the ground station
+  * @param The packet from the satellite
+	* @param A hash value that could be used for acknowledgements (A hash of each byte of the packet for error checking)
+  * @retval The type of packet that it is given by its 1 byte opcode value
+  */
 uint8_t Decode_Ground_Packet(uint8_t *packet, uint8_t hashValue)
 {
 	double julianDate = 0.0;
@@ -98,7 +115,12 @@ uint8_t Decode_Ground_Packet(uint8_t *packet, uint8_t hashValue)
 	return command;
 }
 
-/* Create the packet used for sending a Kill signal */
+
+/**
+  * @brief Create the packet used for sending a Kill signal
+  * @param The packet created
+  * @retval A success or fail
+  */
 uint8_t Create_Kill_Packet(uint8_t *retPacket)
 {
 	// Opcode: 1111
@@ -110,7 +132,14 @@ uint8_t Create_Kill_Packet(uint8_t *retPacket)
 	return SUCCESS;
 }
 
-/* Create a log science event packet */
+
+/**
+  * @brief Create a log science event packet 
+  * @param The packet created
+	* @param The type of log request to be made: log now or log at StartTime
+	* @param The time to start logging data
+  * @retval A success or fail
+  */
 uint8_t Create_Command_LogSciEvent(uint8_t *retPacket, uint8_t logType, double StartTime)
 {	
 	uint8_t packet[9] = {0};
@@ -153,7 +182,14 @@ uint8_t Create_Request_Status(uint8_t *retPacket)
 	return SUCCESS;
 }
 
-/* Create a request for science data */
+/**
+  * @brief Create a request to downlink science data
+  * @param The packet created
+	* @param The time stamp used to start looking for data to be downlinked
+	* @param The time stamp used to mark the end of the data to be downlinked
+	* @param If a chunk of data is requested instead, then a chunkSize number of data points will be downlinked
+  * @retval A success or fail
+  */
 uint8_t Create_Request_ScienceData(uint8_t *retPacket, time_of_day *StartTime, time_of_day *FinishTime, uint32_t chunkSize)
 {
 	uint8_t packet[7] = {0};
@@ -186,7 +222,12 @@ uint8_t Create_Request_ScienceData(uint8_t *retPacket, time_of_day *StartTime, t
 	return SUCCESS;
 }
 
-/* Create a request for the CubeSat's location (Keplerian Elements) */
+
+/**
+  * @brief Create a request for the CubeSat's location (Keplerian Elements)
+  * @param The packet created
+  * @retval A success or fail
+  */
 uint8_t Create_Request_Location(uint8_t *retPacket)
 {
 	// 1st byte is 0101 0000, where the bottom 4 bits could be used for optional messages in the future
@@ -197,7 +238,13 @@ uint8_t Create_Request_Location(uint8_t *retPacket)
 	return SUCCESS;
 }
 
-/* Create a packet to update the Keplerian elements on the CubeSat */
+
+/**
+  * @brief Create a packet to update the Keplerian elements on the CubeSat (Update the Sat's location)
+  * @param The packet created
+	* @param Various Keplerian elements. Size and amount may need to be changed in the future
+  * @retval A success or fail
+  */
 uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t KepElem2, uint8_t KepElem3)
 {
 	// 1st byte is 0011 0000
@@ -216,7 +263,16 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 
 /***** Functions for the CubeSat side *****/
 
-/* This function will decode packets that have come into the CubeSat */
+
+/**
+  * @brief This function will decode packets that have come into the CubeSat
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param UART used for debugging
+	* @param SPI connected to the shared SPI FRAM
+	* @param I2C connected to the science payload's I2C FRAM
+  * @retval The type of packet received
+  */
 uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi, I2C_HandleTypeDef *hi2c)
 {
 	char msg1[100] = {0};
@@ -281,7 +337,14 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	return command;
 }
 
-/* Create a packet responding to the status request from ground station */
+
+/**
+  * @brief Create a packet responding to the status request from ground station
+  * @param The packet created
+	* @param Status of the satellite
+	* @param Current time of the CubeSat in julian date form
+  * @retval A success or fail
+  */
 uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate)
 {
 	// Packet header: TIME(8 bytes) 0000 0XXX
@@ -304,7 +367,15 @@ uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julian
 	return SUCCESS;
 }
 
-/* Create a packet containing science payload data */
+
+/**
+  * @brief Create a packet containing science payload data
+  * @param The packet created
+	* @param Science data points
+	* @param Number of science data points
+	* @param Current time of the CubeSat in julian date form
+  * @retval A success or fail
+  */
 uint8_t Create_ScienceData(uint8_t *retPacket, ScienceDataPoint *data, uint16_t dataLength, double julianDate)
 {
 	// Packet header: TIME(8 bytes) 0000 0XXX
@@ -329,7 +400,14 @@ uint8_t Create_ScienceData(uint8_t *retPacket, ScienceDataPoint *data, uint16_t 
 	return SUCCESS;
 }
 
-/* Acknowledgement of certain messages or responses */
+
+/**
+  * @brief Create an acknowledgement to certain messages or responses
+  * @param The packet created
+	* @param Hash value of the message acknowledging
+	* @param Current time of the CubeSat in julian date form
+  * @retval A success or fail
+  */
 uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, double julianDate)
 {
 	// Packet header: TIME(8 bytes) 0000 0XXX
@@ -353,6 +431,13 @@ uint8_t Create_Acknowledgement(uint8_t *retPacket, uint8_t hashValue, double jul
 }
 
 /* Create a packet with the current CubeSat's location (Keplerian Elements) */
+/**
+  * @brief Create a log science event packet 
+  * @param The packet created
+	* @param Location of the satellite currently in latitude, longitude, and altitude
+	* @param Current time of the CubeSat in julian date form
+  * @retval A success or fail
+  */
 uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude, float altitude, double julianDate)
 {
 	// Packet header: TIME(8 bytes) 0000 0XXX
@@ -381,6 +466,13 @@ uint8_t Create_LocationData(uint8_t *retPacket, float latitude, float longitude,
 
 /*** Functions for handling packets sent by the ground station to the CubeSat***/
 
+/**
+  * @brief This function will handle kill packets sent in by the ground station
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param UART used for debugging
+  * @retval None
+  */
 void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Create an Ack
@@ -401,6 +493,14 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 	}
 }
 
+/**
+  * @brief This function will handle log data request packets sent in by the ground station
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param UART used for debugging
+	* @param SPI connected to the shared SPI FRAM
+  * @retval None
+  */
 void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// Write to SPI FRAM in the location for a logged science event
@@ -425,6 +525,14 @@ void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	}
 }
 
+/**
+  * @brief This function will handle status request packets sent in by the ground station
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param UART used for debugging
+	* @param SPI connected to the shared SPI FRAM
+  * @retval None
+  */
 void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// The status that will be used for the flat sat is the battery level
@@ -440,6 +548,14 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	CC1200_Transmit_Packet(statusPacket, FIXED_PACK_SIZE, hspi, huart);
 }
 
+/**
+  * @brief This function will handle downlink science data packets sent in by the ground station
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param I2C connected to the science payload's I2C FRAM
+	* @param UART used for debugging
+  * @retval None
+  */
 void Handle_ReqSciData_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart)
 {
 	// Decode packet to see which data points to get. 
@@ -493,6 +609,14 @@ void Handle_ReqSciData_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, I2C_Hand
 	
 }
 
+/**
+  * @brief This function will handle request location packets sent in by the ground station
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param UART used for debugging
+	* @param SPI connected to the shared SPI FRAM
+  * @retval None
+  */
 void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// Access SPI FRAM to get the latitude, longitude, and altitude
@@ -530,7 +654,14 @@ void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	CC1200_Transmit_Packet(locationPacket, FIXED_PACK_SIZE, hspi, huart);
 }
 
-
+/**
+  * @brief This function will decode pdate location packets that have come into the CubeSat
+  * @param The packet from the ground station
+	* @param SPI connected to the CC1200
+	* @param UART used for debugging
+	* @param SPI connected to the shared SPI FRAM
+  * @retval None
+  */
 void Handle_UpdateKep_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// Read new keplerian elements. 
