@@ -39,6 +39,7 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 }
 
 #define AGC_SETPOINT (-30.0) // dBm
+#define AGC_SETPOINT_RANGE (10) // dBm, so plus or minus 10/2=5 dBm on each side
 #define VGA_MAX (AGC_VGAToDAC(50 /* gain */))
 #define VGA_MIN (AGC_VGAToDAC(-20 /* gain */))
 #define VA_MAX (AGC_VAToDAC(-3.5 /* dB */))
@@ -50,6 +51,10 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
+
+//#define AGC_IN_RANGE(x) (((x) > (AGC_SETPOINT - (AGC_SETPOINT_RANGE / 2.))) && ((x) < (AGC_SETPOINT + (AGC_SETPOINT_RANGE / 2.))))
+#define AGC_SETPOINT_MAX ((AGC_SETPOINT + (AGC_SETPOINT_RANGE / 2.)))
+#define AGC_SETPOINT_MIN ((AGC_SETPOINT - (AGC_SETPOINT_RANGE / 2.)))
 
 static volatile uint32_t VgaValue, VaValue, DetectorValue;
 
@@ -84,11 +89,11 @@ void AGC_DoEvent(void) {
 		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu     VGA:%lu VA:%lu\n\n",
 				CurrentState, rssi, NeededGain,
 				DetectorValue, VgaValue, VaValue);
-		if (rssi < AGC_SETPOINT && VgaValue < VGA_MAX) {
+		if (rssi < AGC_SETPOINT_MIN && VgaValue < VGA_MAX) {
 			CurrentState = STATE_INCREASE_VGA;
-		} else if (rssi > AGC_SETPOINT && VgaValue > VGA_MIN) {
+		} else if (rssi > AGC_SETPOINT_MAX && VgaValue > VGA_MIN) {
 			CurrentState = STATE_DECREASE_VGA;
-		} else if (rssi > AGC_SETPOINT && VgaValue <= VGA_MIN) {
+		} else if (rssi > AGC_SETPOINT_MAX && VgaValue <= VGA_MIN) {
 			CurrentState = STATE_INCREASE_VA;
 		}
 		break;
@@ -107,7 +112,7 @@ void AGC_DoEvent(void) {
 			DetectorValue, VgaValue, VaValue);
 
 		rssi = AGC_MeasureRSSI();
-		if (rssi >= AGC_SETPOINT || VgaValue >= VGA_MAX) {
+		if (rssi >= AGC_SETPOINT_MAX || VgaValue >= VGA_MAX) {
 			CurrentState = STATE_IDLE;
 		}
 		break;
@@ -122,9 +127,9 @@ void AGC_DoEvent(void) {
 		HAL_Delay(AGC_DELAY_VGA);
 
 		rssi = AGC_MeasureRSSI();
-		if (rssi <= AGC_SETPOINT) {
+		if (rssi <= AGC_SETPOINT_MIN) {
 			CurrentState = STATE_IDLE;
-		} else if (rssi >= AGC_SETPOINT && VgaValue <= VGA_MIN) {
+		} else if (rssi >= AGC_SETPOINT_MAX && VgaValue <= VGA_MIN) {
 			CurrentState = STATE_INCREASE_VA;
 		}
 		break;
@@ -142,7 +147,7 @@ void AGC_DoEvent(void) {
 			DetectorValue, VgaValue, VaValue);
 
 		rssi = AGC_MeasureRSSI();
-		if (rssi <= AGC_SETPOINT || VaValue >= VA_MAX) {
+		if (rssi <= AGC_SETPOINT_MIN || VaValue >= VA_MAX) {
 			CurrentState = STATE_IDLE;
 		}
 		break;
