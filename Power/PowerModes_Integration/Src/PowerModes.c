@@ -199,36 +199,41 @@ States Transition(uint8_t event)
 	// Delay the program for awhile to test they are correct
 //	for (int i = 0; i < 100000000; i++);
 	
+	States ret = 255;
 	
 	if (event == Detumble)
 	{
-		return Detumble_Transition();
+		ret = Detumble_Transition();
 	}
 	else if (event == Kill)
 	{
-		return Kill;
+		ret = Kill;
 	}
 	else if (event == Normal)
 	{
-		return Normal_Transition();
+		ret = Normal_Transition();
 	}
 	else if (event == UltraLowPower)
 	{
-		return UltraLowPower_Transition();
+		ret = UltraLowPower_Transition();
 	}
 	else if (event == LowPower)
 	{
-		return LowPower_Transition();
+		ret = LowPower_Transition();
 	}
 	else if (event == Eclipse)
 	{
-		return Eclipse_Transition();
+		ret = Eclipse_Transition();
 	}
 	else if (event == ScienceOnly)
 	{
-		return ScienceOnly_Transition(); 
+		ret = ScienceOnly_Transition(); 
 	}
-	return 255;
+	
+	// Write the new state to the SPI FRAM here //
+	/***************************/
+	
+	return ret;
 }
 
 
