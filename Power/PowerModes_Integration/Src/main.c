@@ -129,6 +129,12 @@ int main(void)
 	/* Enter the state machine */
 		while(1)
 		{
+			// Check battery level
+			// Read_FuelGauge(battlevel)
+			// Write the battery level to the fram
+			
+			/* optionally, read the current and voltage and also write that to the FRAM */
+			
 			if (state != globalState)
 			{
 				firstTransition = 0;
