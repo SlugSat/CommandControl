@@ -60,18 +60,26 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define SPI_FRAM_CS_Pin GPIO_PIN_1
 #define SPI_FRAM_CS_GPIO_Port GPIOB
+#define SPI_FRAM_LOCK_Pin GPIO_PIN_12
+#define SPI_FRAM_LOCK_GPIO_Port GPIOB
 #define SPI_FRAM_SCK_Pin GPIO_PIN_13
 #define SPI_FRAM_SCK_GPIO_Port GPIOB
 #define SPI_FRAM_MISO_Pin GPIO_PIN_14
 #define SPI_FRAM_MISO_GPIO_Port GPIOB
 #define SPI_FRAM_MOSI_Pin GPIO_PIN_15
 #define SPI_FRAM_MOSI_GPIO_Port GPIOB
+#define Update_Location_To_Power_Pin GPIO_PIN_8
+#define Update_Location_To_Power_GPIO_Port GPIOC
 #define SP_CC_RESET_Pin GPIO_PIN_8
 #define SP_CC_RESET_GPIO_Port GPIOA
 #define SPI_CC_CS_Pin GPIO_PIN_9
 #define SPI_CC_CS_GPIO_Port GPIOA
 #define Kill_to_PModes_Int_Pin GPIO_PIN_10
 #define Kill_to_PModes_Int_GPIO_Port GPIOA
+#define SPI_FRAM_IN2_Pin GPIO_PIN_11
+#define SPI_FRAM_IN2_GPIO_Port GPIOA
+#define SPI_FRAM_IN1_Pin GPIO_PIN_12
+#define SPI_FRAM_IN1_GPIO_Port GPIOA
 #define SPI_CC_SCK_Pin GPIO_PIN_3
 #define SPI_CC_SCK_GPIO_Port GPIOB
 #define SPI_CC_MISO_Pin GPIO_PIN_4
