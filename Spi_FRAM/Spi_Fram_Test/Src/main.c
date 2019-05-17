@@ -289,7 +289,7 @@ int main(void)
 	snprintf(msg, 200, "\nMech state: 0x%02X\n", mechState); 
 	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
 	
-	
+	HAL_GPIO_WritePin(GPIOA, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
 	
   while (1)
   {
@@ -419,6 +419,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SPI_FRAM_IN2_Pin */
@@ -427,11 +430,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SPI_FRAM_IN2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI_FRAM_IN1_Pin SPI_FRAM_LOCK_Pin */
-  GPIO_InitStruct.Pin = SPI_FRAM_IN1_Pin|SPI_FRAM_LOCK_Pin;
+  /*Configure GPIO pin : SPI_FRAM_IN1_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_IN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(SPI_FRAM_IN1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI_FRAM_LOCK_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_LOCK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPI_FRAM_LOCK_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SPI_FRAM_CS_Pin */
   GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin;
