@@ -536,8 +536,11 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
 uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
-	static int i = 0;
-	if ((i++ % 30) == 20) 
+	uint8_t longitudeBytes[4] = {0};
+	SPI_FRAM_Read(hspi, SPI_FRAM_LONGITUDE_ADDR, longitudeBytes, 4);
+	
+	float longitude = bytes_to_float(longitudeBytes);
+	if (longitude < 15.0 && longitude > -15.0)
 	{
 		return SUCCESS;
 	}
@@ -548,6 +551,11 @@ uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
 uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on time
+	static int i = 0;
+	if ((i++ % 30) == 20) 
+	{
+		return SUCCESS;
+	}
 	return FAIL;
 }
 
