@@ -262,7 +262,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv)
+{
+	// Values are ent as bytes so make a buffer to get the bytes and then reassemble
+	uint8_t recv_buff[2] = {0};
+	
+	// I2C Read
+	HAL_I2C_Master_Transmit(hi2c, CurrentSensor_SLAVE_ADDR, &reg, 1, 10);
+	HAL_I2C_Master_Receive(hi2c, CurrentSensor_SLAVE_ADDR, recv_buff, 2, 10);
+	
+	// Reassemble the bytes into the unsigned integer output
+	*recv |= recv_buff[1];
+	*recv <<= 8;
+	*recv |= recv_buff[0];
+}
 
+void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send)
+{
+	// Write the value to the register
+	uint8_t send_buff[3] = {reg, (uint8_t)(*send & 0x00FF), (uint8_t)((*send >> 8) & 0x00FF)};
+	HAL_I2C_Master_Transmit(hi2c, CurrentSensor_SLAVE_ADDR, send_buff, 3, 10);
+}
 /* USER CODE END 4 */
 
 /**
