@@ -111,6 +111,10 @@ void Error_Handler(void);
 #define SCI_INT_EXTI_IRQn EXTI9_5_IRQn
 #define Memory_Rail_Pin GPIO_PIN_9
 #define Memory_Rail_GPIO_Port GPIOA
+#define Telemetry_Rail_Pin GPIO_PIN_11
+#define Telemetry_Rail_GPIO_Port GPIOA
+#define DEAD_Pin GPIO_PIN_12
+#define DEAD_GPIO_Port GPIOA
 #define STABLE_INT_Pin GPIO_PIN_3
 #define STABLE_INT_GPIO_Port GPIOB
 #define STABLE_INT_EXTI_IRQn EXTI3_IRQn
@@ -119,10 +123,10 @@ void Error_Handler(void);
 #define SOLAR_INT_EXTI_IRQn EXTI4_IRQn
 #define LT_Rail_Pin GPIO_PIN_6
 #define LT_Rail_GPIO_Port GPIOB
-#define DEAD_Pin GPIO_PIN_8
-#define DEAD_GPIO_Port GPIOB
-#define Telemetry_Rail_Pin GPIO_PIN_9
-#define Telemetry_Rail_GPIO_Port GPIOB
+#define FUEL_GAUGE_SCL_Pin GPIO_PIN_8
+#define FUEL_GAUGE_SCL_GPIO_Port GPIOB
+#define FUEL_GAUGE_SDA_Pin GPIO_PIN_9
+#define FUEL_GAUGE_SDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
