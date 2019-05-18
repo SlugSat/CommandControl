@@ -1,6 +1,8 @@
 #ifndef POWERMODES_H
 #define POWERMODES_H
 
+#include "main.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -71,7 +73,7 @@ void Set_Telemetry(system_function *function, uint8_t state);
 void Set_SciencePayload(system_function *function, uint8_t state);
 
 /* Transition between the states in the state machine */
-States Transition(uint8_t event);
+States Transition(uint8_t event, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 
 /* Used for debugging and testing the system. Print out all of te current power modes. */
 void Print_System_Settings(system_function *function);

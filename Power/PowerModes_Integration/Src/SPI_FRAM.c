@@ -98,17 +98,17 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 	{
 		HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1);
 		HAL_Delay(500);
-	} while (HAL_GPIO_ReadPin(GPIOA, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
-														HAL_GPIO_ReadPin(GPIOB, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET);
+	} while (HAL_GPIO_ReadPin(GPIOC, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
+														HAL_GPIO_ReadPin(GPIOC, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET);
 	
-	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
-	while(HAL_GPIO_ReadPin(GPIOA, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
-														HAL_GPIO_ReadPin(GPIOB, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET)
+	HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
+	while(HAL_GPIO_ReadPin(GPIOC, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
+														HAL_GPIO_ReadPin(GPIOC, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET)
 	{
 		HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1);
-		HAL_GPIO_WritePin(GPIOB, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
 		for(int i = 0; i < 1000; i++);
-		HAL_GPIO_WritePin(GPIOB, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
 	}
 }
 
@@ -118,5 +118,5 @@ void Free_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 
 	HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1);
 	
-	HAL_GPIO_WritePin(GPIOB, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);	
+	HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);	
 }

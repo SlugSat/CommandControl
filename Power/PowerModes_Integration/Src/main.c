@@ -62,6 +62,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart2;
@@ -77,6 +79,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void Output_Power_Pins(uint8_t currState);
 /* USER CODE END PFP */
@@ -116,6 +119,7 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 	
 	/* Initialize Variables */
@@ -139,6 +143,10 @@ int main(void)
 			// Check battery level
 			// Read_FuelGauge(battlevel)
 			// Write the battery level to the fram
+			// float battPercent = Get_Charge_Percentage(&hi2c1);
+			// uint8_t battBytes[4] = {0};
+			// float_to_bytes(battPercent, battBytes);
+			// SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
 			
 			/* optionally, read the current and voltage and also write that to the FRAM */
 			
@@ -158,7 +166,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(Detumble);
+					state = Transition(Detumble, &hspi2, &huart2);
 					tmp = state == Detumble ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In Kill mode */
@@ -170,7 +178,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(Kill);
+					state = Transition(Kill, &hspi2, &huart2);
 					tmp = state == Kill ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In Normal mode */
@@ -182,7 +190,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(Normal);
+					state = Transition(Normal, &hspi2, &huart2);
 					tmp = state == Normal ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In UltraLowPower mode */	
@@ -194,7 +202,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(UltraLowPower);
+					state = Transition(UltraLowPower, &hspi2, &huart2);
 					tmp = state == UltraLowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In LowPower mode */
@@ -206,7 +214,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(LowPower);
+					state = Transition(LowPower, &hspi2, &huart2);
 					tmp = state == LowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In Eclipse mode */
@@ -218,7 +226,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(Eclipse);
+					state = Transition(Eclipse, &hspi2, &huart2);
 					tmp = state == Eclipse ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In ScienceOnly mode */
@@ -230,7 +238,7 @@ int main(void)
 						Output_Power_Pins(state);
 						firstTransition = 1;
 					}
-					state = Transition(ScienceOnly);
+					state = Transition(ScienceOnly, &hspi2, &huart2);
 					tmp = state == ScienceOnly ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* An error occurred */
@@ -283,6 +291,40 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -371,16 +413,19 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Memory_Rail_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Memory_Rail_Pin 
+                          |Telemetry_Rail_Pin|DEAD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin|Misc_Rail_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|LT_Rail_Pin|DEAD_Pin|Telemetry_Rail_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|LT_Rail_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin Memory_Rail_Pin */
-  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Memory_Rail_Pin;
+  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin Memory_Rail_Pin 
+                           Telemetry_Rail_Pin DEAD_Pin */
+  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Memory_Rail_Pin 
+                          |Telemetry_Rail_Pin|DEAD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -393,8 +438,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI_FRAM_CS_Pin LT_Rail_Pin DEAD_Pin Telemetry_Rail_Pin */
-  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|LT_Rail_Pin|DEAD_Pin|Telemetry_Rail_Pin;
+  /*Configure GPIO pins : SPI_FRAM_CS_Pin LT_Rail_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|LT_Rail_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

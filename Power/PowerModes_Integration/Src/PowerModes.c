@@ -191,7 +191,7 @@ void Set_SciencePayload(system_function *function, uint8_t state)
 }
 
 /* Transition between the states in the state machine */
-States Transition(uint8_t event)
+States Transition(uint8_t event, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Not sure what types of input lead to a transition
 	// Create a function once this is known
@@ -232,6 +232,8 @@ States Transition(uint8_t event)
 	
 	// Write the new state to the SPI FRAM here //
 	/***************************/
+	// 
+	// SPI_FRAM_Write(hspi, SPI_FRAM_PM_STATE_ADDR, ret, 1, huart);
 	
 	return ret;
 }
