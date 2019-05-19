@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "string.h"
 
 /* USER CODE END Includes */
 
@@ -96,6 +97,9 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+	uint32_t ADC_0, ADC_1;
+	char Out[50];
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,6 +109,16 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		
+		HAL_ADC_Start(&hadc1);
+		if(HAL_ADC_PollForConversion(&hadc1, 5) == HAL_OK){
+			ADC_0 = HAL_ADC_GetValue(&hadc1);
+			sprintf(Out, "%d\n",ADC_0);
+			HAL_UART_Transmit(&huart2,Out,strlen(Out),10);
+		}
+		
+		HAL_Delay(500);
+		
   }
   /* USER CODE END 3 */
 }
