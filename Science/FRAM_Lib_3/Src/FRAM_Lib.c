@@ -361,8 +361,8 @@ FRAM_Return FRAM_IO_Search_Start(I2C_HandleTypeDef *i2c_handler, uint32_t StartT
 //		}
 	}
 	
-	sprintf(StrOut,"FRAM: %d, Address: %d, searchTime %d \n",searchFram, searchAddress, searchTime);
-	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
+//	sprintf(StrOut,"FRAM: %d, Address: %d, searchTime %d \n",searchFram, searchAddress, searchTime);
+//	HAL_UART_Transmit(uart_handler,StrOut,strlen(StrOut),10);
 	
 	return FRAM_SUCCESS;
 }
