@@ -98,10 +98,11 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
-	uint32_t ADC_0, ADC_1;
-	char Out[50];
+	uint32_t ADC_0;
 	float Ctemp, Ftemp, Ktemp;
-
+	
+	char Out[50];
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,20 +113,15 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		
-//		HAL_ADC_Start(&hadc1);
-//		if(HAL_ADC_PollForConversion(&hadc1, 5) == HAL_OK){
-//			ADC_0 = HAL_ADC_GetValue(&hadc1);
-//			sprintf(Out, "%d\n",ADC_0);
-//			HAL_UART_Transmit(&huart2,Out,strlen(Out),10);
-//		}
-		
 		//ADC_0 = Poll_Temp(hadc1);	
 		ADC_0 = Smooth_Poll_Temp(hadc1);
+		
 		Ctemp = (ADC_0 - OFFSET) * SCALE;
 		Ftemp = (Ctemp * 9/5) + 32;
 		Ktemp = Ctemp + 273.15;
+		
 		sprintf(Out, "%.2f°C | %.2f°F | %.2f°K\n",Ctemp, Ftemp, Ktemp);
-		//sprintf(Out, "%d.%.2d°C\n", (int) (ADC_0/1000), (int) (ADC_0%1000));
+		
 		HAL_UART_Transmit(&huart2,Out,strlen(Out),10);		
 		
 		HAL_Delay(1000);
