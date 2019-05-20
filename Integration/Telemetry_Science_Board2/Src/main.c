@@ -80,9 +80,9 @@ SPI_HandleTypeDef hspi2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi);
-uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi);
-uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi);
+uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
+uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
+uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
 
 void Log_Science_Data(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
 /* USER CODE END PV */
@@ -210,15 +210,15 @@ int main(void)
 			/* Fetch a packet, location data, or science events mode */
 			case (Fetch): 
 				// Poll buffers and FRAM to check if an event has occurred
-				if 			(Poll_Receive_Packet(&hspi1) == SUCCESS) // Poll for if a packet is received
+				if 			(Poll_Receive_Packet(&hspi1, &huart2) == SUCCESS) // Poll for if a packet is received
 				{
 					state = Decode;
 				}
-				else if (Poll_FRAM_Location(&hspi2) == SUCCESS) // Poll the location of the CubeSat to check if we are over the equator
+				else if (Poll_FRAM_Location(&hspi2, &huart2) == SUCCESS) // Poll the location of the CubeSat to check if we are over the equator
 				{
 					state = Science_Location;
 				}
-				else if (Poll_FRAM_Time(&hspi2) == SUCCESS) // Poll the the log event for a certain time
+				else if (Poll_FRAM_Time(&hspi2, &huart2) == SUCCESS) // Poll the the log event for a certain time
 				{
 					state = Science_Time;
 				}
@@ -512,7 +512,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 // Poll the receive buffer to check if a packet was received
-uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
+uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Check the state of the chip in the event that an error occurred
 	uint8_t readValue = ReadWriteCommandReg(hspi, CC1200_SNOP); 
@@ -550,11 +550,11 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi)
 }
 
 // Poll the housekeeping FRAM to check the location of the CubeSat
-uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
+uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
 	uint8_t longitudeBytes[4] = {0};
-	SPI_FRAM_Read(hspi, SPI_FRAM_LONGITUDE_ADDR, longitudeBytes, 4, &huart2);
+	SPI_FRAM_Read(hspi, SPI_FRAM_LONGITUDE_ADDR, longitudeBytes, 4, huart);
 	
 	float longitude = bytes_to_float(longitudeBytes);
 	if (longitude < 15.0 && longitude > -15.0)
@@ -565,7 +565,7 @@ uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi)
 }
 
 // Poll the housekeeping FRAM to check the if it is time to log a science event
-uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi)
+uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on time
 	static int i = 0;

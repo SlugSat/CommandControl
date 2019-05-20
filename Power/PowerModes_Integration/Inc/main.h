@@ -94,6 +94,10 @@ void Error_Handler(void);
 #define DIE_INT_Pin GPIO_PIN_10
 #define DIE_INT_GPIO_Port GPIOB
 #define DIE_INT_EXTI_IRQn EXTI15_10_IRQn
+#define Memory_Rail_Pin GPIO_PIN_11
+#define Memory_Rail_GPIO_Port GPIOB
+#define LT_Rail_Pin GPIO_PIN_12
+#define LT_Rail_GPIO_Port GPIOB
 #define SPI_FRAM_CLK_Pin GPIO_PIN_13
 #define SPI_FRAM_CLK_GPIO_Port GPIOB
 #define SPI_FRAM_MISO_Pin GPIO_PIN_14
@@ -109,8 +113,8 @@ void Error_Handler(void);
 #define SCI_INT_Pin GPIO_PIN_8
 #define SCI_INT_GPIO_Port GPIOA
 #define SCI_INT_EXTI_IRQn EXTI9_5_IRQn
-#define Memory_Rail_Pin GPIO_PIN_9
-#define Memory_Rail_GPIO_Port GPIOA
+#define SPI_FRAM_LOCKA9_Pin GPIO_PIN_9
+#define SPI_FRAM_LOCKA9_GPIO_Port GPIOA
 #define Telemetry_Rail_Pin GPIO_PIN_11
 #define Telemetry_Rail_GPIO_Port GPIOA
 #define DEAD_Pin GPIO_PIN_12
@@ -121,8 +125,6 @@ void Error_Handler(void);
 #define SOLAR_INT_Pin GPIO_PIN_4
 #define SOLAR_INT_GPIO_Port GPIOB
 #define SOLAR_INT_EXTI_IRQn EXTI4_IRQn
-#define LT_Rail_Pin GPIO_PIN_6
-#define LT_Rail_GPIO_Port GPIOB
 #define FUEL_GAUGE_SCL_Pin GPIO_PIN_8
 #define FUEL_GAUGE_SCL_GPIO_Port GPIOB
 #define FUEL_GAUGE_SDA_Pin GPIO_PIN_9

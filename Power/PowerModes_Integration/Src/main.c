@@ -413,18 +413,18 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Memory_Rail_Pin 
+  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|SPI_FRAM_LOCKA9_Pin 
                           |Telemetry_Rail_Pin|DEAD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin|Misc_Rail_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|LT_Rail_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|Memory_Rail_Pin|LT_Rail_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin Memory_Rail_Pin 
+  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin SPI_FRAM_LOCKA9_Pin 
                            Telemetry_Rail_Pin DEAD_Pin */
-  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Memory_Rail_Pin 
+  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|SPI_FRAM_LOCKA9_Pin 
                           |Telemetry_Rail_Pin|DEAD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -438,8 +438,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI_FRAM_CS_Pin LT_Rail_Pin */
-  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|LT_Rail_Pin;
+  /*Configure GPIO pins : SPI_FRAM_CS_Pin Memory_Rail_Pin LT_Rail_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|Memory_Rail_Pin|LT_Rail_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -526,7 +526,7 @@ void Output_Power_Pins(uint8_t currState)
 {
 	HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, Memory_Rail_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
@@ -540,7 +540,7 @@ void Output_Power_Pins(uint8_t currState)
 	// Set the power for CC and Telemetry systems
 	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse || currState == ScienceOnly)
 	{
-		HAL_GPIO_WritePin(GPIOA, Memory_Rail_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_SET);
 		if (currState != Detumble)
 		{
 			HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_SET);
