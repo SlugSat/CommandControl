@@ -100,7 +100,7 @@ int main(void)
 
 	uint32_t ADC_0, ADC_1;
 	char Out[50];
-	float temp;
+	float Ctemp, Ftemp, Ktemp;
 
   /* USER CODE END 2 */
 
@@ -121,8 +121,10 @@ int main(void)
 		
 		//ADC_0 = Poll_Temp(hadc1);	
 		ADC_0 = Smooth_Poll_Temp(hadc1);
-		temp = (ADC_0 - OFFSET) * SCALE;
-		sprintf(Out, "%.3f°C\n",temp);
+		Ctemp = (ADC_0 - OFFSET) * SCALE;
+		Ftemp = (Ctemp * 9/5) + 32;
+		Ktemp = Ctemp + 273.15;
+		sprintf(Out, "%.2f°C | %.2f°F | %.2f°K\n",Ctemp, Ftemp, Ktemp);
 		//sprintf(Out, "%d.%.2d°C\n", (int) (ADC_0/1000), (int) (ADC_0%1000));
 		HAL_UART_Transmit(&huart2,Out,strlen(Out),10);		
 		
