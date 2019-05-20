@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "string.h"
+#include "Temp_Mon.h"
 
 /* USER CODE END Includes */
 
@@ -110,14 +111,20 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		
-		HAL_ADC_Start(&hadc1);
-		if(HAL_ADC_PollForConversion(&hadc1, 5) == HAL_OK){
-			ADC_0 = HAL_ADC_GetValue(&hadc1);
-			sprintf(Out, "%d\n",ADC_0);
-			HAL_UART_Transmit(&huart2,Out,strlen(Out),10);
-		}
+//		HAL_ADC_Start(&hadc1);
+//		if(HAL_ADC_PollForConversion(&hadc1, 5) == HAL_OK){
+//			ADC_0 = HAL_ADC_GetValue(&hadc1);
+//			sprintf(Out, "%d\n",ADC_0);
+//			HAL_UART_Transmit(&huart2,Out,strlen(Out),10);
+//		}
 		
-		HAL_Delay(500);
+		//ADC_0 = Poll_Temp(hadc1);	
+		ADC_0 = Smooth_Poll_Temp(hadc1);
+		ADC_0 = ADC_0 * 6.97;
+		sprintf(Out, "%d.%.2d°C\n", (int) (ADC_0/1000), (int) (ADC_0%1000));
+		HAL_UART_Transmit(&huart2,Out,strlen(Out),10);		
+		
+		HAL_Delay(1000);
 		
   }
   /* USER CODE END 3 */
