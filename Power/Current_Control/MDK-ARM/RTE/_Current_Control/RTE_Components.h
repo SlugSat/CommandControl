@@ -3,8 +3,8 @@
  * Auto generated Run-Time-Environment Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'Current_Sensor' 
- * Target:  'Current_Sensor' 
+ * Project: 'Current_Control' 
+ * Target:  'Current_Control' 
  */
 
 #ifndef RTE_COMPONENTS_H
