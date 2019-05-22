@@ -127,7 +127,8 @@ int main(void)
 	uint8_t firstTransition = 0;
 	/* Initialize the starting state of each of the systems that need power */
 	Initialize_Functions(&functions);
-
+	/*initialize the current controller*/
+	init(&hi2c1);
 	/* Set Initial state */
 	state = Detumble;
   /* USER CODE END 2 */
@@ -147,7 +148,12 @@ int main(void)
 			// uint8_t battBytes[4] = {0};
 			// float_to_bytes(battPercent, battBytes);
 			// SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
-			
+			/*This are the values from the current controller IC*/
+			/*
+			float Bus_Volt = Get_Bus_Voltage(&hi2c1); //The output will be in VOLTS
+			float Power =   Get_power(&hi2c1); //The output will be in MILLI_WATTS
+			float current = Get_Current(&hi2c1); //The output will be in MILLI_AMPS
+			*/
 			/* optionally, read the current and voltage and also write that to the FRAM */
 			
 			if (state != globalState)

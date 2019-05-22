@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <assert.h>
 //#include <pthread.h>
-
+#include "Current_Control_Functions.h"
 
 /* Define states and system function variables */
 typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, ScienceOnly} States;
