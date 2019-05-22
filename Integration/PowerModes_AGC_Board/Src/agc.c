@@ -6,10 +6,18 @@
  */
 
 #include "main.h"
-#include "dac.h"
-#include "adc.h"
 #include "agc.h"
 
+/* System handles - marked as extern to reference the ones in the main.c */
+extern ADC_HandleTypeDef hadc;
+extern DAC_HandleTypeDef hdac;
+
+/* Printing function, defined in main */
+extern void my_printf(const char *fmt, ...);
+
+/**
+ * AGC states
+ */
 typedef enum {
 	STATE_IDLE,
 	STATE_INCREASE_VGA,
@@ -21,7 +29,7 @@ static AgcState_t CurrentState = STATE_IDLE;
 
 /* These are based on Excel calculations */
 volatile float InputV = 0;
-static  float AGC_DetectorToRSSI(uint32_t DetectorValue) {
+static float AGC_DetectorToRSSI(uint32_t DetectorValue) {
 	InputV = (3.3 * DetectorValue / 4095.);
 	return (52.4748346 * InputV) - 34.33916738;
 	//return (12.4 * InputV) + 0.117;
@@ -62,6 +70,10 @@ static void AGC_SetOutputs(void) {
 	//while(HAL_ADC_PollForConversion(&hadc, 1000) != HAL_OK);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VA, DAC_ALIGN_12B_R, VaValue);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VGA, DAC_ALIGN_12B_R, VgaValue);
+}
+
+static void my_printf(const char *fmt, ...)
+{
 }
 
 void AGC_Init(void) {

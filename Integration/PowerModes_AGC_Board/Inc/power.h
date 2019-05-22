@@ -12,12 +12,12 @@
 /**
  * Do init work for the power state machine.
  */
-void Power_Init();
+void Power_Init(void);
 
 /**
  * Handle any state transitions needed.
  */
-void Power_DoEvent();
+void Power_DoEvent(void);
 
 /**
  * Set pins associated with the current state

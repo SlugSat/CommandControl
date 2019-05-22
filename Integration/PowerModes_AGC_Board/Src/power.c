@@ -2,7 +2,7 @@
 #include "power.h"
 
 /* Private variables */
-static uint16_t globalIntterupt = 0;
+static uint16_t globalInterrupt = 0;
 static States globalState = Detumble;
 static States state;
 
@@ -121,7 +121,7 @@ void Power_DoEvent()
         break;
     /* An error occurred */
     default:
-        state = 255; // Error
+        state = INVALID; // Error
         break;
     }
 
@@ -178,31 +178,31 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
     if (GPIO_PIN == STABLE_INT_Pin)
     {
         change_variables(STABLE);
-        globalIntterupt = STABLE_INT_Pin;
+        globalInterrupt = STABLE_INT_Pin;
         //HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
     }
     else if (GPIO_PIN == SCI_INT_Pin)
     {
         change_variables(SCI_EVENT);
-        globalIntterupt = SCI_INT_Pin;
+        globalInterrupt = SCI_INT_Pin;
         //HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
     }
     else if (GPIO_PIN == DIE_INT_Pin)
     {
         change_variables(DIE);
-        globalIntterupt = DIE_INT_Pin;
+        globalInterrupt = DIE_INT_Pin;
         HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
     }
     else if (GPIO_PIN == BATT_INT_Pin)
     {
         change_variables(BATT);
-        globalIntterupt = BATT_INT_Pin;
+        globalInterrupt = BATT_INT_Pin;
         //HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
     }
     else if (GPIO_PIN == SOLAR_INT_Pin)
     {
         change_variables(SOLAR);
-        globalIntterupt = SOLAR_INT_Pin;
+        globalInterrupt = SOLAR_INT_Pin;
         //HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
     }
     else
