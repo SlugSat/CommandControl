@@ -72,7 +72,7 @@ UART_HandleTypeDef huart2;
 static fg_config_t config = {	6700, 		// design capacity of 3350mAh
 															0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
 															0x8020, 	// model cfg set for lithium NCR/NCA cell
-															0x0780, 	// charge termination current = 0.3A
+															0x01A0, 	// charge termination current = 0.3A
 															0x0000,
 															6700/32,
 															(6700/32)*44138/6700,
@@ -143,41 +143,41 @@ int main(void)
 	uint8_t err_cnt = 0;
 
 	// Initialize the fuel gauge registers
-	init(&hi2c1, config);
+	Fuel_Gauge_Init(&hi2c1, config);
 	
 	// Test each configuration register after initialization
 	recv[0] = 0;
-	readReg(&hi2c1, DESIGN_CAP_REG, recv);
+	Fuel_Gauge_Read(&hi2c1, DESIGN_CAP_REG, recv);
 	if (recv[0] != 6700) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, V_EMPTY_REG, recv);
+	Fuel_Gauge_Read(&hi2c1, V_EMPTY_REG, recv);
 	if (recv[0] != 0x7D61) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, MODEL_CFG_REG, recv);
+	Fuel_Gauge_Read(&hi2c1, MODEL_CFG_REG, recv);
 	if (recv[0] != 0x0020) {
 		err_cnt++;
 	}
 
 	recv[0] = 0;
-	readReg(&hi2c1, I_CHG_REG, recv);
+	Fuel_Gauge_Read(&hi2c1, I_CHG_REG, recv);
 	if (recv[0] != 0x0780) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, CONF_REG, recv);
+	Fuel_Gauge_Read(&hi2c1, CONF_REG, recv);
 	if (recv[0] != 0x8214) {
 		err_cnt++;
 	}
 	
 	recv[0] = 0;
-	readReg(&hi2c1, CONF2_REG, recv);
+	Fuel_Gauge_Read(&hi2c1, CONF2_REG, recv);
 	if (recv[0] != 0x3658) {
 		err_cnt++;
 	}

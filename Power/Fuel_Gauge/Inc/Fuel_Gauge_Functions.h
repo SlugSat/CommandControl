@@ -59,9 +59,9 @@ typedef struct fg_config_t {
 			
 															
 /* Function Prototypes */															
-void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
-void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
-void init(I2C_HandleTypeDef *hi2c, fg_config_t conf);													
+void Fuel_Gauge_Read(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
+void Fuel_Gauge_Write(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
+void Fuel_Gauge_Init(I2C_HandleTypeDef *hi2c, fg_config_t conf);													
 															
 float Get_Remaining_Capacity(I2C_HandleTypeDef *hi2c); // Remaining capacity of battery in mAh
 float Get_Charge_Percentage(I2C_HandleTypeDef *hi2c); // State-of-charge percentage
