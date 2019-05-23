@@ -7,9 +7,12 @@
 #include "main.h"
 #include <string.h>
 
+<<<<<<< HEAD
 // Used for debugging
 #define DEBUG (1)
 
+=======
+>>>>>>> a58ad3d98ba432c8b55e2fb849f72bc8b7c865e4
 // Constants
 #define WRITE_CMD_LEN	(4)
 #define READ_CMD_LEN	(3) 
