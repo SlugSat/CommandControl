@@ -31,9 +31,9 @@ enum {
 };
 
 /* Function Prototypes */															
-void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
-void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
-int  init(I2C_HandleTypeDef *hi2c);													
+void CurrentSensorRead(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
+void CurrentSensorWrite(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
+int  CurrentSensorInit(I2C_HandleTypeDef *hi2c);													
 
 //The output will be in VOLTS													
 float Get_Shunt_Voltage(I2C_HandleTypeDef *hi2c); //The output will be in VOLTS

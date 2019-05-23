@@ -402,73 +402,73 @@ Wire Wire Line
 $Comp
 L Connector:Conn_01x03_Female J6
 U 1 1 5CE780FD
-P 6400 5000
-F 0 "J6" H 6200 5350 50  0000 L CNN
-F 1 "Conn_01x03_Female" H 5850 5250 50  0000 L CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 6400 5000 50  0001 C CNN
-F 3 "~" H 6400 5000 50  0001 C CNN
-	1    6400 5000
+P 9300 3450
+F 0 "J6" H 9100 3800 50  0000 L CNN
+F 1 "Conn_01x03_Female" H 8750 3700 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 9300 3450 50  0001 C CNN
+F 3 "~" H 9300 3450 50  0001 C CNN
+	1    9300 3450
 	-1   0    0    1   
 $EndComp
 $Comp
 L Connector:Conn_01x03_Female J8
 U 1 1 5CE78BB4
-P 9050 5000
-F 0 "J8" H 9000 4700 50  0000 L CNN
-F 1 "Conn_01x03_Female" H 8850 4800 50  0000 L CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 9050 5000 50  0001 C CNN
-F 3 "~" H 9050 5000 50  0001 C CNN
-	1    9050 5000
+P 11950 3450
+F 0 "J8" H 11900 3150 50  0000 L CNN
+F 1 "Conn_01x03_Female" H 11750 3250 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 11950 3450 50  0001 C CNN
+F 3 "~" H 11950 3450 50  0001 C CNN
+	1    11950 3450
 	1    0    0    -1  
 $EndComp
 $Comp
 L Connector:Conn_01x03_Female J7
 U 1 1 5CE7D969
-P 7750 4100
-F 0 "J7" V 7688 3912 50  0000 R CNN
-F 1 "Conn_01x03_Female" V 7597 3912 50  0000 R CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 7750 4100 50  0001 C CNN
-F 3 "~" H 7750 4100 50  0001 C CNN
-	1    7750 4100
+P 10650 2550
+F 0 "J7" V 10588 2362 50  0000 R CNN
+F 1 "Conn_01x03_Female" V 10497 2362 50  0000 R CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 10650 2550 50  0001 C CNN
+F 3 "~" H 10650 2550 50  0001 C CNN
+	1    10650 2550
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	6600 5100 7850 5100
+	9500 3550 10750 3550
 Wire Wire Line
-	7850 4300 7850 5100
-Connection ~ 7850 5100
+	10750 2750 10750 3550
+Connection ~ 10750 3550
 Wire Wire Line
-	7850 5100 8850 5100
+	10750 3550 11750 3550
 Wire Wire Line
-	8850 4900 7750 4900
+	11750 3350 10650 3350
 Wire Wire Line
-	7750 4300 7750 4900
-Connection ~ 7750 4900
+	10650 2750 10650 3350
+Connection ~ 10650 3350
 Wire Wire Line
-	7750 4900 6600 4900
+	10650 3350 9500 3350
 Wire Wire Line
-	7650 4300 7650 5000
+	10550 2750 10550 3450
 Wire Wire Line
-	7650 5000 6600 5000
+	10550 3450 9500 3450
 Wire Wire Line
-	8850 5000 7650 5000
-Connection ~ 7650 5000
-Text Notes 5900 5150 0    50   ~ 0
+	11750 3450 10550 3450
+Connection ~ 10550 3450
+Text Notes 8800 3600 0    50   ~ 0
 M1OUTPUT
-Text Notes 7650 4100 1    50   ~ 0
+Text Notes 10550 2550 1    50   ~ 0
 M3OUTPUT\n
-Text Notes 9050 4900 0    50   ~ 0
+Text Notes 11950 3350 0    50   ~ 0
 M2OUTPUT
-Text Notes 6300 5050 2    50   ~ 0
+Text Notes 9200 3500 2    50   ~ 0
 M3OUTPUT\n
-Text Notes 9450 5000 2    50   ~ 0
+Text Notes 12350 3450 2    50   ~ 0
 M3OUTPUT\n
-Text Notes 9050 5100 0    50   ~ 0
+Text Notes 11950 3550 0    50   ~ 0
 M1OUTPUT
-Text Notes 7900 4100 1    50   ~ 0
+Text Notes 10800 2550 1    50   ~ 0
 M1OUTPUT
-Text Notes 5900 4950 0    50   ~ 0
+Text Notes 8800 3400 0    50   ~ 0
 M2OUTPUT
-Text Notes 7750 4100 1    50   ~ 0
+Text Notes 10650 2550 1    50   ~ 0
 M2OUTPUT
 $EndSCHEMATC
