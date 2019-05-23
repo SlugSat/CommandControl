@@ -80,9 +80,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define HALL_EFF_INT_Pin GPIO_PIN_9
-#define HALL_EFF_INT_GPIO_Port GPIOA
-#define HALL_EFF_INT_EXTI_IRQn EXTI9_5_IRQn
+#define PUSH_BUTTON_Pin GPIO_PIN_13
+#define PUSH_BUTTON_GPIO_Port GPIOC
+#define POT_IN_Pin GPIO_PIN_0
+#define POT_IN_GPIO_Port GPIOA
+#define BOARD_LED_Pin GPIO_PIN_5
+#define BOARD_LED_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
