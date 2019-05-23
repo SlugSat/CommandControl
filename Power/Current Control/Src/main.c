@@ -125,7 +125,7 @@ int main(void)
 	
 	//init function for the current controller
 	int check = 5;
-	check = init(&hi2c1);
+	check = CurrentSensorInit(&hi2c1);
 	if (check == FAIL)
 	{
 	snprintf((char *)Msg1, sizeof(Msg1), "\nInitialization Failed\n");
@@ -150,31 +150,31 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		snprintf((char *)Msg1, sizeof(Msg1), "\nRegister values at time :%d (11)sec\n",time);
-	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-	memcpy(Msg1, Msg2, 100);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		memcpy(Msg1, Msg2, 100);
+			
+		float Shunt_Volt = Get_Shunt_Voltage(&hi2c1); //The output will be in VOLTS
+		snprintf((char *)Msg1, sizeof(Msg1), "\t\t\t\t\tShunt Voltage is: %f V\n",Shunt_Volt);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		memcpy(Msg1, Msg2, 100);
 		
-	float Shunt_Volt = Get_Shunt_Voltage(&hi2c1); //The output will be in VOLTS
-	snprintf((char *)Msg1, sizeof(Msg1), "\t\t\t\t\tShunt Voltage is: %f V\n",Shunt_Volt);
-	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-	memcpy(Msg1, Msg2, 100);
-	
-  float Bus_Volt = Get_Bus_Voltage(&hi2c1); //The output will be in VOLTS
-  snprintf((char *)Msg1, sizeof(Msg1), "\t\t\t\t\t\t Bus Voltage is: %f V\n",Bus_Volt);
-	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-	memcpy(Msg1, Msg2, 100);
-	
-	float Power =   Get_power(&hi2c1); //The output will be in MILLI_WATTS
-  snprintf((char *)Msg1, sizeof(Msg1), "\t\t\t\t\t Power is: %f mW\n",Power);
-	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-	memcpy(Msg1, Msg2, 100);
-	
-	float current = Get_Current(&hi2c1); //The output will be in MILLI_AMPS
-	snprintf((char *)Msg1, sizeof(Msg1), "Current is: %f mA\n",current);
-	HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
-	memcpy(Msg1, Msg2, 100);
-	time++;
-	HAL_Delay(11000);//delay for 11 sec
-  }
+		float Bus_Volt = Get_Bus_Voltage(&hi2c1); //The output will be in VOLTS
+		snprintf((char *)Msg1, sizeof(Msg1), "\t\t\t\t\t\t Bus Voltage is: %f V\n",Bus_Volt);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		memcpy(Msg1, Msg2, 100);
+		
+		float Power =   Get_power(&hi2c1); //The output will be in MILLI_WATTS
+		snprintf((char *)Msg1, sizeof(Msg1), "\t\t\t\t\t Power is: %f mW\n",Power);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		memcpy(Msg1, Msg2, 100);
+		
+		float current = Get_Current(&hi2c1); //The output will be in MILLI_AMPS
+		snprintf((char *)Msg1, sizeof(Msg1), "Current is: %f mA\n",current);
+		HAL_UART_Transmit(&huart2, (uint8_t *) Msg1, sizeof(Msg1), 1);
+		memcpy(Msg1, Msg2, 100);
+		time++;
+		HAL_Delay(11000);//delay for 11 sec
+		}
   /* USER CODE END 3 */
 }
 
