@@ -43,7 +43,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "PWM_Library.h"
+#include "Actuator_Lib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +53,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TIM3_CLK 500000.0
 #define BUTTON_DOWN 0xFE
 #define BUTTON_UP 0x01
 #define TRUE 1
@@ -74,7 +73,7 @@ TIM_HandleTypeDef htim4;
 /* USER CODE BEGIN PV */
 
 // duty cycle variable in percentage
-static uint16_t duty_cycle = 0;
+static float duty_cycle = 0;
 
 // button history bitstream
 static uint8_t button_state = 0;
@@ -147,78 +146,58 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	
 	//========================================================
-	//								PWM Initialization functions
+	//									Initialize Motor
 	//========================================================
-	// starts base timer
-  HAL_TIM_Base_Start(&htim4);
-	TIM3->CCER |= 1; // ENABLES CAPTURE REGISTER CUBE MX IS TRASH
-	HAL_TIM_Base_Start(&htim3);
-	HAL_TIM_Base_Start_IT(&htim3);
-	
-	// starts PWM signal generation
-	if (HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1) != HAL_OK) {
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	}
-		
-	// set PWM signal frequency
-	PWM_Set_Frequency(&htim4, 100);
 
 	//========================================================
 	//								ADC Initialization functions
 	//========================================================
 	HAL_ADC_Start(&hadc1);
 	
-	// set initial duty cycle
-	PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
+	// set initial speed
+	rw_set_speed(&htim4, duty_cycle);
 	
-//	// push button test harness phase 1
-//	while(1)
-//	{
-//		
-//		if (calc_rpm) {
-//			// time for rotation (us) assuming pulses are equidistant
-//			xor_pulse_time *= 6.0; 								// time to rotate in us
-//			xor_pulse_time = xor_pulse_time 		// (us/rev)
-//											 * (1.0/1000000.0) 	// (s/us)
-//											 * (1.0/60);				// (min/s)
-//			
-//			// calculate rpm
-//			rpm = 1.0/xor_pulse_time;
-//		}
-//		
-//		// store button ADC value 
-//		button_state |= HAL_GPIO_ReadPin(GPIOB, PUSH_BUTTON_Pin);
-//		button_state <<= 1;
-//		
-//		// if button is pressed
-//		if (button_state & BUTTON_DOWN)
-//		{
-//			// set PWM duty cycle
-//			duty_cycle += 5;
-//			PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
-//		}
-//		
-//		// end of duty cycle range
-//		if (duty_cycle == 100)
-//		{
-//			break;
-//		}
-//	}
-//	
-//	// busy wait until button is pressed to enter 
-//	// testing phase 2 (continue checking rpm)
-//	while (!(button_state & BUTTON_DOWN)){
-//		if (calc_rpm) {
-//			// time for rotation (us) assuming pulses are equidistant
-//			xor_pulse_time *= 6.0; 								// time to rotate in us
-//			xor_pulse_time = xor_pulse_time 		// (us/rev)
-//											 * (1.0/1000000.0) 	// (s/us)
-//											 * (1.0/60);				// (min/s)
-//			
-//			// calculate rpm
-//			rpm = 1.0/xor_pulse_time;
-//		}
-//	}
+	// push button test harness phase 1
+	while(1)
+	{
+		
+		// get current speed
+		rw_get_speed(&htim3, &rpm);
+		
+		// store button ADC value 
+		button_state <<= 1;
+		button_state |= HAL_GPIO_ReadPin(GPIOC, PUSH_BUTTON_Pin);
+		
+		// if button is pressed
+		if (button_state == BUTTON_DOWN)
+		{
+			// increment speed by 5 percent
+			duty_cycle += 5;
+			rw_set_speed(&htim4, duty_cycle);
+		}
+		
+		// end of duty cycle range
+		if (duty_cycle == 100)
+		{
+			break;
+		}
+	}
+	
+	// store button ADC value 
+	button_state <<= 1;
+	button_state |= HAL_GPIO_ReadPin(GPIOC, PUSH_BUTTON_Pin);
+	
+	// busy wait until button is pressed to enter 
+	// testing phase 2 (continue checking rpm)
+	while (!(button_state == BUTTON_DOWN)) {
+		
+		// get speed in RPM
+		rw_get_speed(&htim3, &rpm);
+		
+		// store button ADC value 
+		button_state <<= 1;
+		button_state |= HAL_GPIO_ReadPin(GPIOC, PUSH_BUTTON_Pin);
+	}
 		
 	
   while (1)
@@ -229,18 +208,12 @@ int main(void)
 
 		// convert adc value to duty cycle percentage
 		duty_cycle = (adc_val * 100.0)/4096;
-			
-		// set duty cycle accordingly
-		PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
 		
-		// time for rotation (us) assuming pulses are equidistant
-		xor_pulse_time = 6.0 * TIM3->CCR1; 	// time to rotate in us
-		xor_pulse_time = xor_pulse_time 		// (us/rev)
-										 * (1.0/TIM3_CLK) 	// (s/us)
-										 * (1.0/60);				// (min/s)
-			
-		// calculate rpm
-		rpm = (1.0/xor_pulse_time)*3.0;
+		// set motor speed based on adc_val
+		rw_set_speed(&htim4, duty_cycle);
+		
+		// get current speed
+		rw_get_speed(&htim3, &rpm);
 		
     /* USER CODE END WHILE */
 

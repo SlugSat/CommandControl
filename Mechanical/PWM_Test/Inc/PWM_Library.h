@@ -10,9 +10,9 @@
 // Sets duty cycle for PWM signal assuming clock frequency is 1 MHz
 // (note: the duty cycle is in percent so the range is 0-100
 //======================================================================
-void PWM_Set_Duty_Cycle(TIM_HandleTypeDef *htim, // timer handler
-												uint16_t duty_cycle,		 // percent duty cycle
-												uint32_t channel);				 // pwm generation channel
+void PWM_Set_Duty_Cycle(TIM_HandleTypeDef *htim, 	// timer handler
+												float duty_cycle,		 			// percent duty cycle
+												uint32_t channel);				// pwm generation channel
 
 //======================================================================
 // Sets frequency for all PWM signals. frequency is in Hz
