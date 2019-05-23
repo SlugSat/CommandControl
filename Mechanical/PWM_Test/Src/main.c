@@ -53,6 +53,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define TIM3_CLK 500000.0
 #define BUTTON_DOWN 0xFE
 #define BUTTON_UP 0x01
 #define TRUE 1
@@ -67,36 +68,38 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 
 // duty cycle variable in percentage
-static uint16_t duty_cycle = 100;
-static uint16_t duty_cycle2 = 100;
+static uint16_t duty_cycle = 0;
 
+// button history bitstream
+static uint8_t button_state = 0;
 
 // adc value variable
 static uint16_t adc_val = 0;
 
 // hall effect counter variable
-static uint32_t hall_cnt = 0;
+static uint8_t xor_cnt = 0;
+static float xor_pulse_time = 0;
 
 // calculate rpm
 static uint8_t calc_rpm = FALSE;
 static float rpm = 0;
+static float curr_time = 0;
+
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -133,10 +136,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_TIM4_Init();
   MX_ADC1_Init();
-  MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -148,7 +150,8 @@ int main(void)
 	//								PWM Initialization functions
 	//========================================================
 	// starts base timer
-	HAL_TIM_Base_Start(&htim4);
+  HAL_TIM_Base_Start(&htim4);
+	TIM3->CCER |= 1; // ENABLES CAPTURE REGISTER CUBE MX IS TRASH
 	HAL_TIM_Base_Start(&htim3);
 	HAL_TIM_Base_Start_IT(&htim3);
 	
@@ -156,23 +159,68 @@ int main(void)
 	if (HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1) != HAL_OK) {
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
-	
-	if (HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2) != HAL_OK) {
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	}	
+		
 	// set PWM signal frequency
-	PWM_Set_Frequency(&htim4, 1000);
-	
-	// initialize duty cycle
-	PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
-	PWM_Set_Duty_Cycle(&htim4, duty_cycle2, TIM_CHANNEL_2);
+	PWM_Set_Frequency(&htim4, 100);
 
-	
 	//========================================================
 	//								ADC Initialization functions
 	//========================================================
 	HAL_ADC_Start(&hadc1);
+	
+	// set initial duty cycle
+	PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
+	
+//	// push button test harness phase 1
+//	while(1)
+//	{
+//		
+//		if (calc_rpm) {
+//			// time for rotation (us) assuming pulses are equidistant
+//			xor_pulse_time *= 6.0; 								// time to rotate in us
+//			xor_pulse_time = xor_pulse_time 		// (us/rev)
+//											 * (1.0/1000000.0) 	// (s/us)
+//											 * (1.0/60);				// (min/s)
+//			
+//			// calculate rpm
+//			rpm = 1.0/xor_pulse_time;
+//		}
+//		
+//		// store button ADC value 
+//		button_state |= HAL_GPIO_ReadPin(GPIOB, PUSH_BUTTON_Pin);
+//		button_state <<= 1;
+//		
+//		// if button is pressed
+//		if (button_state & BUTTON_DOWN)
+//		{
+//			// set PWM duty cycle
+//			duty_cycle += 5;
+//			PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
+//		}
+//		
+//		// end of duty cycle range
+//		if (duty_cycle == 100)
+//		{
+//			break;
+//		}
+//	}
+//	
+//	// busy wait until button is pressed to enter 
+//	// testing phase 2 (continue checking rpm)
+//	while (!(button_state & BUTTON_DOWN)){
+//		if (calc_rpm) {
+//			// time for rotation (us) assuming pulses are equidistant
+//			xor_pulse_time *= 6.0; 								// time to rotate in us
+//			xor_pulse_time = xor_pulse_time 		// (us/rev)
+//											 * (1.0/1000000.0) 	// (s/us)
+//											 * (1.0/60);				// (min/s)
+//			
+//			// calculate rpm
+//			rpm = 1.0/xor_pulse_time;
+//		}
+//	}
 		
+	
   while (1)
   {
 		
@@ -181,18 +229,18 @@ int main(void)
 
 		// convert adc value to duty cycle percentage
 		duty_cycle = (adc_val * 100.0)/4096;
-		duty_cycle2 = 100 - ((adc_val * 100.0)/4096);
 			
 		// set duty cycle accordingly
 		PWM_Set_Duty_Cycle(&htim4, duty_cycle, TIM_CHANNEL_1);
-		PWM_Set_Duty_Cycle(&htim4, duty_cycle2, TIM_CHANNEL_2);
 		
-		if (calc_rpm)
-		{
-			rpm = hall_cnt * 60;
-			calc_rpm = FALSE;
-			hall_cnt = 0;
-		}
+		// time for rotation (us) assuming pulses are equidistant
+		xor_pulse_time = 6.0 * TIM3->CCR1; 	// time to rotate in us
+		xor_pulse_time = xor_pulse_time 		// (us/rev)
+										 * (1.0/TIM3_CLK) 	// (s/us)
+										 * (1.0/60);				// (min/s)
+			
+		// calculate rpm
+		rpm = (1.0/xor_pulse_time)*3.0;
 		
     /* USER CODE END WHILE */
 
@@ -226,7 +274,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV16;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV16;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV16;
 
@@ -288,54 +336,6 @@ static void MX_ADC1_Init(void)
 }
 
 /**
-  * @brief TIM2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM2_Init(void)
-{
-
-  /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM2_Init 1 */
-
-  /* USER CODE END TIM2_Init 1 */
-  htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
-  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 0;
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
-  sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
-  sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
-  sClockSourceConfig.ClockFilter = 0;
-  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM2_Init 2 */
-
-  /* USER CODE END TIM2_Init 2 */
-
-}
-
-/**
   * @brief TIM3 Initialization Function
   * @param None
   * @retval None
@@ -348,6 +348,7 @@ static void MX_TIM3_Init(void)
   /* USER CODE END TIM3_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_HallSensor_InitTypeDef sConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
   /* USER CODE BEGIN TIM3_Init 1 */
@@ -356,7 +357,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 31250;
+  htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -368,7 +369,15 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC1Filter = 0;
+  sConfig.Commutation_Delay = 0;
+  if (HAL_TIMEx_HallSensor_Init(&htim3, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_OC2REF;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
@@ -401,7 +410,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 1000;
+  htim4.Init.Period = 0;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -424,7 +433,7 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 500;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -436,7 +445,7 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM4_Init 2 */
-
+	
   /* USER CODE END TIM4_Init 2 */
   HAL_TIM_MspPostInit(&htim4);
 
@@ -457,46 +466,36 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(BOARD_LED_GPIO_Port, BOARD_LED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  /*Configure GPIO pin : PUSH_BUTTON_Pin */
+  GPIO_InitStruct.Pin = PUSH_BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(PUSH_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  /*Configure GPIO pin : BOARD_LED_Pin */
+  GPIO_InitStruct.Pin = BOARD_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : HALL_EFF_INT_Pin */
-  GPIO_InitStruct.Pin = HALL_EFF_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(HALL_EFF_INT_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+  HAL_GPIO_Init(BOARD_LED_GPIO_Port, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
-{
-	if (GPIO_PIN == HALL_EFF_INT_Pin)
-	{
-		hall_cnt++;
-	}
-	else 
-	{
-		__NOP();
-	}
-}
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
+//{
+//	if (GPIO_PIN == HALL_EFF_INT_Pin)
+//	{
+//		hall_cnt++;
+//	}
+//	else 
+//	{
+//		__NOP();
+//	}
+//}
 
 /**
   * @brief This function handles TIM3 global interrupt.
@@ -504,6 +503,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
+		// save pulse time (1/6th) of rotation
+	xor_pulse_time = TIM2->CCR1;
+	
+		// toggle board LED
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	
+	// set flag to calculate rpm
+	calc_rpm = TRUE;
 
   /* USER CODE END TIM3_IRQn 0 */
 	
@@ -511,10 +518,6 @@ void TIM3_IRQHandler(void)
 	
   /* USER CODE BEGIN TIM3_IRQn 1 */
 	
-	// set flag to compute RPM
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	calc_rpm = TRUE;
-		
   /* USER CODE END TIM3_IRQn 1 */
 }
 
