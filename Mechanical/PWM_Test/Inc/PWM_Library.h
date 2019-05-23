@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define CLOCK_FREQ 31250 // Frequency of Timer 4
+#define CLOCK_FREQ 1000000 // Frequency of Timer 4
 
 
 //======================================================================
