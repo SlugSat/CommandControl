@@ -1,4 +1,4 @@
-15815914375935696
+15819031849556597
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -65211,6 +65211,20 @@ LEM Hall Effect Voltage transducer
 0
 5
 5
+SN74HC32N
+DIP254P762X508-14
+
+
+0
+14
+14
+SN74LS21N
+DIP254P762X508-14
+
+
+0
+14
+14
 Socket
 3M_Textool_240-1288-00-0602J_2x20_P2.54mm
 3M 40-pin zero insertion force socket, though-hole, row spacing 25.4 mm (1000 mils)
