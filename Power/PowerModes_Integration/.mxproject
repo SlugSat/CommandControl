@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/sneuschm/Documents/SlugSat/CommandControl/Power/PowerModes_Integration/Inc
+HeaderPath=E:/UCSC/School Work/Spring19/CommandControl/Power/PowerModes_Integration/Inc
 HeaderFiles=stm32l1xx_it.h;stm32l1xx_hal_conf.h;main.h;
-SourcePath=C:/Users/sneuschm/Documents/SlugSat/CommandControl/Power/PowerModes_Integration/Src
+SourcePath=E:/UCSC/School Work/Spring19/CommandControl/Power/PowerModes_Integration/Src
 SourceFiles=stm32l1xx_it.c;stm32l1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]

@@ -72,6 +72,59 @@ void Initialize_All_Current_Sensors(I2C_HandleTypeDef *hi2c)
 	CurrentSensorInit(hi2c, CURR_SENSE_ADDRESS_7); */
 }
 
+
+void Check_for_Shorts(I2C_HandleTypeDef *hi2c1, uint8_t *shortCheck)
+{
+	// First make all the checks for the rails that are 5 V and lower
+	float curr1 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_1);
+	float curr2 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_2);
+	float curr3 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_3);
+	float curr4 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_4);
+	
+	if (curr1 < SHORT_DETECT_5_LESS)
+	{
+		*shortCheck |= 0x01;
+	}
+	
+	if (curr2 < SHORT_DETECT_5_LESS)
+	{
+		*shortCheck |= 0x02;
+	}
+	
+	if (curr3 < SHORT_DETECT_5_LESS)
+	{
+		*shortCheck |= 0x03;
+	}
+	
+	if (curr4 < SHORT_DETECT_5_LESS)
+	{
+		*shortCheck |= 0x04;
+	}
+	
+	
+	// Make all the checks for the voltage rails higher than 8 V
+	float curr5 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_5);
+	float curr6 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_6);
+	float curr7 = Get_Current(hi2c1, CURR_SENSE_ADDRESS_7);
+	
+	if (curr5 < SHORT_DETECT_8_MORE)
+	{
+		*shortCheck |= 0x05;
+	}
+	
+	if (curr6 < SHORT_DETECT_8_MORE)
+	{
+		*shortCheck |= 0x06;
+	}
+	
+	if (curr7 < SHORT_DETECT_8_MORE)
+	{
+		*shortCheck |= 0x07;
+	}
+	
+}
+
+
 float Get_Shunt_Voltage(I2C_HandleTypeDef *hi2c, uint8_t slaveAddress)
 {
 	uint16_t recv = 0;

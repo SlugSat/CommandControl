@@ -105,7 +105,7 @@ uint8_t Set_Stable(uint8_t change);
 uint8_t Set_Die(uint8_t change);
 uint8_t Set_ScienceEvent(uint8_t change);
 uint8_t Set_SolarVector(uint8_t change);
-uint8_t Set_BatteryLevel(uint8_t change);
+float Set_BatteryLevel(float change);
 
 /* Thread calls which variables to change */
 void *change_variables(uint8_t type);

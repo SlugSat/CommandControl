@@ -76,6 +76,8 @@ UART_HandleTypeDef huart2;
 uint16_t globalIntterupt = 0;
 States globalState = Detumble;
 volatile States state;
+uint8_t shortCheck = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -127,10 +129,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	/* Initialize Variables */
-	system_function functions;
 	uint8_t firstTransition = 0;
-	/* Initialize the starting state of each of the systems that need power */
-	Initialize_Functions(&functions);
 	/* Initialize the current controllers */
 	Initialize_All_Current_Sensors(&hi2c1);
 	/* Initialize the fuel gauge */
@@ -142,28 +141,31 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	int tmp;
   while (1)
   {
 	/* Enter the state machine */
 		while(1)
 		{
 			// Check battery level
-			float voltage = Get_Voltage(&hi2c1, 0);
-			float battPercentage = (voltage / MAX_VOLTAGE) * 100;
+			float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
 			// Write the battery level to the fram
 			uint8_t battBytes[4] = {0};
 			float_to_bytes(battPercentage, battBytes);
 			SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
-			Set_BatteryLevel((uint8_t) battPercentage);
+			Set_BatteryLevel(battPercentage);
 			
-			/*This are the values from the current controller IC*/
-			/*
-			float Bus_Volt = Get_Bus_Voltage(&hi2c1); //The output will be in VOLTS
-			float Power =   Get_power(&hi2c1); //The output will be in MILLI_WATTS
-			float current = Get_Current(&hi2c1); //The output will be in MILLI_AMPS
-			*/
-			/* optionally, read the current and voltage and also write that to the FRAM */
+			// Check the science event pin
+			if (HAL_GPIO_ReadPin(GPIOC, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
+			{
+				Set_ScienceEvent(TRUE);
+			}
+			else
+			{
+				Set_ScienceEvent(FALSE);
+			}
+			
+			// Check if there is a short in any of the rails
+			Check_for_Shorts(&hi2c1, &shortCheck);
 			
 			if (state != globalState)
 			{
@@ -174,7 +176,6 @@ int main(void)
 			{
 				/* In Detumble mode */
 				case (Detumble): 
-					Set_PowerModes(&functions, Detumble);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -182,11 +183,9 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(Detumble, &hspi2, &huart2);
-					tmp = state == Detumble ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In Kill mode */
 				case (Kill): 
-					Set_PowerModes(&functions, Kill);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -194,11 +193,9 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(Kill, &hspi2, &huart2);
-					tmp = state == Kill ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In Normal mode */
 				case (Normal): 
-					Set_PowerModes(&functions, Normal);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -206,11 +203,9 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(Normal, &hspi2, &huart2);
-					tmp = state == Normal ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In UltraLowPower mode */	
 				case (UltraLowPower): 
-					Set_PowerModes(&functions, UltraLowPower);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -218,11 +213,9 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(UltraLowPower, &hspi2, &huart2);
-					tmp = state == UltraLowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In LowPower mode */
 				case (LowPower): 
-					Set_PowerModes(&functions, LowPower);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -230,11 +223,9 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(LowPower, &hspi2, &huart2);
-					tmp = state == LowPower ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In Eclipse mode */
 				case (Eclipse): 
-					Set_PowerModes(&functions, Eclipse);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -242,11 +233,9 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(Eclipse, &hspi2, &huart2);
-					tmp = state == Eclipse ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* In ScienceOnly mode */
 				case (ScienceOnly): 
-					Set_PowerModes(&functions, ScienceOnly);
 					// Set rails high for this state
 					if (firstTransition == 0)
 					{
@@ -254,12 +243,11 @@ int main(void)
 						firstTransition = 1;
 					}
 					state = Transition(ScienceOnly, &hspi2, &huart2);
-					tmp = state == ScienceOnly ? GPIO_PIN_SET : GPIO_PIN_RESET;
 					break;
 				/* An error occurred */
 				default:
-					state = 255; // Error
-					continue;
+					// Error
+					return 0;
 			}
 		}
 		
@@ -428,8 +416,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|SPI_FRAM_LOCKA9_Pin 
-                          |Telemetry_Rail_Pin|DEAD_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Telemetry_Rail_Pin 
+                          |DEAD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin|Misc_Rail_Pin, GPIO_PIN_RESET);
@@ -437,14 +425,20 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|Memory_Rail_Pin|LT_Rail_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin SPI_FRAM_LOCKA9_Pin 
-                           Telemetry_Rail_Pin DEAD_Pin */
-  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|SPI_FRAM_LOCKA9_Pin 
-                          |Telemetry_Rail_Pin|DEAD_Pin;
+  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin Telemetry_Rail_Pin 
+                           DEAD_Pin */
+  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Telemetry_Rail_Pin 
+                          |DEAD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SCIENCE_EVENT_Pin SPI_FRAM_IN2_Pin SPI_FRAM_IN1_Pin */
+  GPIO_InitStruct.Pin = SCIENCE_EVENT_Pin|SPI_FRAM_IN2_Pin|SPI_FRAM_IN1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SPI_FRAM_LOCK_Pin Misc_Rail_Pin */
   GPIO_InitStruct.Pin = SPI_FRAM_LOCK_Pin|Misc_Rail_Pin;
@@ -465,12 +459,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : SPI_FRAM_IN2_Pin SPI_FRAM_IN1_Pin */
-  GPIO_InitStruct.Pin = SPI_FRAM_IN2_Pin|SPI_FRAM_IN1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SCI_INT_Pin */
   GPIO_InitStruct.Pin = SCI_INT_Pin;
@@ -538,46 +526,89 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 }
 
 void Output_Power_Pins(uint8_t currState)
-{
-	HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-	
+{	
 	// Set the MechanicalSys power mode
 	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse)
 	{
-		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_SET);
+		if ((shortCheck & 0x16) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set the power for CC and Telemetry systems
 	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse || currState == ScienceOnly)
 	{
-		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_SET);
-		if (currState != Detumble)
+		if ((shortCheck & 0x14) != 0) // Check if there was a short in the rail
 		{
-			HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_SET);
+			if (currState != Detumble)
+			{
+				HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_SET);
+			}
 		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set the power for the Science payload systems
 	if (currState == ScienceOnly)
 	{
-		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_SET);
+		if ((shortCheck & 0x4C) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else 
+	{
+		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set the LT power rail
-	if (currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse)
+	if (currState == Normal)
 	{
-		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_SET);
+		if ((shortCheck & 0x3F) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set a pin when Kill mode is entered, used for debugging
 	if (currState == Kill)
 	{
 		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_SET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
 	}
 }
 	

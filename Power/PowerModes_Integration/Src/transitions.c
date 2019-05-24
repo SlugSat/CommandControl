@@ -6,7 +6,7 @@
 /* Global variables controlling events and signals */
 uint8_t stable = 0;
 uint8_t die = 0;
-uint8_t batteryLevel = 100;
+float batteryLevel = 100;
 uint8_t scienceEvent = 0;
 uint8_t solarVector = 1; 
 #endif
@@ -46,7 +46,7 @@ uint8_t Set_SolarVector(uint8_t change)
 	return change;
 }
 /* Set the solarVector global variable */
-uint8_t Set_BatteryLevel(uint8_t change)
+float Set_BatteryLevel(float change)
 {
 	batteryLevel = change;
 	return change;
@@ -55,175 +55,44 @@ uint8_t Set_BatteryLevel(uint8_t change)
 /* State transition for Detumble */
 uint8_t Detumble_Transition(void)
 {
-	while(1)
+
+	if (die == FALSE)
 	{
-		//Print_Globals();
-		// Grab mutex
-		if (die == FALSE)
+		if (stable == TRUE)
 		{
-			if (stable == TRUE)
+			if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
 			{
-				if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return Eclipse;
-				}
-				else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
-				{
-					return Normal;
-				}
-				else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return LowPower;
-				}
-				else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
-				{
-					return UltraLowPower;
-				}
+				return Eclipse;
 			}
-			return Detumble;
+			else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
+			{
+				return Normal;
+			}
+			else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return LowPower;
+			}
+			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
+			{
+				return UltraLowPower;
+			}
 		}
-		else
-		{
-			return Kill;
-		}
-		// Release mutex
+		return Detumble;
 	}
+	else
+	{
+		return Kill;
+	}
+	return Detumble;
 }
 
 /* State transition for Eclipse */
 uint8_t Eclipse_Transition(void)
 {
-	while(1)
-	{
-		//Print_Globals();
-		// Grab mutex
-		if (die == FALSE)
-		{
-			if (scienceEvent == FALSE)
-			{
-				if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return Eclipse;
-				}
-				else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
-				{
-					return Normal;
-				}
-				else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return LowPower;
-				}
-				else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
-				{
-					return UltraLowPower;
-				}
-			}
-			else
-			{
-				return ScienceOnly;
-			}
-		}
-		else
-		{
-			return Kill;
-		}
-		// Release mutex
-	}
-	
-}
 
-/* State transition for Normal */
-uint8_t Normal_Transition(void)
-{
-	while(1)
+	if (die == FALSE)
 	{
-		//Print_Globals();
-		// Grab mutex
-		if (die == FALSE)
-		{
-			if (scienceEvent == FALSE)
-			{
-				if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return Eclipse;
-				}
-				else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
-				{
-					return Normal;
-				}
-				else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return LowPower;
-				}
-				else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
-				{
-					return UltraLowPower;
-				}
-			}
-			else
-			{
-				return ScienceOnly;
-			}
-		}
-		else
-		{
-			return Kill;
-		}
-		// Release mutex
-	}
-	
-}
-
-/* State transition for LowPower */
-uint8_t LowPower_Transition(void)
-{
-	while(1)
-	{
-		//Print_Globals();
-		// Grab mutex
-		if (die == FALSE)
-		{
-			if (scienceEvent == FALSE)
-			{
-				if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return Eclipse;
-				}
-				else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
-				{
-					return Normal;
-				}
-				else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return LowPower;
-				}
-				else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
-				{
-					return UltraLowPower;
-				}
-			}
-			else
-			{
-				return ScienceOnly;
-			}
-		}
-		else
-		{
-			return Kill;
-		}
-		// Release mutex
-	}
-	
-}
-
-/* State transition for UltraLowPower */
-uint8_t UltraLowPower_Transition(void)
-{
-	while(1)
-	{
-		//Print_Globals();
-		// Grab mutex
-		if (die == FALSE)
+		if (scienceEvent == FALSE)
 		{
 			if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
 			{
@@ -244,53 +113,152 @@ uint8_t UltraLowPower_Transition(void)
 		}
 		else
 		{
-			return Kill;
-		}		
-		// Release mutex
+			return ScienceOnly;
+		}
 	}
-	
+	else
+	{
+		return Kill;
+	}	
+	return Eclipse;
+}
+
+/* State transition for Normal */
+uint8_t Normal_Transition(void)
+{
+
+	if (die == FALSE)
+	{
+		if (scienceEvent == FALSE)
+		{
+			if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return Eclipse;
+			}
+			else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
+			{
+				return Normal;
+			}
+			else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return LowPower;
+			}
+			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
+			{
+				return UltraLowPower;
+			}
+		}
+		else
+		{
+			return ScienceOnly;
+		}
+	}
+	else
+	{
+		return Kill;
+	}
+	return Normal;
+}
+
+/* State transition for LowPower */
+uint8_t LowPower_Transition(void)
+{
+	if (die == FALSE)
+	{
+		if (scienceEvent == FALSE)
+		{
+			if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return Eclipse;
+			}
+			else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
+			{
+				return Normal;
+			}
+			else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return LowPower;
+			}
+			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
+			{
+				return UltraLowPower;
+			}
+		}
+		else
+		{
+			return ScienceOnly;
+		}
+	}
+	else
+	{
+		return Kill;
+	}
+	return LowPower;
+}
+
+/* State transition for UltraLowPower */
+uint8_t UltraLowPower_Transition(void)
+{
+	if (die == FALSE)
+	{
+		if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
+		{
+			return Eclipse;
+		}
+		else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
+		{
+			return Normal;
+		}
+		else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
+		{
+			return LowPower;
+		}
+		else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
+		{
+			return UltraLowPower;
+		}
+	}
+	else
+	{
+		return Kill;
+	}		
+	return UltraLowPower;
 }
 
 /* State transition for ScienceOnly */
 uint8_t ScienceOnly_Transition(void)
 {
-	while(1)
+	if (die == FALSE)
 	{
-		//Print_Globals();
-		// Grab mutex
-		if (die == FALSE)
+		if (batteryLevel < ULTRA_LOW_BATT)
 		{
-			if (batteryLevel < ULTRA_LOW_BATT)
+			return UltraLowPower;
+		}
+		
+		if (scienceEvent == FALSE)
+		{
+			if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return Eclipse;
+			}
+			else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
+			{
+				return Normal;
+			}
+			else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
+			{
+				return LowPower;
+			}
+			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
 			{
 				return UltraLowPower;
 			}
-			
-			if (scienceEvent == FALSE)
-			{
-				if ((solarVector == OFF) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return Eclipse;
-				}
-				else if ((solarVector == ON) && (batteryLevel > LOW_BATT))
-				{
-					return Normal;
-				}
-				else if ((solarVector == ON) && (batteryLevel < LOW_BATT) && (batteryLevel > ULTRA_LOW_BATT))
-				{
-					return LowPower;
-				}
-				else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT))
-				{
-					return UltraLowPower;
-				}
-			}
 		}
-		else
-		{
-			return Kill;
-		}
-		// Release mutex
 	}
-
+	else
+	{
+		return Kill;
+	}
+	return ScienceOnly;
 }
 
