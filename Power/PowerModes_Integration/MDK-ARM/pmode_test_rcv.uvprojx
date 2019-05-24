@@ -432,6 +432,36 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32l1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>Fuel_Gauge_Functions.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\Fuel_Gauge_Functions.c</FilePath>
+            </File>
+            <File>
+              <FileName>DateConversion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\DateConversion.c</FilePath>
+            </File>
+            <File>
+              <FileName>Current_Control_Functions.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\Current_Control_Functions.c</FilePath>
+            </File>
+            <File>
+              <FileName>Fuel_Gauge_Functions.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\Fuel_Gauge_Functions.h</FilePath>
+            </File>
+            <File>
+              <FileName>DateConversion.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\DateConversion.h</FilePath>
+            </File>
+            <File>
+              <FileName>Current_Control_Functions.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\Current_Control_Functions.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

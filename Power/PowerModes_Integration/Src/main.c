@@ -44,6 +44,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "PowerModes.h"
+#include "SPI_FRAM.h"
+#include "DateConversion.h"
+#include "Current_Control_Functions.h"
+#include "Fuel_Gauge_Functions.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -127,27 +131,32 @@ int main(void)
 	uint8_t firstTransition = 0;
 	/* Initialize the starting state of each of the systems that need power */
 	Initialize_Functions(&functions);
-	/*initialize the current controller*/
-	init(&hi2c1);
+	/* Initialize the current controllers */
+	Initialize_All_Current_Sensors(&hi2c1);
+	/* Initialize the fuel gauge */
+	Fuel_Gauge_Init(&hi2c1);
+	
 	/* Set Initial state */
 	state = Detumble;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	volatile int tmp;
+	int tmp;
   while (1)
   {
 	/* Enter the state machine */
 		while(1)
 		{
 			// Check battery level
-			// Read_FuelGauge(battlevel)
+			float voltage = Get_Voltage(&hi2c1, 0);
+			float battPercentage = (voltage / MAX_VOLTAGE) * 100;
 			// Write the battery level to the fram
-			// float battPercent = Get_Charge_Percentage(&hi2c1);
-			// uint8_t battBytes[4] = {0};
-			// float_to_bytes(battPercent, battBytes);
-			// SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
+			uint8_t battBytes[4] = {0};
+			float_to_bytes(battPercentage, battBytes);
+			SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
+			Set_BatteryLevel((uint8_t) battPercentage);
+			
 			/*This are the values from the current controller IC*/
 			/*
 			float Bus_Volt = Get_Bus_Voltage(&hi2c1); //The output will be in VOLTS
