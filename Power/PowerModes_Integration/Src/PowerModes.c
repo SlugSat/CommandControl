@@ -199,42 +199,36 @@ States Transition(uint8_t event, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *hu
 	// Delay the program for awhile to test they are correct
 //	for (int i = 0; i < 100000000; i++);
 	
-	States ret = 255;
+	States ret = (States) event;
 	
 	if (event == Detumble)
 	{
-		ret = Detumble_Transition();
+		ret = (States) Detumble_Transition();
 	}
 	else if (event == Kill)
 	{
-		ret = Kill;
+		ret = (States) Kill;
 	}
 	else if (event == Normal)
 	{
-		ret = Normal_Transition();
+		ret = (States) Normal_Transition();
 	}
 	else if (event == UltraLowPower)
 	{
-		ret = UltraLowPower_Transition();
+		ret = (States) UltraLowPower_Transition();
 	}
 	else if (event == LowPower)
 	{
-		ret = LowPower_Transition();
+		ret = (States) LowPower_Transition();
 	}
 	else if (event == Eclipse)
 	{
-		ret = Eclipse_Transition();
+		ret = (States) Eclipse_Transition();
 	}
 	else if (event == ScienceOnly)
 	{
-		ret = ScienceOnly_Transition(); 
+		ret = (States) ScienceOnly_Transition(); 
 	}
-	
-	// Write the new state to the SPI FRAM here //
-	/***************************/
-	// 
-	// SPI_FRAM_Write(hspi, SPI_FRAM_PM_STATE_ADDR, ret, 1, huart);
-	
 	return ret;
 }
 

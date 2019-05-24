@@ -170,6 +170,7 @@ int main(void)
 			if (state != globalState)
 			{
 				firstTransition = 0;
+				SPI_FRAM_Write(&hspi2, SPI_FRAM_PM_STATE_ADDR, (uint8_t *) &state, 1, &huart2);
 			}
 			globalState = state;
 			switch (state)
@@ -601,10 +602,16 @@ void Output_Power_Pins(uint8_t currState)
 		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
-	// Set a pin when Kill mode is entered, used for debugging
+	// Set a pin when Kill mode is entered, used for debugging or shutting off all rails
 	if (currState == Kill)
 	{
 		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_SET);
+		
+		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
 	}
 	else
 	{
