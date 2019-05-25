@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/thomas/Documents/school1819/SeniorDesign/Keil/LowPowerDelay/Inc
+HeaderPath=C:/Users/thomas/Documents/school1819/SeniorDesign/repo-cc/Power/LowPowerDelay/Inc
 HeaderFiles=stm32l1xx_it.h;stm32l1xx_hal_conf.h;main.h;
-SourcePath=C:/Users/thomas/Documents/school1819/SeniorDesign/Keil/LowPowerDelay/Src
+SourcePath=C:/Users/thomas/Documents/school1819/SeniorDesign/repo-cc/Power/LowPowerDelay/Src
 SourceFiles=stm32l1xx_it.c;stm32l1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]

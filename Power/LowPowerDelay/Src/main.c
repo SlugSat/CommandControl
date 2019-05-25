@@ -40,7 +40,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
-
+void HAL_Delay2(__IO uint32_t Delay);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -84,11 +84,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  volatile GPIO_PinState tmp = GPIO_PIN_RESET;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+     HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, tmp);
+      tmp = tmp == GPIO_PIN_RESET ? GPIO_PIN_SET : GPIO_PIN_RESET;
+      //HAL_Delay(5000);
+      HAL_Delay2(5000);
   }
   /* USER CODE END 3 */
 }
@@ -108,14 +113,11 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /**Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
-  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -124,17 +126,17 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
-  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -153,6 +155,9 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
   /* USER CODE BEGIN RTC_Init 1 */
 
   /* USER CODE END RTC_Init 1 */
@@ -160,12 +165,43 @@ static void MX_RTC_Init(void)
   */
   hrtc.Instance = RTC;
   hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-  hrtc.Init.AsynchPrediv = 127;
-  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.AsynchPrediv = 0x7c;
+  hrtc.Init.SynchPrediv = 0x127;
   hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
   hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+    
+  /* USER CODE END Check_RTC_BKUP */
+
+  /**Initialize RTC and set the Time and Date 
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /**Enable the WakeUp 
+  */
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
   {
     Error_Handler();
   }
@@ -242,16 +278,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_Delay(__IO uint32_t Delay)
-{
-    uint32_t _time = (Delay * 2314) / 1000;
-    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, _time, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-
-    __HAL_RCC_PWR_CLK_ENABLE(); // Enable Power Control clock
-    HAL_PWREx_EnableUltraLowPower(); // Ultra low power mode
-    HAL_PWREx_EnableFastWakeUp(); // Fast wake-up for ultra low power mode
-}
-
 static void GPIO_DeInit(void)
 {
     // set the configuration for the GPIO ports (PA, PB, PC) to be analog inputs for low power
@@ -269,7 +295,33 @@ static void GPIO_DeInit(void)
     __HAL_RCC_GPIOC_CLK_DISABLE();
 }
 
+void HAL_Delay2(__IO uint32_t Delay)
+{
+    // the RTC is clocked by LSI, which means Wake Up clock is RTCCLK /16
+    uint32_t TimeValue = (Delay * (LSI_VALUE / 16)) / 1000;
+    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, TimeValue, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 
+    __HAL_RCC_PWR_CLK_ENABLE(); // Enable Power Control clock
+    HAL_PWREx_EnableUltraLowPower(); // Ultra low power mode
+    HAL_PWREx_EnableFastWakeUp(); // Fast wake-up for ultra low power mode
+    
+    // turn off GPIO to save power
+    GPIO_DeInit();
+    
+    // switch to STOP mode
+    // the microcontroller is sleeping in this function. It will resume on interrupt
+    EXTI->PR = 0xFFFFFFFF; // https://community.st.com/s/question/0D50X00009Xke5iSAB/enter-and-exit-stop-mode-with-rtc-and-exti
+    HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+    
+    // Now we're waking up, so set up clocks again
+    SystemClock_Config();
+    
+    // Deactivate RTC wakeUp
+    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    
+    // Reinit GPIOs
+    MX_GPIO_Init();
+}
 
 /* USER CODE END 4 */
 
