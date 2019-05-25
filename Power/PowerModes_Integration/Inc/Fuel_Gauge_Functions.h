@@ -44,6 +44,8 @@
 #define resistSensor 	0.01 // Ohms
 #define CLEAR					0x00
 
+#define MAX_VOLTAGE (4.2000)
+
 /* Custom typedefs and variables */
 typedef struct fg_config_t {
 	uint16_t design_cap;
@@ -56,12 +58,12 @@ typedef struct fg_config_t {
 	uint16_t config1;
 	uint16_t config2;
 } fg_config_t;
-			
+
 															
 /* Function Prototypes */															
-void readReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
-void writeReg(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
-void init(I2C_HandleTypeDef *hi2c, fg_config_t conf);													
+void Fuel_Gauge_Read(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv);
+void Fuel_Gauge_Write(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send);
+void Fuel_Gauge_Init(I2C_HandleTypeDef *hi2c);													
 															
 float Get_Remaining_Capacity(I2C_HandleTypeDef *hi2c); // Remaining capacity of battery in mAh
 float Get_Charge_Percentage(I2C_HandleTypeDef *hi2c); // State-of-charge percentage
@@ -70,7 +72,7 @@ float Get_TTE(I2C_HandleTypeDef *hi2c); // Time to empty
 float Get_TTF(I2C_HandleTypeDef *hi2c); // Time to full
 uint16_t Get_Status(I2C_HandleTypeDef *hi2c); // Status of the fuel gauge
 float Get_Voltage(I2C_HandleTypeDef *hi2c, uint8_t average); // Voltage measured between BATT and CSP
-float Get_Current(I2C_HandleTypeDef *hi2c, uint8_t average);
+float Get_FG_Current(I2C_HandleTypeDef *hi2c, uint8_t average);
 float Get_Temp(I2C_HandleTypeDef *hi2c);
 
 #endif // FUEL_GAUGE

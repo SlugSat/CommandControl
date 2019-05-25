@@ -120,11 +120,15 @@ int main(void)
 		Ftemp = (Ctemp * 9/5) + 32;
 		Ktemp = Ctemp + 273.15;
 		
-		sprintf(Out, "%.2f°C | %.2f°F | %.2f°K\n",Ctemp, Ftemp, Ktemp);
+		sprintf(Out, "%d  |  %.2f\n",ADC_0,Ctemp);
+		
+		//sprintf(Out, "%.2f\n",Ctemp);
+		
+		//sprintf(Out, "%.2f°C | %.2f°F | %.2f°K\n",Ctemp, Ftemp, Ktemp);
 		
 		HAL_UART_Transmit(&huart2,Out,strlen(Out),10);		
 		
-		HAL_Delay(1000);
+		HAL_Delay(500);
 		
   }
   /* USER CODE END 3 */

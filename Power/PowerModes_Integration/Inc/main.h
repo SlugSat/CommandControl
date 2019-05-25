@@ -84,6 +84,8 @@ void Error_Handler(void);
 #define Scie_Rail_GPIO_Port GPIOA
 #define Mech_Rail_Pin GPIO_PIN_7
 #define Mech_Rail_GPIO_Port GPIOA
+#define SCIENCE_EVENT_Pin GPIO_PIN_4
+#define SCIENCE_EVENT_GPIO_Port GPIOC
 #define SPI_FRAM_LOCK_Pin GPIO_PIN_5
 #define SPI_FRAM_LOCK_GPIO_Port GPIOC
 #define SPI_FRAM_CS_Pin GPIO_PIN_1
@@ -113,8 +115,6 @@ void Error_Handler(void);
 #define SCI_INT_Pin GPIO_PIN_8
 #define SCI_INT_GPIO_Port GPIOA
 #define SCI_INT_EXTI_IRQn EXTI9_5_IRQn
-#define SPI_FRAM_LOCKA9_Pin GPIO_PIN_9
-#define SPI_FRAM_LOCKA9_GPIO_Port GPIOA
 #define Telemetry_Rail_Pin GPIO_PIN_11
 #define Telemetry_Rail_GPIO_Port GPIOA
 #define DEAD_Pin GPIO_PIN_12

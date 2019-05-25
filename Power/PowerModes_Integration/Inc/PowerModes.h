@@ -6,11 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-//#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-//#include <pthread.h>
 #include "Current_Control_Functions.h"
 
 /* Define states and system function variables */
@@ -22,8 +20,12 @@ typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, S
 #define FALSE (0)
 #define TRUE  (1)
 
-#define ULTRA_LOW_BATT (15)
-#define LOW_BATT	   (50)
+// Have a different voltage for going into and out of the low power states to prevent thrashing
+// Also known as a histeuresis shift
+#define ULTRA_LOW_BATT_IN 	(3.4000)
+#define ULTRA_LOW_BATT_OUT  (3.500)
+#define LOW_BATT_IN	 				(3.6000)
+#define LOW_BATT_OUT 				(3.7000)
 
 #define STABLE (1)
 #define DIE (2)
@@ -105,7 +107,7 @@ uint8_t Set_Stable(uint8_t change);
 uint8_t Set_Die(uint8_t change);
 uint8_t Set_ScienceEvent(uint8_t change);
 uint8_t Set_SolarVector(uint8_t change);
-uint8_t Set_BatteryLevel(uint8_t change);
+float Set_BatteryLevel(float change);
 
 /* Thread calls which variables to change */
 void *change_variables(uint8_t type);
