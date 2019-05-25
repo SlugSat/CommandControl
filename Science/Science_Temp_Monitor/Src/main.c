@@ -116,15 +116,13 @@ int main(void)
 		//ADC_0 = Poll_Temp(hadc1);	
 		ADC_0 = Smooth_Poll_Temp(hadc1);
 		
-		Ctemp = (ADC_0 - OFFSET) * SCALE;
-		Ftemp = (Ctemp * 9/5) + 32;
-		Ktemp = Ctemp + 273.15;
+		Ctemp = ADC_To_C(ADC_0);
+		Ftemp = ADC_To_F(ADC_0);
+		Ktemp = ADC_To_K(ADC_0);
 		
-		sprintf(Out, "%d  |  %.2f\n",ADC_0,Ctemp);
+		sprintf(Out, "%.2f°C | %.2f°F | %.2f°K\n",Ctemp, Ftemp, Ktemp);
 		
-		//sprintf(Out, "%.2f\n",Ctemp);
-		
-		//sprintf(Out, "%.2f°C | %.2f°F | %.2f°K\n",Ctemp, Ftemp, Ktemp);
+		//sprintf(Out, "%.2f, %.2f, %.2f,\n",Ctemp, Ftemp, Ktemp);
 		
 		HAL_UART_Transmit(&huart2,Out,strlen(Out),10);		
 		
