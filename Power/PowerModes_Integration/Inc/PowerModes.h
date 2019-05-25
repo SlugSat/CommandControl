@@ -23,8 +23,8 @@ typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, S
 // Have a different voltage for going into and out of the low power states to prevent thrashing
 // Also known as a histeuresis shift
 #define ULTRA_LOW_BATT_IN 	(3.4000)
-#define ULTRA_LOW_BATT_OUT  (3.4500)
-#define LOW_BATT_IN	 				(3.5000)
+#define ULTRA_LOW_BATT_OUT  (3.500)
+#define LOW_BATT_IN	 				(3.6000)
 #define LOW_BATT_OUT 				(3.7000)
 
 #define STABLE (1)

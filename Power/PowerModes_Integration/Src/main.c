@@ -564,7 +564,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 	}
 	else if (GPIO_PIN == BATT_INT_Pin)
 	{
-		change_variables(BATT);
 		globalIntterupt = BATT_INT_Pin;
 		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 	}
