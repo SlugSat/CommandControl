@@ -336,9 +336,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_HAL_DRIVER,STM32L152xE</Define>
+              <Define>USE_HAL_DRIVER,STM32L152xE,USE_DEBUG_PRINTF</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;               ../Drivers/STM32L1xx_HAL_Driver/Inc;               ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy;               ../Drivers/CMSIS/Device/ST/STM32L1xx/Include;               ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;                 ../Drivers/STM32L1xx_HAL_Driver/Inc;                 ../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy;                 ../Drivers/CMSIS/Device/ST/STM32L1xx/Include;                 ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

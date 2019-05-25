@@ -78,8 +78,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define ADC_Detector_Pin GPIO_PIN_1
-#define ADC_Detector_GPIO_Port GPIOA
 #define DAC_VGA_Pin GPIO_PIN_4
 #define DAC_VGA_GPIO_Port GPIOA
 #define DAC_VA_Pin GPIO_PIN_5

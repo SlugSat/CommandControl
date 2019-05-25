@@ -32,7 +32,7 @@ void Power_DoEvent()
     }
 	
     globalState = state;
-	int tmp;
+    int tmp;
     switch (state)
     {
     /* In Detumble mode */

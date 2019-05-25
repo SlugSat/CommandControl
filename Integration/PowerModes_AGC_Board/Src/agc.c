@@ -61,8 +61,11 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
 //#define AGC_IN_RANGE(x) (((x) > (AGC_SETPOINT - (AGC_SETPOINT_RANGE / 2.))) && ((x) < (AGC_SETPOINT + (AGC_SETPOINT_RANGE / 2.))))
-#define AGC_SETPOINT_MAX ((AGC_SETPOINT + (AGC_SETPOINT_RANGE / 2.)))
-#define AGC_SETPOINT_MIN ((AGC_SETPOINT - (AGC_SETPOINT_RANGE / 2.)))
+//#define AGC_SETPOINT_MAX ((AGC_SETPOINT + (AGC_SETPOINT_RANGE / 2.)))
+//#define AGC_SETPOINT_MIN ((AGC_SETPOINT - (AGC_SETPOINT_RANGE / 2.)))
+// TODO: actually fix the range
+#define AGC_SETPOINT_MAX AGC_SETPOINT
+#define AGC_SETPOINT_MIN AGC_SETPOINT
 
 static volatile uint32_t VgaValue, VaValue, DetectorValue;
 
@@ -70,10 +73,6 @@ static void AGC_SetOutputs(void) {
 	//while(HAL_ADC_PollForConversion(&hadc, 1000) != HAL_OK);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VA, DAC_ALIGN_12B_R, VaValue);
 	HAL_DAC_SetValue(&hdac, DAC_CH_VGA, DAC_ALIGN_12B_R, VgaValue);
-}
-
-static void my_printf(const char *fmt, ...)
-{
 }
 
 void AGC_Init(void) {
