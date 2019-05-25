@@ -289,8 +289,8 @@ static void GPIO_DeInit(void)
     // GPIO_A is preserved to keep output status unchanged and have 
     // Interrupt working for waking Up.
     // GPIO_B and GPIO_C are disabled
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-    __HAL_RCC_GPIOB_CLK_DISABLE();
+    //HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+    //__HAL_RCC_GPIOB_CLK_DISABLE();
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     __HAL_RCC_GPIOC_CLK_DISABLE();
 }

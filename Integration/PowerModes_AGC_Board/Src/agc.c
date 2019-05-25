@@ -53,8 +53,8 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 #define VA_MAX (AGC_VAToDAC(-3.5 /* dB */))
 #define VA_MIN (AGC_VAToDAC(-20 /* dB */))
 
-#define AGC_DELAY_VGA 1000 // ms
-#define AGC_DELAY_VA 1000 // ms
+#define AGC_DELAY_VGA 5000 // ms
+#define AGC_DELAY_VA 5000 // ms
 
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -66,6 +66,8 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 // TODO: actually fix the range
 #define AGC_SETPOINT_MAX AGC_SETPOINT
 #define AGC_SETPOINT_MIN AGC_SETPOINT
+
+//#define my_printf(x, ...) {}
 
 static volatile uint32_t VgaValue, VaValue, DetectorValue;
 
