@@ -70,6 +70,8 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi2;
 
+TIM_HandleTypeDef htim6;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -77,6 +79,7 @@ uint16_t globalIntterupt = 0;
 States globalState = Detumble;
 volatile States state;
 uint8_t shortCheck = 0;
+uint8_t checkBatt = FALSE;
 
 /* USER CODE END PV */
 
@@ -86,6 +89,7 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 void Output_Power_Pins(uint8_t currState);
 /* USER CODE END PFP */
@@ -126,6 +130,7 @@ int main(void)
   MX_SPI2_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 	
 	/* Initialize Variables */
@@ -137,6 +142,12 @@ int main(void)
 	
 	/* Set Initial state */
 	state = Detumble;
+	
+	/* Start Timer for interrupt drive fuel gauge check */
+	HAL_TIM_Base_Start(&htim6);
+	
+	/* Start Timer Interrupt Handler */
+	HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,26 +157,33 @@ int main(void)
 	/* Enter the state machine */
 		while(1)
 		{
-			// Check battery level
-			float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
-			// Write the battery level to the fram
-			uint8_t battBytes[4] = {0};
-			float_to_bytes(battPercentage, battBytes);
-			SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
-			Set_BatteryLevel(battPercentage);
-			
-			// Check the science event pin
-			if (HAL_GPIO_ReadPin(GPIOC, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
+			if (checkBatt)
 			{
-				Set_ScienceEvent(TRUE);
+					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+
+				// Check battery level
+				float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
+				// Write the battery level to the fram
+				uint8_t battBytes[4] = {0};
+				float_to_bytes(battPercentage, battBytes);
+				SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
+				Set_BatteryLevel(battPercentage);
+				
+				// Check the science event pin
+				if (HAL_GPIO_ReadPin(GPIOC, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
+				{
+					Set_ScienceEvent(TRUE);
+				}
+				else
+				{
+					Set_ScienceEvent(FALSE);
+				}
+				
+				// Check if there is a short in any of the rails
+				Check_for_Shorts(&hi2c1, &shortCheck);
+				
+				checkBatt = FALSE;
 			}
-			else
-			{
-				Set_ScienceEvent(FALSE);
-			}
-			
-			// Check if there is a short in any of the rails
-			Check_for_Shorts(&hi2c1, &shortCheck);
 			
 			if (state != globalState)
 			{
@@ -273,10 +291,9 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /**Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
-  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSICalibrationValue = 0;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -286,10 +303,10 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV64;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV16;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
@@ -370,6 +387,43 @@ static void MX_SPI2_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 0;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 63000;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -385,7 +439,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -617,6 +671,21 @@ void Output_Power_Pins(uint8_t currState)
 	{
 		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
 	}
+}
+
+/* TIMER INTERRUPT SERVICE ROUTINE */
+/**
+  * @brief This function handles TIM6 global interrupt.
+  */
+void TIM6_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_IRQn 0 */
+
+  /* USER CODE END TIM6_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_IRQn 1 */
+	checkBatt = TRUE;
+  /* USER CODE END TIM6_IRQn 1 */
 }
 	
 /* USER CODE END 4 */
