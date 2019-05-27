@@ -14,8 +14,8 @@
 /* Define states and system function variables */
 typedef enum States {Detumble, Kill, Normal, LowPower, UltraLowPower, Eclipse, ScienceOnly} States;
 
-#define OFF (0)
-#define ON (1)
+#define OFF (0x02)
+#define ON (0x00)
 
 #define FALSE (0)
 #define TRUE  (1)
@@ -110,6 +110,6 @@ uint8_t Set_SolarVector(uint8_t change);
 float Set_BatteryLevel(float change);
 
 /* Thread calls which variables to change */
-void *change_variables(uint8_t type);
+void *change_variables(uint8_t type, uint8_t solarStatus);
 
 #endif

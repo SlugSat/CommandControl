@@ -70,7 +70,7 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi2;
 
-TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim10;
 
 UART_HandleTypeDef huart2;
 
@@ -89,7 +89,7 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_TIM6_Init(void);
+static void MX_TIM10_Init(void);
 /* USER CODE BEGIN PFP */
 void Output_Power_Pins(uint8_t currState);
 /* USER CODE END PFP */
@@ -108,6 +108,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -130,13 +131,14 @@ int main(void)
   MX_SPI2_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
-  MX_TIM6_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 	
 	/* Initialize Variables */
 	uint8_t firstTransition = 0;
 	/* Initialize the current controllers */
-	Initialize_All_Current_Sensors(&hi2c1);
+	//Initialize_All_Current_Sensors(&hi2c1);
+	
 	/* Initialize the fuel gauge */
 	Fuel_Gauge_Init(&hi2c1);
 	
@@ -144,22 +146,28 @@ int main(void)
 	state = Detumble;
 	
 	/* Start Timer for interrupt drive fuel gauge check */
-	HAL_TIM_Base_Start(&htim6);
+	HAL_TIM_Base_Start(&htim10);
 	
 	/* Start Timer Interrupt Handler */
-	HAL_TIM_Base_Start_IT(&htim6);
+	HAL_TIM_Base_Start_IT(&htim10);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	char msg[200] = {0};
   while (1)
   {
-	/* Enter the state machine */
+//		float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
+//		snprintf(msg, 200, "\nBatt: %f \n\n", battPercentage);
+//		HAL_UART_Transmit(&huart2, (uint8_t *)msg, 200, 100);
+//		HAL_Delay(1000);
+		/* Enter the state machine */
 		while(1)
 		{
+			
 			if (checkBatt)
 			{
-					HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+				HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
 
 				// Check battery level
 				float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
@@ -170,19 +178,36 @@ int main(void)
 				Set_BatteryLevel(battPercentage);
 				
 				// Check the science event pin
-				if (HAL_GPIO_ReadPin(GPIOC, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
+				uint8_t scienceStatus = 0;
+				if (HAL_GPIO_ReadPin(GPIOA, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
 				{
-					Set_ScienceEvent(TRUE);
+					scienceStatus = Set_ScienceEvent(TRUE);
 				}
 				else
 				{
-					Set_ScienceEvent(FALSE);
+					scienceStatus = Set_ScienceEvent(FALSE);
 				}
 				
 				// Check if there is a short in any of the rails
-				Check_for_Shorts(&hi2c1, &shortCheck);
+				//Check_for_Shorts(&hi2c1, &shortCheck);
+				
+				// Get whether the craft is detumbling or not
+				uint8_t stable[1] = {0};
+				SPI_FRAM_Read(&hspi2, SPI_FRAM_MECH_STATE_ADDR, stable, 1, &huart2);
+				if (stable[0] != 0x2) // Detumble
+				{
+					change_variables(STABLE, 0);
+				}
+				
+				// Get the solar vector status
+				uint8_t currentSensor[1] = {0};
+				SPI_FRAM_Read(&hspi2, SPI_FRAM_SOLAR_VECTOR_ADDR, currentSensor, 1, &huart2);
+				change_variables(SOLAR, currentSensor[0]);
+				
 				
 				checkBatt = FALSE;
+				snprintf(msg, 200, "\nState: %u    Batt: %f     Shorts: 0x%02X     ScienceStatus: 0x%02x    SolarVector: 0x%02x\n\n", state, battPercentage, shortCheck, scienceStatus, currentSensor[0]);
+				HAL_UART_Transmit(&huart2, (uint8_t *)msg, 200, 100);
 			}
 			
 			if (state != globalState)
@@ -286,25 +311,28 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /**Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage 
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /**Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
+  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
-  /**Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV64;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV16;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV16;
 
@@ -387,39 +415,40 @@ static void MX_SPI2_Init(void)
 }
 
 /**
-  * @brief TIM6 Initialization Function
+  * @brief TIM10 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_TIM6_Init(void)
+static void MX_TIM10_Init(void)
 {
 
-  /* USER CODE BEGIN TIM6_Init 0 */
+  /* USER CODE BEGIN TIM10_Init 0 */
 
-  /* USER CODE END TIM6_Init 0 */
+  /* USER CODE END TIM10_Init 0 */
 
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 
-  /* USER CODE BEGIN TIM6_Init 1 */
+  /* USER CODE BEGIN TIM10_Init 1 */
 
-  /* USER CODE END TIM6_Init 1 */
-  htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 0;
-  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 63000;
-  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  /* USER CODE END TIM10_Init 1 */
+  htim10.Instance = TIM10;
+  htim10.Init.Prescaler = 0;
+  htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim10.Init.Period = 65535;
+  htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
+  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
   {
     Error_Handler();
   }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim10, &sClockSourceConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM6_Init 2 */
+  /* USER CODE BEGIN TIM10_Init 2 */
 
-  /* USER CODE END TIM6_Init 2 */
+  /* USER CODE END TIM10_Init 2 */
 
 }
 
@@ -489,12 +518,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SCIENCE_EVENT_Pin SPI_FRAM_IN2_Pin SPI_FRAM_IN1_Pin */
-  GPIO_InitStruct.Pin = SCIENCE_EVENT_Pin|SPI_FRAM_IN2_Pin|SPI_FRAM_IN1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
   /*Configure GPIO pins : SPI_FRAM_LOCK_Pin Misc_Rail_Pin */
   GPIO_InitStruct.Pin = SPI_FRAM_LOCK_Pin|Misc_Rail_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -509,31 +532,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BATT_INT_Pin DIE_INT_Pin STABLE_INT_Pin SOLAR_INT_Pin */
-  GPIO_InitStruct.Pin = BATT_INT_Pin|DIE_INT_Pin|STABLE_INT_Pin|SOLAR_INT_Pin;
+  /*Configure GPIO pin : DIE_INT_Pin */
+  GPIO_InitStruct.Pin = DIE_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(DIE_INT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SCI_INT_Pin */
-  GPIO_InitStruct.Pin = SCI_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pins : SPI_FRAM_IN2_Pin SPI_FRAM_IN1_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_IN2_Pin|SPI_FRAM_IN1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SCI_INT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SCIENCE_EVENT_Pin */
+  GPIO_InitStruct.Pin = SCIENCE_EVENT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SCIENCE_EVENT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -543,35 +560,11 @@ static void MX_GPIO_Init(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
 {
-	//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-	if (GPIO_PIN == STABLE_INT_Pin)
+  if (GPIO_PIN == DIE_INT_Pin)
 	{
-		change_variables(STABLE);
-		globalIntterupt = STABLE_INT_Pin;
-		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-	}
-	else if (GPIO_PIN == SCI_INT_Pin)
-	{
-		change_variables(SCI_EVENT);
-		globalIntterupt = SCI_INT_Pin;
-		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-	}
-	else if (GPIO_PIN == DIE_INT_Pin)
-	{
-		change_variables(DIE);
+		change_variables(DIE, 0);
 		globalIntterupt = DIE_INT_Pin;
 		HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-	}
-	else if (GPIO_PIN == BATT_INT_Pin)
-	{
-		globalIntterupt = BATT_INT_Pin;
-		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-	}
-	else if (GPIO_PIN == SOLAR_INT_Pin)
-	{
-		change_variables(SOLAR);
-		globalIntterupt = SOLAR_INT_Pin;
-		//HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
 	}
 	else 
 	{
@@ -674,18 +667,13 @@ void Output_Power_Pins(uint8_t currState)
 
 /* TIMER INTERRUPT SERVICE ROUTINE */
 /**
-  * @brief This function handles TIM6 global interrupt.
+  * @brief This function handles TIM6 update event interrupt.
   */
-void TIM6_IRQHandler(void)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  /* USER CODE BEGIN TIM6_IRQn 0 */
-
-  /* USER CODE END TIM6_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim6);
-  /* USER CODE BEGIN TIM6_IRQn 1 */
-	checkBatt = TRUE;
-  /* USER CODE END TIM6_IRQn 1 */
+		checkBatt = TRUE;
 }
+
 	
 /* USER CODE END 4 */
 

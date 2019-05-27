@@ -8,7 +8,7 @@ uint8_t stable = 0;
 uint8_t die = 0;
 float batteryLevel = 100;
 uint8_t scienceEvent = 0;
-uint8_t solarVector = 1; 
+uint8_t solarVector = ON; 
 #endif
 
 /* Print out each global variable */
@@ -72,7 +72,7 @@ uint8_t Detumble_Transition(void)
 			{
 				return LowPower;
 			}
-			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT_IN))
+			else if ((batteryLevel < ULTRA_LOW_BATT_IN))
 			{
 				return UltraLowPower;
 			}
@@ -105,7 +105,7 @@ uint8_t Eclipse_Transition(void)
 			{
 				return LowPower;
 			}
-			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT_IN))
+			else if ((batteryLevel < ULTRA_LOW_BATT_IN))
 			{
 				return UltraLowPower;
 			}
@@ -142,7 +142,7 @@ uint8_t Normal_Transition(void)
 			{
 				return LowPower;
 			}
-			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT_IN))
+			else if ((batteryLevel < ULTRA_LOW_BATT_IN))
 			{
 				return UltraLowPower;
 			}
@@ -178,7 +178,7 @@ uint8_t LowPower_Transition(void)
 			{
 				return LowPower;
 			}
-			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT_IN))
+			else if ((batteryLevel < ULTRA_LOW_BATT_IN))
 			{
 				return UltraLowPower;
 			}
@@ -212,7 +212,7 @@ uint8_t UltraLowPower_Transition(void)
 		{
 			return LowPower;
 		}
-		else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT_OUT))
+		else if ((batteryLevel < ULTRA_LOW_BATT_OUT))
 		{
 			return UltraLowPower;
 		}
@@ -248,7 +248,7 @@ uint8_t ScienceOnly_Transition(void)
 			{
 				return LowPower;
 			}
-			else if ((solarVector == ON) && (batteryLevel < ULTRA_LOW_BATT_IN))
+			else if ((batteryLevel < ULTRA_LOW_BATT_IN))
 			{
 				return UltraLowPower;
 			}

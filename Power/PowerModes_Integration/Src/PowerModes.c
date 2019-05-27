@@ -1,46 +1,22 @@
 #include "PowerModes.h"
 
-void *change_variables(uint8_t type)
+void *change_variables(uint8_t type, uint8_t solarStatus)
 {
 	uint8_t temp = 0;
-	static int cnt = 200;
 	
 	switch(type)
 	{
 		case (STABLE):
-			temp = rand() % 2;
-			//printf("Setting stable to: %u\n", temp);
+			temp = TRUE;
 			Set_Stable(temp);
 			break;
 		case (DIE):
-			temp = 1;
-			//printf("Setting die  to: %u\n", temp);
+			temp = TRUE;
 			Set_Die(temp);
 			break;
-		case (SCI_EVENT):
-			temp = rand() % 2;
-			//printf("Setting science to: %u\n", temp);
-			Set_ScienceEvent(temp);
-			break;
-		case (BATT):
-			cnt--;
-			if (cnt > 100 && cnt <= 200)
-			{
-				temp = cnt - 100;
-			}
-			else if (cnt <= 100)
-			{
-				temp = 100 - cnt;
-			}
-			
-			//printf("Setting power to: %u\n", temp);
-			Set_BatteryLevel(temp);
-			break;
 		case (SOLAR):
-			temp = rand() % 2;
-			//printf("Setting solar to: %u\n", temp);
+			temp = solarStatus;
 			Set_SolarVector(temp);
-			break;
 	}
 	return NULL;	
 }
@@ -233,13 +209,4 @@ States Transition(uint8_t event, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *hu
 }
 
 
-/* Used for debugging and testing the system. Print out all of te current power modes. */
-void Print_System_Settings(system_function *function)
-{
-	printf("0 is Power, 1 is limited power, 2 is No power...\n");
-	printf("MechanicalSys: %u\t MechanicalMCU: %u\n", function->MechanicalSys, function->MechanicalMCU);
-	printf("LinearTransponderSys %u\t LinearTransponderMCU %u\n", function->LinearTransponderSys, function->LinearTransponderMCU);
-	printf("TelemetrySys %u\t\t TelemetryMCU %u\n", function->TelemetrySys, function->TelemetryMCU);
-	printf("SciencePayloadSys %u\t SciencePayloadMCU %u\n", function->SciencePayloadSys, function->SciencePayloadMCU);
-	return;
-}
+

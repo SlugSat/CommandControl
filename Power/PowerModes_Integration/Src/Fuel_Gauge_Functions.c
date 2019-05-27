@@ -8,17 +8,6 @@ float time_multiplier_Min = 5.625 / 3600; //
 float percentage_multiplier = 1.0 / 256.0; // Multiply the capacity percentage sensor reading by this
 float temperature_multiplier = 1.0 / 256.0; // Multiply the temperature sensor  by this
 
-// Used for configuring the fuel gauge
-static fg_config_t conf = {	6700, 		// design capacity of 3350mAh
-														0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
-														0x8020, 	// model cfg set for lithium NCR/NCA cell
-														0x01A0, 	// charge termination current = 0.3A
-														0x0000,
-														6700/32,
-														(6700/32)*44138/6700,
-														0x8214,	 	// config1
-														0x3658};	// config2		
-
 void Fuel_Gauge_Read(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *recv)
 {
 	// Values are ent as bytes so make a buffer to get the bytes and then reassemble
@@ -43,6 +32,18 @@ void Fuel_Gauge_Write(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send)
 
 void Fuel_Gauge_Init(I2C_HandleTypeDef *hi2c)
 {
+	// Used for configuring the fuel gauge
+	static fg_config_t conf = {	6700, 		// design capacity of 3350mAh
+														0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
+														0x8020, 	// model cfg set for lithium NCR/NCA cell
+														0x01A0, 	// charge termination current = 0.3A
+														0x0000,
+														6700/32,
+														(6700/32)*44138/6700,
+														0x8214,	 	// config1
+														0x3658};	// config2		
+	
+	
 	/**** Check chip status ****/
 	uint16_t status = 0;
 	Fuel_Gauge_Read(hi2c, STAT_REG, &status);
@@ -199,5 +200,3 @@ float Get_Temp(I2C_HandleTypeDef *hi2c)
 	float output = (int16_t) recv * temperature_multiplier;
 	return output;
 }
-
-

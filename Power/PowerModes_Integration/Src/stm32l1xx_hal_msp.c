@@ -106,7 +106,6 @@ void HAL_MspInit(void)
 */
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
-
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(hi2c->Instance==I2C1)
   {
@@ -141,10 +140,8 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 * @param hi2c: I2C handle pointer
 * @retval None
 */
-
 void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 {
-
   if(hi2c->Instance==I2C1)
   {
   /* USER CODE BEGIN I2C1_MspDeInit 0 */
@@ -174,7 +171,6 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 */
 void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
 {
-
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(hspi->Instance==SPI2)
   {
@@ -210,10 +206,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
 * @param hspi: SPI handle pointer
 * @retval None
 */
-
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
 {
-
   if(hspi->Instance==SPI2)
   {
   /* USER CODE BEGIN SPI2_MspDeInit 0 */
@@ -244,20 +238,19 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
 */
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
 {
-
-  if(htim_base->Instance==TIM6)
+  if(htim_base->Instance==TIM10)
   {
-  /* USER CODE BEGIN TIM6_MspInit 0 */
+  /* USER CODE BEGIN TIM10_MspInit 0 */
 
-  /* USER CODE END TIM6_MspInit 0 */
+  /* USER CODE END TIM10_MspInit 0 */
     /* Peripheral clock enable */
-    __HAL_RCC_TIM6_CLK_ENABLE();
-    /* TIM6 interrupt Init */
-    HAL_NVIC_SetPriority(TIM6_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM6_IRQn);
-  /* USER CODE BEGIN TIM6_MspInit 1 */
+    __HAL_RCC_TIM10_CLK_ENABLE();
+    /* TIM10 interrupt Init */
+    HAL_NVIC_SetPriority(TIM10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM10_IRQn);
+  /* USER CODE BEGIN TIM10_MspInit 1 */
 
-  /* USER CODE END TIM6_MspInit 1 */
+  /* USER CODE END TIM10_MspInit 1 */
   }
 
 }
@@ -268,23 +261,21 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
 * @param htim_base: TIM_Base handle pointer
 * @retval None
 */
-
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
 {
-
-  if(htim_base->Instance==TIM6)
+  if(htim_base->Instance==TIM10)
   {
-  /* USER CODE BEGIN TIM6_MspDeInit 0 */
+  /* USER CODE BEGIN TIM10_MspDeInit 0 */
 
-  /* USER CODE END TIM6_MspDeInit 0 */
+  /* USER CODE END TIM10_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_TIM6_CLK_DISABLE();
+    __HAL_RCC_TIM10_CLK_DISABLE();
 
-    /* TIM6 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(TIM6_IRQn);
-  /* USER CODE BEGIN TIM6_MspDeInit 1 */
+    /* TIM10 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(TIM10_IRQn);
+  /* USER CODE BEGIN TIM10_MspDeInit 1 */
 
-  /* USER CODE END TIM6_MspDeInit 1 */
+  /* USER CODE END TIM10_MspDeInit 1 */
   }
 
 }
@@ -297,7 +288,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
 */
 void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 {
-
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(huart->Instance==USART2)
   {
@@ -332,10 +322,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 * @param huart: UART handle pointer
 * @retval None
 */
-
 void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 {
-
   if(huart->Instance==USART2)
   {
   /* USER CODE BEGIN USART2_MspDeInit 0 */
