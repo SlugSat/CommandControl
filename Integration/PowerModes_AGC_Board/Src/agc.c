@@ -53,8 +53,9 @@ static uint32_t AGC_VAToDAC(float VaValue) {
 #define VA_MAX (AGC_VAToDAC(-3.5 /* dB */))
 #define VA_MIN (AGC_VAToDAC(-20 /* dB */))
 
-#define AGC_DELAY_VGA 5000 // ms
-#define AGC_DELAY_VA 5000 // ms
+#define AGC_DELAY_VGA 1000 // ms
+#define AGC_DELAY_VA 1000 // ms
+#define AGC_DELAY_IDLE 1000 // ms
 
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -99,9 +100,11 @@ void AGC_DoEvent(void) {
 
 	switch (CurrentState) {
 	case STATE_IDLE:
-		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu     VGA:%lu VA:%lu\n\n",
-				CurrentState, rssi, NeededGain,
-				DetectorValue, VgaValue, VaValue);
+		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
+            CurrentState, rssi, NeededGain,
+            DetectorValue, (DetectorValue * 3.3) / 4096.,
+            VgaValue, (VgaValue * 3.3) / 4096.,
+            VaValue, (VgaValue * 3.3) / 4096.);
 		if (rssi < AGC_SETPOINT_MIN && VgaValue < VGA_MAX) {
 			CurrentState = STATE_INCREASE_VGA;
 		} else if (rssi > AGC_SETPOINT_MAX && VgaValue > VGA_MIN) {
@@ -109,22 +112,30 @@ void AGC_DoEvent(void) {
 		} else if (rssi > AGC_SETPOINT_MAX && VgaValue <= VGA_MIN) {
 			CurrentState = STATE_INCREASE_VA;
 		}
+        
+        // if no change in state, delay here
+        HAL_Delay(AGC_DELAY_IDLE);
+        
 		break;
 	case STATE_INCREASE_VGA:
 		NeededGain = AGC_SETPOINT - rssi;
 		VgaValue = AGC_VGAToDAC(NeededGain); //max(min(, VGA_MAX), VGA_MIN);
-		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu     VGA:%lu VA:%lu\n\n",
-				CurrentState, rssi, NeededGain,
-				DetectorValue, VgaValue, VaValue);
+		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
+            CurrentState, rssi, NeededGain,
+            DetectorValue, (DetectorValue * 3.3) / 4096.,
+            VgaValue, (VgaValue * 3.3) / 4096.,
+            VaValue, (VgaValue * 3.3) / 4096.);
 		AGC_SetOutputs();
 
 		HAL_Delay(AGC_DELAY_VGA);
-
-		my_printf("[%d After Delay] RSSI: %f, Needed Gain: %f\nDetector: %lu\tVGA:%lu VA:%lu\n\n",
-			CurrentState, rssi, NeededGain,
-			DetectorValue, VgaValue, VaValue);
-
 		rssi = AGC_MeasureRSSI();
+        
+        my_printf("[%d after delay] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
+            CurrentState, rssi, NeededGain,
+            DetectorValue, (DetectorValue * 3.3) / 4096.,
+            VgaValue, (VgaValue * 3.3) / 4096.,
+            VaValue, (VgaValue * 3.3) / 4096.);
+    
 		if (rssi >= AGC_SETPOINT_MAX || VgaValue >= VGA_MAX) {
 			CurrentState = STATE_IDLE;
 		}
@@ -132,14 +143,22 @@ void AGC_DoEvent(void) {
 	case STATE_DECREASE_VGA:
 		NeededGain = AGC_SETPOINT - rssi;
 		VgaValue = AGC_VGAToDAC(NeededGain); //max(min(, VGA_MAX), VGA_MIN);
-		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu     VGA:%lu VA:%lu\n\n",
+		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
 				CurrentState, rssi, NeededGain,
-				DetectorValue, VgaValue, VaValue);
+				DetectorValue, (DetectorValue * 3.3) / 4096.,
+                VgaValue, (VgaValue * 3.3) / 4096.,
+                VaValue, (VgaValue * 3.3) / 4096.);
 		AGC_SetOutputs();
 
 		HAL_Delay(AGC_DELAY_VGA);
-
 		rssi = AGC_MeasureRSSI();
+    
+        my_printf("[%d after delay] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
+            CurrentState, rssi, NeededGain,
+            DetectorValue, (DetectorValue * 3.3) / 4096.,
+            VgaValue, (VgaValue * 3.3) / 4096.,
+            VaValue, (VgaValue * 3.3) / 4096.);
+        
 		if (rssi <= AGC_SETPOINT_MIN) {
 			CurrentState = STATE_IDLE;
 		} else if (rssi >= AGC_SETPOINT_MAX && VgaValue <= VGA_MIN) {
@@ -149,17 +168,22 @@ void AGC_DoEvent(void) {
 	case STATE_INCREASE_VA:
 		NeededGain = AGC_SETPOINT - rssi;
 		VaValue = AGC_VAToDAC(NeededGain); //max(min(, VA_MAX), VA_MIN);
-		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu     VGA:%lu VA:%lu\n\n",
+		my_printf("[%d] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
 				CurrentState, rssi, NeededGain,
-				DetectorValue, VgaValue, VaValue);
+				DetectorValue, (DetectorValue * 3.3) / 4096.,
+                VgaValue, (VgaValue * 3.3) / 4096.,
+                VaValue, (VgaValue * 3.3) / 4096.);
 		AGC_SetOutputs();
 
 		HAL_Delay(AGC_DELAY_VA);
-		my_printf("[%d After Delay] RSSI: %f, Needed Gain: %f\nDetector: %lu\tVGA:%lu VA:%lu\n\n",
-			CurrentState, rssi, NeededGain,
-			DetectorValue, VgaValue, VaValue);
+        rssi = AGC_MeasureRSSI();
+    
+		my_printf("[%d after delay] RSSI: %f, Needed Gain: %f\nDetector: %lu = %f V   VGA:%lu = %f V, VA:%lu = %f V\n\n",
+            CurrentState, rssi, NeededGain,
+            DetectorValue, (DetectorValue * 3.3) / 4096.,
+            VgaValue, (VgaValue * 3.3) / 4096.,
+            VaValue, (VgaValue * 3.3) / 4096.);
 
-		rssi = AGC_MeasureRSSI();
 		if (rssi <= AGC_SETPOINT_MIN || VaValue >= VA_MAX) {
 			CurrentState = STATE_IDLE;
 		}
