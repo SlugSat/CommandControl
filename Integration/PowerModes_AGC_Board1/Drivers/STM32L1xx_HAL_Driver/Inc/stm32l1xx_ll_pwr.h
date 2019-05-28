@@ -6,13 +6,29 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
@@ -220,11 +236,11 @@ __STATIC_INLINE void LL_PWR_DisableLowPowerRunMode(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledLowPowerRunMode(void)
 {
-  return ((READ_BIT(PWR->CR, PWR_CR_LPRUN) == PWR_CR_LPRUN) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CR, PWR_CR_LPRUN) == (PWR_CR_LPRUN));
 }
 
 /**
-  * @brief  Set voltage Regulator to low-power and switch from
+  * @brief  Set voltage Regulator to low-power and switch from 
   *         run main mode to run low-power mode.
   * @rmtoll CR    LPSDSR       LL_PWR_EnterLowPowerRunMode\n
   *         CR    LPRUN        LL_PWR_EnterLowPowerRunMode
@@ -243,12 +259,12 @@ __STATIC_INLINE void LL_PWR_EnterLowPowerRunMode(void)
 }
 
 /**
-  * @brief  Set voltage Regulator to main and switch from
+  * @brief  Set voltage Regulator to main and switch from 
   *         run main mode to low-power mode.
   * @rmtoll CR    LPSDSR       LL_PWR_ExitLowPowerRunMode\n
   *         CR    LPRUN        LL_PWR_ExitLowPowerRunMode
-  * @note   This "high level" function is introduced to provide functional
-  *         compatibility with other families. Notice that the two registers
+  * @note   This "high level" function is introduced to provide functional   
+  *         compatibility with other families. Notice that the two registers 
   *         have to be written sequentially, so this function is not atomic.
   *         To assure atomicity you can call separately the following functions:
   *         - @ref LL_PWR_DisableLowPowerRunMode();
@@ -314,7 +330,7 @@ __STATIC_INLINE void LL_PWR_DisableBkUpAccess(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledBkUpAccess(void)
 {
-  return ((READ_BIT(PWR->CR, PWR_CR_DBP) == PWR_CR_DBP) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CR, PWR_CR_DBP) == (PWR_CR_DBP));
 }
 
 /**
@@ -375,9 +391,9 @@ __STATIC_INLINE uint32_t LL_PWR_GetRegulModeDS(void)
   * @param  PDMode This parameter can be one of the following values:
   *         @arg @ref LL_PWR_MODE_STOP
   *         @arg @ref LL_PWR_MODE_STANDBY
-  * @note   Set the Regulator to low power (bit @ref LL_PWR_REGU_LPMODES_LOW_POWER)
-  *         before setting MODE_STOP. If the Regulator remains in "main mode",
-  *         it consumes more power without providing any additional feature.
+  * @note   Set the Regulator to low power (bit @ref LL_PWR_REGU_LPMODES_LOW_POWER)  
+  *         before setting MODE_STOP. If the Regulator remains in "main mode",   
+  *         it consumes more power without providing any additional feature. 
   *         In MODE_STANDBY the Regulator is automatically off.
   * @retval None
   */
@@ -463,7 +479,7 @@ __STATIC_INLINE void LL_PWR_DisablePVD(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledPVD(void)
 {
-  return ((READ_BIT(PWR->CR, PWR_CR_PVDE) == PWR_CR_PVDE) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CR, PWR_CR_PVDE) == (PWR_CR_PVDE));
 }
 #endif /* PWR_PVD_SUPPORT */
 
@@ -518,7 +534,7 @@ __STATIC_INLINE void LL_PWR_DisableWakeUpPin(uint32_t WakeUpPin)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledWakeUpPin(uint32_t WakeUpPin)
 {
-  return ((READ_BIT(PWR->CSR, WakeUpPin) == WakeUpPin) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, WakeUpPin) == (WakeUpPin));
 }
 
 /**
@@ -548,7 +564,7 @@ __STATIC_INLINE void LL_PWR_DisableUltraLowPower(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledUltraLowPower(void)
 {
-  return ((READ_BIT(PWR->CR, PWR_CR_ULP) == PWR_CR_ULP) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CR, PWR_CR_ULP) == (PWR_CR_ULP));
 }
 
 /**
@@ -580,7 +596,7 @@ __STATIC_INLINE void LL_PWR_DisableFastWakeUp(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledFastWakeUp(void)
 {
-  return ((READ_BIT(PWR->CR, PWR_CR_FWU) == PWR_CR_FWU) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CR, PWR_CR_FWU) == (PWR_CR_FWU));
 }
 
 
@@ -599,7 +615,7 @@ __STATIC_INLINE uint32_t LL_PWR_IsEnabledFastWakeUp(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_WU(void)
 {
-  return ((READ_BIT(PWR->CSR, PWR_CSR_WUF) == PWR_CSR_WUF) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, PWR_CSR_WUF) == (PWR_CSR_WUF));
 }
 
 /**
@@ -609,7 +625,7 @@ __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_WU(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_SB(void)
 {
-  return ((READ_BIT(PWR->CSR, PWR_CSR_SBF) == PWR_CSR_SBF) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, PWR_CSR_SBF) == (PWR_CSR_SBF));
 }
 
 #if defined(PWR_PVD_SUPPORT)
@@ -620,7 +636,7 @@ __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_SB(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_PVDO(void)
 {
-  return ((READ_BIT(PWR->CSR, PWR_CSR_PVDO) == PWR_CSR_PVDO) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, PWR_CSR_PVDO) == (PWR_CSR_PVDO));
 }
 #endif /* PWR_PVD_SUPPORT */
 
@@ -632,7 +648,7 @@ __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_PVDO(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_VREFINTRDY(void)
 {
-  return ((READ_BIT(PWR->CSR, PWR_CSR_VREFINTRDYF) == PWR_CSR_VREFINTRDYF) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, PWR_CSR_VREFINTRDYF) == (PWR_CSR_VREFINTRDYF));
 }
 #endif /* PWR_CSR_VREFINTRDYF */
 /**
@@ -642,7 +658,7 @@ __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_VREFINTRDY(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_VOS(void)
 {
-  return ((READ_BIT(PWR->CSR, PWR_CSR_VOSF) == PWR_CSR_VOSF) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, LL_PWR_CSR_VOS) == (LL_PWR_CSR_VOS));
 }
 /**
   * @brief Indicate whether the Regulator is ready in main mode or is in low-power mode
@@ -652,7 +668,7 @@ __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_VOS(void)
   */
 __STATIC_INLINE uint32_t LL_PWR_IsActiveFlag_REGLPF(void)
 {
-  return ((READ_BIT(PWR->CSR, PWR_CSR_REGLPF) == PWR_CSR_REGLPF) ? 1UL : 0UL);
+  return (READ_BIT(PWR->CSR, PWR_CSR_REGLPF) == (PWR_CSR_REGLPF));
 }
 /**
   * @brief  Clear Standby Flag

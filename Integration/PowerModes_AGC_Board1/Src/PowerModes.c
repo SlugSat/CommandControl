@@ -81,7 +81,7 @@ uint8_t Power_Modes_State_Machine_Run(void)
 		
 		checkBatt = FALSE;
 		snprintf(msg, 200, "\nState: %u    Batt: %f     Shorts: 0x%02X     ScienceStatus: 0x%02x    SolarVector: 0x%02x\n\n", state, battPercentage, shortCheck, scienceStatus, currentSensor[0]);
-		HAL_UART_Transmit(uartDebug, (uint8_t *)msg, 200, 100);
+		HAL_UART_Transmit(uartDebug, (uint8_t *)msg, strlen(msg), 100);
 	}
 	
 	if (state != prevState)

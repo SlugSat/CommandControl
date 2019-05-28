@@ -30,13 +30,29 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
@@ -80,8 +96,8 @@ extern FLASH_ProcessTypeDef pFlash;
  * @{
  */
 
-static __RAM_FUNC HAL_StatusTypeDef FLASHRAM_WaitForLastOperation(uint32_t Timeout);
-static __RAM_FUNC HAL_StatusTypeDef FLASHRAM_SetErrorCode(void);
+static __RAM_FUNC FLASHRAM_WaitForLastOperation(uint32_t Timeout);
+static __RAM_FUNC FLASHRAM_SetErrorCode(void);
 
 /**
   * @}
@@ -112,7 +128,7 @@ static __RAM_FUNC HAL_StatusTypeDef FLASHRAM_SetErrorCode(void);
   * @note  This function can be used only when the user code is running from Internal SRAM.
   * @retval HAL status
   */
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_EnableRunPowerDown(void)
+__RAM_FUNC HAL_FLASHEx_EnableRunPowerDown(void)
 {
   /* Enable the Power Down in Run mode*/
   __HAL_FLASH_POWER_DOWN_ENABLE();
@@ -125,7 +141,7 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_EnableRunPowerDown(void)
   * @note  This function can be used only when the user code is running from Internal SRAM.
   * @retval HAL status
   */
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DisableRunPowerDown(void)
+__RAM_FUNC HAL_FLASHEx_DisableRunPowerDown(void)
 {
   /* Disable the Power Down in Run mode*/
   __HAL_FLASH_POWER_DOWN_DISABLE();
@@ -162,7 +178,7 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DisableRunPowerDown(void)
   *         is the start address of a page (multiple of @ref FLASH_PAGE_SIZE bytes).
   * @retval HAL status
   */
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_EraseParallelPage(uint32_t Page_Address1, uint32_t Page_Address2)
+__RAM_FUNC HAL_FLASHEx_EraseParallelPage(uint32_t Page_Address1, uint32_t Page_Address2)
 {
   HAL_StatusTypeDef status = HAL_OK;
 
@@ -223,55 +239,65 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_EraseParallelPage(uint32_t Page_Address
   *         beginning.
   * @retval HAL status
   */
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_ProgramParallelHalfPage(uint32_t Address1, uint32_t* pBuffer1, uint32_t Address2, uint32_t* pBuffer2)
+__RAM_FUNC HAL_FLASHEx_ProgramParallelHalfPage(uint32_t Address1, uint32_t* pBuffer1, uint32_t Address2, uint32_t* pBuffer2)
 {
-  uint32_t primask_bit;
   uint32_t count = 0U; 
   HAL_StatusTypeDef status = HAL_OK;
+
+  /* Set the DISMCYCINT[0] bit in the Auxillary Control Register (0xE000E008U) 
+     This bit prevents the interruption of multicycle instructions and therefore 
+     will increase the interrupt latency. of Cortex-M3. */
+  SET_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
 
   /* Wait for last operation to be completed */
   status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
   
   if(status == HAL_OK)
   {
-    /* Disable all IRQs */
-    primask_bit = __get_PRIMASK();
-    __disable_irq();
-    
     /* Proceed to program the new half page */
     SET_BIT(FLASH->PECR, FLASH_PECR_PARALLBANK);
     SET_BIT(FLASH->PECR, FLASH_PECR_FPRG);
     SET_BIT(FLASH->PECR, FLASH_PECR_PROG);
 
-    /* Write the first half page directly with 32 different words */
-    while(count < 32U)
-    {
-      *(__IO uint32_t*) ((uint32_t)(Address1 + (4 * count))) = *pBuffer1;
-      pBuffer1++;
-      count ++;  
-    }
-    
-    /* Write the second half page directly with 32 different words */
-    count = 0U;
-    while(count < 32U)
-    {
-      *(__IO uint32_t*) ((uint32_t)(Address2 + (4 * count))) = *pBuffer2;
-      pBuffer2++;
-      count ++;  
-    }
-    
     /* Wait for last operation to be completed */
     status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
-    
+    if(status == HAL_OK)
+    {
+      /* Disable all IRQs */
+      __disable_irq();
+
+      /* Write the first half page directly with 32 different words */
+      while(count < 32U)
+      {
+        *(__IO uint32_t*) ((uint32_t)(Address1 + (4 * count))) = *pBuffer1;
+        pBuffer1++;
+        count ++;  
+      }
+
+      /* Write the second half page directly with 32 different words */
+      count = 0U;
+      while(count < 32U)
+      {
+        *(__IO uint32_t*) ((uint32_t)(Address2 + (4 * count))) = *pBuffer2;
+        pBuffer2++;
+        count ++;  
+      }
+
+      /* Enable IRQs */
+      __enable_irq();
+
+      /* Wait for last operation to be completed */
+      status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
+    }
+
     /* if the write operation is completed, disable the PROG, FPRG and PARALLBANK bits */
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_PROG);
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_FPRG);
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_PARALLBANK);
-
-    /* Enable IRQs */
-    __set_PRIMASK(primask_bit);    
   }
 
+  CLEAR_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+    
   /* Return the Write Status */
   return status;
 }
@@ -279,8 +305,8 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_ProgramParallelHalfPage(uint32_t Addres
 
 /**
   * @brief  Program a half page in program memory.
-  * @param  Address specifies the address to be written.
-  * @param  pBuffer pointer to the buffer  containing the data to be  written to 
+  * @param  Address: specifies the address to be written.
+  * @param  pBuffer: pointer to the buffer  containing the data to be  written to 
   *         the half page.
   * @note   To correctly run this function, the @ref HAL_FLASH_Unlock() function
   *         must be called before.
@@ -301,25 +327,28 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_ProgramParallelHalfPage(uint32_t Addres
   *         beginning.
   * @retval HAL status
   */
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_HalfPageProgram(uint32_t Address, uint32_t* pBuffer)
+__RAM_FUNC HAL_FLASHEx_HalfPageProgram(uint32_t Address, uint32_t* pBuffer)
 {
-  uint32_t primask_bit;
   uint32_t count = 0U; 
   HAL_StatusTypeDef status = HAL_OK;
 
+  /* Set the DISMCYCINT[0] bit in the Auxillary Control Register (0xE000E008U) 
+     This bit prevents the interruption of multicycle instructions and therefore 
+     will increase the interrupt latency. of Cortex-M3. */
+  SET_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+  
   /* Wait for last operation to be completed */
   status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
   
   if(status == HAL_OK)
   {
-    /* Disable all IRQs */
-    primask_bit = __get_PRIMASK();
-    __disable_irq();
-
     /* Proceed to program the new half page */
     SET_BIT(FLASH->PECR, FLASH_PECR_FPRG);
     SET_BIT(FLASH->PECR, FLASH_PECR_PROG);
     
+    /* Disable all IRQs */
+    __disable_irq();
+
     /* Write one half page directly with 32 different words */
     while(count < 32U)
     {
@@ -330,15 +359,17 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_HalfPageProgram(uint32_t Address, uint3
 
     /* Wait for last operation to be completed */
     status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
+
+    /* Enable IRQs */
+    __enable_irq();
  
     /* If the write operation is completed, disable the PROG and FPRG bits */
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_PROG);
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_FPRG);
-
-    /* Enable IRQs */
-    __set_PRIMASK(primask_bit);
   }
-   
+
+  CLEAR_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+    
   /* Return the Write Status */
   return status;
 }
@@ -393,7 +424,7 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_HalfPageProgram(uint32_t Address, uint3
   *            @arg @ref HAL_FLASH_ERROR_OPTV    FLASH Option valid error flag 
   * @retval HAL Status
   */
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_GetError(uint32_t * Error)
+__RAM_FUNC HAL_FLASHEx_GetError(uint32_t * Error)
 { 
   *Error = pFlash.ErrorCode;
   return HAL_OK;  
@@ -410,7 +441,7 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_GetError(uint32_t * Error)
 
 /**
   * @brief  Erase a double word in data memory.
-  * @param  Address specifies the address to be erased.
+  * @param  Address: specifies the address to be erased.
   * @note   To correctly run this function, the HAL_FLASH_EEPROM_Unlock() function
   *         must be called before.
   *         Call the HAL_FLASH_EEPROM_Lock() to he data EEPROM access
@@ -425,20 +456,20 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_GetError(uint32_t * Error)
   * @retval HAL status
   */
 
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_EraseDoubleWord(uint32_t Address)
+__RAM_FUNC HAL_FLASHEx_DATAEEPROM_EraseDoubleWord(uint32_t Address)
 {
-  uint32_t primask_bit;
   HAL_StatusTypeDef status = HAL_OK;
   
+  /* Set the DISMCYCINT[0] bit in the Auxillary Control Register (0xE000E008U) 
+     This bit prevents the interruption of multicycle instructions and therefore 
+     will increase the interrupt latency. of Cortex-M3. */
+  SET_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+    
   /* Wait for last operation to be completed */
   status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
   
   if(status == HAL_OK)
   {
-    /* Disable all IRQs */
-    primask_bit = __get_PRIMASK();
-    __disable_irq();
-
     /* If the previous operation is completed, proceed to erase the next double word */
     /* Set the ERASE bit */
     SET_BIT(FLASH->PECR, FLASH_PECR_ERASE);
@@ -457,20 +488,18 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_EraseDoubleWord(uint32_t Add
     /* If the erase operation is completed, disable the ERASE and DATA bits */
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_ERASE);
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_DATA);
-
-    /* Enable IRQs */
-    __set_PRIMASK(primask_bit);
- 
   }  
-      
+  
+  CLEAR_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+    
   /* Return the erase status */
   return status;
 }
 
 /**
   * @brief  Write a double word in data memory without erase.
-  * @param  Address specifies the address to be written.
-  * @param  Data specifies the data to be written.
+  * @param  Address: specifies the address to be written.
+  * @param  Data: specifies the data to be written.
   * @note   To correctly run this function, the HAL_FLASH_EEPROM_Unlock() function
   *         must be called before.
   *         Call the HAL_FLASH_EEPROM_Lock() to he data EEPROM access
@@ -485,20 +514,20 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_EraseDoubleWord(uint32_t Add
   *         operations such as breakpoints, periodic updates, etc.).
   * @retval HAL status
   */ 
-__RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_ProgramDoubleWord(uint32_t Address, uint64_t Data)
+__RAM_FUNC HAL_FLASHEx_DATAEEPROM_ProgramDoubleWord(uint32_t Address, uint64_t Data)
 {
-  uint32_t primask_bit;
   HAL_StatusTypeDef status = HAL_OK;
 
+  /* Set the DISMCYCINT[0] bit in the Auxillary Control Register (0xE000E008U) 
+     This bit prevents the interruption of multicycle instructions and therefore 
+     will increase the interrupt latency. of Cortex-M3. */
+  SET_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+    
   /* Wait for last operation to be completed */
   status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
   
   if(status == HAL_OK)
   {
-    /* Disable all IRQs */
-    primask_bit = __get_PRIMASK();
-    __disable_irq();
-
     /* If the previous operation is completed, proceed to program the new data*/
     SET_BIT(FLASH->PECR, FLASH_PECR_FPRG);
     SET_BIT(FLASH->PECR, FLASH_PECR_DATA);
@@ -507,18 +536,17 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_ProgramDoubleWord(uint32_t A
      *(__IO uint32_t *)Address = (uint32_t) Data;
      Address += 4U;
      *(__IO uint32_t *)Address = (uint32_t) (Data >> 32);
-     
+    
     /* Wait for last operation to be completed */
     status = FLASHRAM_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
     
     /* If the write operation is completed, disable the FPRG and DATA bits */
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_FPRG);
     CLEAR_BIT(FLASH->PECR, FLASH_PECR_DATA);     
-
-    /* Enable IRQs */
-    __set_PRIMASK(primask_bit);
   }
-      
+  
+  CLEAR_BIT(SCnSCB->ACTLR, SCnSCB_ACTLR_DISMCYCINT_Msk);
+    
   /* Return the Write Status */
   return status;
 }
@@ -539,7 +567,7 @@ __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_ProgramDoubleWord(uint32_t A
   * @brief  Set the specific FLASH error flag.
   * @retval HAL Status
   */
-static __RAM_FUNC HAL_StatusTypeDef FLASHRAM_SetErrorCode(void)
+static __RAM_FUNC FLASHRAM_SetErrorCode(void)
 {
   uint32_t flags = 0U;
   
@@ -582,10 +610,10 @@ static __RAM_FUNC HAL_StatusTypeDef FLASHRAM_SetErrorCode(void)
 
 /**
   * @brief  Wait for a FLASH operation to complete.
-  * @param  Timeout maximum flash operationtimeout
+  * @param  Timeout: maximum flash operationtimeout
   * @retval HAL status
   */
-static __RAM_FUNC HAL_StatusTypeDef FLASHRAM_WaitForLastOperation(uint32_t Timeout)
+static __RAM_FUNC  FLASHRAM_WaitForLastOperation(uint32_t Timeout)
 { 
     /* Wait for the FLASH operation to complete by polling on BUSY flag to be reset.
        Even if the FLASH operation fails, the BUSY flag will be reset and an error
