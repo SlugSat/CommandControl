@@ -43,8 +43,6 @@ void Power_Modes_State_Machine_Run(void)
 	
 	if (checkBatt)
 	{
-		HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
-
 		// Check battery level
 		float battPercentage = Get_Voltage(i2c, 0); // Currently returns a value in volts
 		// Write the battery level to the fram

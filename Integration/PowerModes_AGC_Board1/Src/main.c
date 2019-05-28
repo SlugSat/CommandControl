@@ -43,8 +43,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdarg.h>
 #include "PowerModes.h"
-
+#include "agc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,7 +64,13 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc;
+
+DAC_HandleTypeDef hdac;
+
 I2C_HandleTypeDef hi2c1;
+
+RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi2;
 
@@ -82,9 +89,12 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_ADC_Init(void);
+static void MX_DAC_Init(void);
+static void MX_RTC_Init(void);
 static void MX_TIM10_Init(void);
 /* USER CODE BEGIN PFP */
-
+void my_printf(const char *fmt, ...);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -116,7 +126,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+	__HAL_RCC_DAC_CLK_ENABLE();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -124,22 +134,34 @@ int main(void)
   MX_SPI2_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_ADC_Init();
+  MX_DAC_Init();
+  MX_RTC_Init();
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 	Power_Modes_State_Machine_Init(&hi2c1, &hspi2, &huart2, &htim10);
 
+	HAL_ADC_Start(&hadc);
+	DAC->CR |= DAC_CR_EN1;
+	DAC->CR |= DAC_CR_EN2;
+	AGC_Init();
+	
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+		my_printf("test\n");
+		uint32_t ticks = 0;
+    while (1)
+    {
+			// do power events
+      Power_Modes_State_Machine_Run();
 
-  while (1)
-  {
-//		float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
-//		snprintf(msg, 200, "\nBatt: %f \n\n", battPercentage);
-//		HAL_UART_Transmit(&huart2, (uint8_t *)msg, 200, 100);
-//		HAL_Delay(1000);
-			Power_Modes_State_Machine_Run();
+			// do AGC events
+      ticks = HAL_GetTick();
+      AGC_DoEvent();
+      my_printf("XX %d\n", (HAL_GetTick() - ticks)); 
 		
     /* USER CODE END WHILE */
 
@@ -156,15 +178,17 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Configure the main internal regulator output voltage 
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
@@ -186,6 +210,109 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief ADC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC_Init(void)
+{
+
+  /* USER CODE BEGIN ADC_Init 0 */
+
+  /* USER CODE END ADC_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC_Init 1 */
+
+  /* USER CODE END ADC_Init 1 */
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  */
+  hadc.Instance = ADC1;
+  hadc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  hadc.Init.LowPowerAutoWait = ADC_AUTOWAIT_DISABLE;
+  hadc.Init.LowPowerAutoPowerOff = ADC_AUTOPOWEROFF_DISABLE;
+  hadc.Init.ChannelsBank = ADC_CHANNELS_BANK_A;
+  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.NbrOfConversion = 1;
+  hadc.Init.DiscontinuousConvMode = DISABLE;
+  hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc.Init.DMAContinuousRequests = DISABLE;
+  if (HAL_ADC_Init(&hadc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_4CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC_Init 2 */
+
+  /* USER CODE END ADC_Init 2 */
+
+}
+
+/**
+  * @brief DAC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_DAC_Init(void)
+{
+
+  /* USER CODE BEGIN DAC_Init 0 */
+
+  /* USER CODE END DAC_Init 0 */
+
+  DAC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN DAC_Init 1 */
+
+  /* USER CODE END DAC_Init 1 */
+  /** DAC Initialization 
+  */
+  hdac.Instance = DAC;
+  if (HAL_DAC_Init(&hdac) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** DAC channel OUT1 config 
+  */
+  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+  if (HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** DAC channel OUT2 config 
+  */
+  if (HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN DAC_Init 2 */
+
+  /* USER CODE END DAC_Init 2 */
+
 }
 
 /**
@@ -219,6 +346,74 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+  /** Initialize RTC Only 
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+    
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date 
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Enable the WakeUp 
+  */
+  if (HAL_RTCEx_SetWakeUpTimer(&hrtc, 0, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
 
 }
 
@@ -341,13 +536,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Telemetry_Rail_Pin 
-                          |DEAD_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin|Mech_Rail_Pin|Telemetry_Rail_Pin|DEAD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, SPI_FRAM_LOCK_Pin|Misc_Rail_Pin, GPIO_PIN_RESET);
@@ -355,10 +549,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|Memory_Rail_Pin|LT_Rail_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : BOARD_LED_Pin Scie_Rail_Pin Mech_Rail_Pin Telemetry_Rail_Pin 
-                           DEAD_Pin */
-  GPIO_InitStruct.Pin = BOARD_LED_Pin|Scie_Rail_Pin|Mech_Rail_Pin|Telemetry_Rail_Pin 
-                          |DEAD_Pin;
+  /*Configure GPIO pins : Scie_Rail_Pin Mech_Rail_Pin Telemetry_Rail_Pin DEAD_Pin */
+  GPIO_InitStruct.Pin = Scie_Rail_Pin|Mech_Rail_Pin|Telemetry_Rail_Pin|DEAD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -403,8 +595,96 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+#ifdef USE_DEBUG_PRINTF
+/**
+ * Print a printf-like string to the UART
+ *
+ * \param fmt	printf format string
+ * \param argp	variable argument list
+ */
+static void vprint(const char *fmt, va_list argp) {
+    char string[400];
+    if(0 < vsprintf(string,fmt,argp)) // build string
+    {
+        HAL_UART_Transmit(&huart2, (uint8_t*)string, strlen(string), 1000); // send message via UART
+    }
+}
+#endif
 
+/**
+ * Custom printf that prints to the UART.
+ * If the preprocessor USE_DEBUG_PRINTF is not defined, then it does nothing.
+ * I would use the syscalls but those didn't work for some reason.
+ *
+ * \param fmt	printf format string
+ */
+void my_printf(const char *fmt, ...) // custom printf() function
+{
+#ifdef USE_DEBUG_PRINTF
+    va_list argp;
+    va_start(argp, fmt);
+    vprint(fmt, argp);
+    va_end(argp);
+#endif
+}
 
+#if 1
+static void GPIO_DeInit(void)
+{
+    // set the configuration for the GPIO ports (PA, PB, PC) to be analog inputs for low power
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitStructure.Pin = GPIO_PIN_All;
+    GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStructure.Pull = GPIO_NOPULL; 
+
+    // GPIO_A is preserved to keep output status unchanged and have 
+    // Interrupt working for waking Up.
+    // GPIO_B and GPIO_C are disabled
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+    __HAL_RCC_GPIOB_CLK_DISABLE();
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+    __HAL_RCC_GPIOC_CLK_DISABLE();
+}
+
+void HAL_Delay(__IO uint32_t Delay)
+{
+    // the RTC is clocked by LSI, which means Wake Up clock is RTCCLK /16
+    uint32_t TimeValue = (Delay * (LSI_VALUE / 16)) / 1000;
+    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, TimeValue, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+
+    __HAL_RCC_PWR_CLK_ENABLE(); // Enable Power Control clock
+    HAL_PWREx_EnableUltraLowPower(); // Ultra low power mode
+    HAL_PWREx_EnableFastWakeUp(); // Fast wake-up for ultra low power mode
+    
+    // turn off GPIO to save power
+    GPIO_DeInit();
+    
+    HAL_ADC_DeInit(&hadc);
+    HAL_UART_DeInit(&huart2);
+    HAL_SPI_DeInit(&hspi2);
+    HAL_I2C_DeInit(&hi2c1);
+    
+    // switch to STOP mode
+    // the microcontroller is sleeping in this function. It will resume on interrupt
+    EXTI->PR = 0xFFFFFFFF; // https://community.st.com/s/question/0D50X00009Xke5iSAB/enter-and-exit-stop-mode-with-rtc-and-exti
+    HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+    
+    // Now we're waking up, so set up clocks again
+    SystemClock_Config();
+    
+    // Deactivate RTC wakeUp
+    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    
+    // Reinit GPIOs
+    MX_GPIO_Init();
+    MX_SPI2_Init();
+    MX_USART2_UART_Init();
+    MX_I2C1_Init();
+    MX_ADC_Init();
+    HAL_ADC_Start(&hadc);
+    
+}
+#endif
 	
 /* USER CODE END 4 */
 

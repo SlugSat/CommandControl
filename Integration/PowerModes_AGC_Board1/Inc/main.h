@@ -78,8 +78,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BOARD_LED_Pin GPIO_PIN_5
-#define BOARD_LED_GPIO_Port GPIOA
+#define DAC_VGA_Pin GPIO_PIN_4
+#define DAC_VGA_GPIO_Port GPIOA
+#define DAC_VA_Pin GPIO_PIN_5
+#define DAC_VA_GPIO_Port GPIOA
 #define Scie_Rail_Pin GPIO_PIN_6
 #define Scie_Rail_GPIO_Port GPIOA
 #define Mech_Rail_Pin GPIO_PIN_7
