@@ -146,22 +146,30 @@ int main(void)
 	DAC->CR |= DAC_CR_EN2;
 	AGC_Init();
 	
-	
+	char msg[50] = "\nI'm dead!!! :(\n";
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 		my_printf("test\n");
 		uint32_t ticks = 0;
+		uint8_t alive = 0;
     while (1)
     {
 			// do power events
-      Power_Modes_State_Machine_Run();
-
+			if (alive != Kill)
+			{
+				alive = Power_Modes_State_Machine_Run();
+			}
+			else
+			{
+				HAL_UART_Transmit(&huart2, (uint8_t *)msg, sizeof(msg), 30);
+				for (int i = 0; i < 100000; i++);
+			}
 			// do AGC events
-      ticks = HAL_GetTick();
-      AGC_DoEvent();
-      my_printf("XX %d\n", (HAL_GetTick() - ticks)); 
+      //ticks = HAL_GetTick();
+      //AGC_DoEvent();
+      //my_printf("XX %d\n", (HAL_GetTick() - ticks)); 
 		
     /* USER CODE END WHILE */
 

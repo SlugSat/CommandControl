@@ -37,7 +37,7 @@ void Power_Modes_State_Machine_Init(I2C_HandleTypeDef *hi2cTest, SPI_HandleTypeD
 
 
 
-void Power_Modes_State_Machine_Run(void)
+uint8_t Power_Modes_State_Machine_Run(void)
 {
 	char msg[200] = {0};
 	
@@ -53,7 +53,7 @@ void Power_Modes_State_Machine_Run(void)
 		
 		// Check the science event pin
 		uint8_t scienceStatus = 0;
-		if (HAL_GPIO_ReadPin(GPIOA, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
+		if (HAL_GPIO_ReadPin(SCIENCE_EVENT_GPIO_Port, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
 		{
 			scienceStatus = Set_ScienceEvent(TRUE);
 		}
@@ -111,7 +111,7 @@ void Power_Modes_State_Machine_Run(void)
 				firstTransition = 1;
 			}
 			state = Transition(Kill, framSPI, uartDebug);
-			break;
+			return Kill;
 		/* In Normal mode */
 		case (Normal): 
 			// Set rails high for this state
@@ -163,7 +163,7 @@ void Power_Modes_State_Machine_Run(void)
 			state = Transition(ScienceOnly, framSPI, uartDebug);
 			break;			
 	}
-	return;
+	return 0;
 }
 
 

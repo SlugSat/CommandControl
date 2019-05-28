@@ -62,7 +62,7 @@ typedef struct events
 
 void Power_Modes_State_Machine_Init(I2C_HandleTypeDef *hi2cTest, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim);
 
-void Power_Modes_State_Machine_Run(void);
+uint8_t Power_Modes_State_Machine_Run(void);
 
 void Output_Power_Pins(uint8_t currState);
 
