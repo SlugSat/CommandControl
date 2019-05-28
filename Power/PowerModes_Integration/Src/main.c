@@ -44,10 +44,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "PowerModes.h"
-#include "SPI_FRAM.h"
-#include "DateConversion.h"
-#include "Current_Control_Functions.h"
-#include "Fuel_Gauge_Functions.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +54,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DEBUG (0)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -75,11 +72,7 @@ TIM_HandleTypeDef htim10;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint16_t globalIntterupt = 0;
-States globalState = Detumble;
-volatile States state;
-uint8_t shortCheck = 0;
-uint8_t checkBatt = FALSE;
+
 
 /* USER CODE END PV */
 
@@ -91,7 +84,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM10_Init(void);
 /* USER CODE BEGIN PFP */
-void Output_Power_Pins(uint8_t currState);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -133,167 +126,20 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
-	
-	/* Initialize Variables */
-	uint8_t firstTransition = 0;
-	/* Initialize the current controllers */
-	//Initialize_All_Current_Sensors(&hi2c1);
-	
-	/* Initialize the fuel gauge */
-	Fuel_Gauge_Init(&hi2c1);
-	
-	/* Set Initial state */
-	state = Detumble;
-	
-	/* Start Timer for interrupt drive fuel gauge check */
-	HAL_TIM_Base_Start(&htim10);
-	
-	/* Start Timer Interrupt Handler */
-	HAL_TIM_Base_Start_IT(&htim10);
+	Power_Modes_State_Machine_Init(&hi2c1, &hspi2, &huart2, &htim10);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	char msg[200] = {0};
+
   while (1)
   {
 //		float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
 //		snprintf(msg, 200, "\nBatt: %f \n\n", battPercentage);
 //		HAL_UART_Transmit(&huart2, (uint8_t *)msg, 200, 100);
 //		HAL_Delay(1000);
-		/* Enter the state machine */
-		while(1)
-		{
-			
-			if (checkBatt)
-			{
-				HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
-
-				// Check battery level
-				float battPercentage = Get_Voltage(&hi2c1, 0); // Currently returns a value in volts
-				// Write the battery level to the fram
-				uint8_t battBytes[4] = {0};
-				float_to_bytes(battPercentage, battBytes);
-				SPI_FRAM_Write(&hspi2, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, &huart2);
-				Set_BatteryLevel(battPercentage);
-				
-				// Check the science event pin
-				uint8_t scienceStatus = 0;
-				if (HAL_GPIO_ReadPin(GPIOA, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
-				{
-					scienceStatus = Set_ScienceEvent(TRUE);
-				}
-				else
-				{
-					scienceStatus = Set_ScienceEvent(FALSE);
-				}
-				
-				// Check if there is a short in any of the rails
-				//Check_for_Shorts(&hi2c1, &shortCheck);
-				
-				// Get whether the craft is detumbling or not
-				uint8_t stable[1] = {0};
-				SPI_FRAM_Read(&hspi2, SPI_FRAM_MECH_STATE_ADDR, stable, 1, &huart2);
-				if (stable[0] != 0x2) // Detumble
-				{
-					change_variables(STABLE, 0);
-				}
-				
-				// Get the solar vector status
-				uint8_t currentSensor[1] = {0};
-				SPI_FRAM_Read(&hspi2, SPI_FRAM_SOLAR_VECTOR_ADDR, currentSensor, 1, &huart2);
-				change_variables(SOLAR, currentSensor[0]);
-				
-				
-				checkBatt = FALSE;
-				snprintf(msg, 200, "\nState: %u    Batt: %f     Shorts: 0x%02X     ScienceStatus: 0x%02x    SolarVector: 0x%02x\n\n", state, battPercentage, shortCheck, scienceStatus, currentSensor[0]);
-				HAL_UART_Transmit(&huart2, (uint8_t *)msg, 200, 100);
-			}
-			
-			if (state != globalState)
-			{
-				firstTransition = 0;
-				SPI_FRAM_Write(&hspi2, SPI_FRAM_PM_STATE_ADDR, (uint8_t *) &state, 1, &huart2);
-			}
-			globalState = state;
-			switch (state)
-			{
-				/* In Detumble mode */
-				case (Detumble): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(Detumble, &hspi2, &huart2);
-					break;
-				/* In Kill mode */
-				case (Kill): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(Kill, &hspi2, &huart2);
-					break;
-				/* In Normal mode */
-				case (Normal): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(Normal, &hspi2, &huart2);
-					break;
-				/* In UltraLowPower mode */	
-				case (UltraLowPower): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(UltraLowPower, &hspi2, &huart2);
-					break;
-				/* In LowPower mode */
-				case (LowPower): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(LowPower, &hspi2, &huart2);
-					break;
-				/* In Eclipse mode */
-				case (Eclipse): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(Eclipse, &hspi2, &huart2);
-					break;
-				/* In ScienceOnly mode */
-				case (ScienceOnly): 
-					// Set rails high for this state
-					if (firstTransition == 0)
-					{
-						Output_Power_Pins(state);
-						firstTransition = 1;
-					}
-					state = Transition(ScienceOnly, &hspi2, &huart2);
-					break;
-				/* An error occurred */
-				default:
-					// Error
-					return 0;
-			}
-		}
+			Power_Modes_State_Machine_Run();
 		
     /* USER CODE END WHILE */
 
@@ -558,121 +404,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
-{
-  if (GPIO_PIN == DIE_INT_Pin)
-	{
-		change_variables(DIE, 0);
-		globalIntterupt = DIE_INT_Pin;
-		HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
-	}
-	else 
-	{
-		__NOP();
-	}
-}
-
-void Output_Power_Pins(uint8_t currState)
-{	
-	// Set the MechanicalSys power mode
-	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse)
-	{
-		if ((shortCheck & 0x16) != 0) // Check if there was a short in the rail
-		{
-			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_SET);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
-		}
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
-	}
-	
-	// Set the power for CC and Telemetry systems
-	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse || currState == ScienceOnly)
-	{
-		if ((shortCheck & 0x14) != 0) // Check if there was a short in the rail
-		{
-			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_SET);
-			if (currState != Detumble)
-			{
-				HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_SET);
-			}
-		}
-		else
-		{
-			HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
-		}
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
-	}
-	
-	// Set the power for the Science payload systems
-	if (currState == ScienceOnly)
-	{
-		if ((shortCheck & 0x4C) != 0) // Check if there was a short in the rail
-		{
-			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_SET);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
-		}
-	}
-	else 
-	{
-		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
-	}
-	
-	// Set the LT power rail
-	if (currState == Normal)
-	{
-		if ((shortCheck & 0x3F) != 0) // Check if there was a short in the rail
-		{
-			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_SET);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
-		}
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
-	}
-	
-	// Set a pin when Kill mode is entered, used for debugging or shutting off all rails
-	if (currState == Kill)
-	{
-		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_SET);
-		
-		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
-	}
-}
-
-/* TIMER INTERRUPT SERVICE ROUTINE */
-/**
-  * @brief This function handles TIM6 update event interrupt.
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-		checkBatt = TRUE;
-}
 
 	
 /* USER CODE END 4 */

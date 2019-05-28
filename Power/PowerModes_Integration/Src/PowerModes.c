@@ -1,5 +1,289 @@
 #include "PowerModes.h"
 
+/* Initialize Variables */
+static uint8_t firstTransition = 0;
+static uint8_t shortCheck = 0;
+static uint8_t checkBatt = FALSE;
+/* Set Initial state */
+static States state = Detumble;
+static States prevState = Detumble;
+
+/* Setup the communication handlers */
+static I2C_HandleTypeDef *i2c;
+static SPI_HandleTypeDef *framSPI;
+static UART_HandleTypeDef *uartDebug;
+static TIM_HandleTypeDef *timer;
+
+void Power_Modes_State_Machine_Init(I2C_HandleTypeDef *hi2cTest, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim)
+{
+	i2c = hi2cTest;
+	framSPI = hspi;
+	timer = htim;
+	uartDebug = huart;
+	
+	/* Initialize the current controllers */
+	//Initialize_All_Current_Sensors(&hi2c1);
+	
+	/* Initialize the fuel gauge */
+	Fuel_Gauge_Init(i2c);
+	
+	/* Start Timer for interrupt drive fuel gauge check */
+	HAL_TIM_Base_Start(timer);
+	
+	/* Start Timer Interrupt Handler */
+	HAL_TIM_Base_Start_IT(timer);
+}
+
+
+
+
+void Power_Modes_State_Machine_Run(void)
+{
+	char msg[200] = {0};
+	
+	if (checkBatt)
+	{
+		HAL_GPIO_TogglePin(GPIOA, BOARD_LED_Pin);
+
+		// Check battery level
+		float battPercentage = Get_Voltage(i2c, 0); // Currently returns a value in volts
+		// Write the battery level to the fram
+		uint8_t battBytes[4] = {0};
+		float_to_bytes(battPercentage, battBytes);
+		SPI_FRAM_Write(framSPI, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, uartDebug);
+		Set_BatteryLevel(battPercentage);
+		
+		// Check the science event pin
+		uint8_t scienceStatus = 0;
+		if (HAL_GPIO_ReadPin(GPIOA, SCIENCE_EVENT_Pin) == GPIO_PIN_SET)
+		{
+			scienceStatus = Set_ScienceEvent(TRUE);
+		}
+		else
+		{
+			scienceStatus = Set_ScienceEvent(FALSE);
+		}
+		
+		// Check if there is a short in any of the rails
+		//Check_for_Shorts(&hi2c1, &shortCheck);
+		
+		// Get whether the craft is detumbling or not
+		uint8_t stable[1] = {0};
+		SPI_FRAM_Read(framSPI, SPI_FRAM_MECH_STATE_ADDR, stable, 1, uartDebug);
+		if (stable[0] != 0x2) // Detumble
+		{
+			change_variables(STABLE, 0);
+		}
+		
+		// Get the solar vector status
+		uint8_t currentSensor[1] = {0};
+		SPI_FRAM_Read(framSPI, SPI_FRAM_SOLAR_VECTOR_ADDR, currentSensor, 1, uartDebug);
+		change_variables(SOLAR, currentSensor[0]);
+		
+		
+		checkBatt = FALSE;
+		snprintf(msg, 200, "\nState: %u    Batt: %f     Shorts: 0x%02X     ScienceStatus: 0x%02x    SolarVector: 0x%02x\n\n", state, battPercentage, shortCheck, scienceStatus, currentSensor[0]);
+		HAL_UART_Transmit(uartDebug, (uint8_t *)msg, 200, 100);
+	}
+	
+	if (state != prevState)
+	{
+		firstTransition = 0;
+		SPI_FRAM_Write(framSPI, SPI_FRAM_PM_STATE_ADDR, (uint8_t *) &state, 1, uartDebug);
+	}
+	prevState = state;
+	switch (state)
+	{
+		/* In Detumble mode */
+		case (Detumble): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(Detumble, framSPI, uartDebug);
+			break;
+		/* In Kill mode */
+		case (Kill): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(Kill, framSPI, uartDebug);
+			break;
+		/* In Normal mode */
+		case (Normal): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(Normal, framSPI, uartDebug);
+			break;
+		/* In UltraLowPower mode */	
+		case (UltraLowPower): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(UltraLowPower, framSPI, uartDebug);
+			break;
+		/* In LowPower mode */
+		case (LowPower): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(LowPower, framSPI, uartDebug);
+			break;
+		/* In Eclipse mode */
+		case (Eclipse): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(Eclipse, framSPI, uartDebug);
+			break;
+		/* In ScienceOnly mode */
+		case (ScienceOnly): 
+			// Set rails high for this state
+			if (firstTransition == 0)
+			{
+				Output_Power_Pins(state);
+				firstTransition = 1;
+			}
+			state = Transition(ScienceOnly, framSPI, uartDebug);
+			break;			
+	}
+	return;
+}
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_PIN)
+{
+  if (GPIO_PIN == DIE_INT_Pin)
+	{
+		change_variables(DIE, 0);
+		HAL_GPIO_TogglePin(GPIOA , GPIO_PIN_5);
+	}
+	else 
+	{
+		__NOP();
+	}
+}
+
+void Output_Power_Pins(uint8_t currState)
+{	
+	// Set the MechanicalSys power mode
+	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse)
+	{
+		if ((shortCheck & 0x16) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+	}
+	
+	// Set the power for CC and Telemetry systems
+	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse || currState == ScienceOnly)
+	{
+		if ((shortCheck & 0x14) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_SET);
+			if (currState != Detumble)
+			{
+				HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_SET);
+			}
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+	}
+	
+	// Set the power for the Science payload systems
+	if (currState == ScienceOnly)
+	{
+		if ((shortCheck & 0x4C) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else 
+	{
+		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+	}
+	
+	// Set the LT power rail
+	if (currState == Normal)
+	{
+		if ((shortCheck & 0x3F) != 0) // Check if there was a short in the rail
+		{
+			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+	}
+	
+	// Set a pin when Kill mode is entered, used for debugging or shutting off all rails
+	if (currState == Kill)
+	{
+		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_SET);
+		
+		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
+	}
+}
+
+/* TIMER INTERRUPT SERVICE ROUTINE */
+/**
+  * @brief This function handles TIM6 update event interrupt.
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+		checkBatt = TRUE;
+}
+
 void *change_variables(uint8_t type, uint8_t solarStatus)
 {
 	uint8_t temp = 0;

@@ -2,6 +2,10 @@
 #define POWERMODES_H
 
 #include "main.h"
+#include "SPI_FRAM.h"
+#include "DateConversion.h"
+#include "Current_Control_Functions.h"
+#include "Fuel_Gauge_Functions.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -55,6 +59,12 @@ typedef struct events
 
 
 /* Define function prototypes */
+
+void Power_Modes_State_Machine_Init(I2C_HandleTypeDef *hi2cTest, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim);
+
+void Power_Modes_State_Machine_Run(void);
+
+void Output_Power_Pins(uint8_t currState);
 
 /* Set the intial power modes of each system */
 void Initialize_Functions(system_function *functions);
