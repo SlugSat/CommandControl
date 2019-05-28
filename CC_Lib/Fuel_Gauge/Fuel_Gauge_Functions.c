@@ -30,8 +30,20 @@ void Fuel_Gauge_Write(I2C_HandleTypeDef *hi2c, uint8_t reg, uint16_t *send)
 	HAL_I2C_Master_Transmit(hi2c, FG_SLAVE_ADDR, send_buff, 3, 10);
 }
 
-void Fuel_Gauge_Init(I2C_HandleTypeDef *hi2c, fg_config_t conf)
+void Fuel_Gauge_Init(I2C_HandleTypeDef *hi2c)
 {
+	// Used for configuring the fuel gauge
+	static fg_config_t conf = {	6700, 		// design capacity of 3350mAh
+														0x7D61, 	// empty voltage target = 2.5V, recovery voltage = 3.88V
+														0x8020, 	// model cfg set for lithium NCR/NCA cell
+														0x01A0, 	// charge termination current = 0.3A
+														0x0000,
+														6700/32,
+														(6700/32)*44138/6700,
+														0x8214,	 	// config1
+														0x3658};	// config2		
+	
+	
 	/**** Check chip status ****/
 	uint16_t status = 0;
 	Fuel_Gauge_Read(hi2c, STAT_REG, &status);
@@ -166,7 +178,7 @@ float Get_Voltage(I2C_HandleTypeDef *hi2c, uint8_t average)
 	return output;
 }
 
-float Get_Current(I2C_HandleTypeDef *hi2c, uint8_t average)
+float Get_FG_Current(I2C_HandleTypeDef *hi2c, uint8_t average)
 {
 	uint16_t recv = 0;
 	if (average)
@@ -188,5 +200,3 @@ float Get_Temp(I2C_HandleTypeDef *hi2c)
 	float output = (int16_t) recv * temperature_multiplier;
 	return output;
 }
-
-
