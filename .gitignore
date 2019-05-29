@@ -67,6 +67,7 @@
 *.sct
 *.sfd
 *.sfr
+*.bak
 
 # Miscellaneous
 *.tra
