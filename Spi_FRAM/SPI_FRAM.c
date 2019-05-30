@@ -1,8 +1,19 @@
 #include "SPI_FRAM.h"
 
-#define M1_DELAY 1000
-#define M2_DELAY 500
-#define M3_DELAY 1500
+#define M1_DELAY 942
+#define M2_DELAY 635
+#define M3_DELAY 1017
+
+/**
+  * @brief  Initialize reading from the FRAM
+  * @param  SPI peripheral connected to the SPI FRAM
+  */
+void SPI_FRAM_Init(SPI_HandleTypeDef *hspi)
+{
+	HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);	
+	// Chip select high
+	HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_SET);
+}
 
 /**
   * @brief  Read from the FRAM
@@ -10,7 +21,7 @@
   * @param  pRxData: pointer to reception data buffer to be
   * @param  size: size of the data you are expecting (# of bytes)
   */
-void SPI_FRAM_Read( SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size, UART_HandleTypeDef *huart)
+void SPI_FRAM_Read(SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size, UART_HandleTypeDef *huart)
 {
 	// Acquire the SPI FRAM lock
 	Get_Lock(hspi, huart);
@@ -19,31 +30,27 @@ void SPI_FRAM_Read( SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, 
 	HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
 
 	// initialize read command
-	uint8_t read_command[READ_CMD_LEN] = {READ_OP, 			// read operation code
+	uint8_t read_command[READ_CMD_LEN+1] = {READ_OP, 			// read operation code
 										address>>8,			// MSB of address
-										(uint8_t)address}; 	// LSB of address
-
+										(uint8_t)address,  	// LSB of address
+										0}; // garbage data value
 	// initiate read operation
 	while(HAL_SPI_Transmit(hspi, read_command, READ_CMD_LEN, 10) != HAL_OK){};
-//	while (HAL_SPI_GetState(hspi) == HAL_SPI_STATE_BUSY){};
-//	HAL_SPI_DeInit(hspi);
-//	HAL_SPI_Init(hspi);
+
 	// recieve data from appropriate register
 	for(int i = size - 1; i >= 0; i--)
 	{
 		while(HAL_SPI_Receive(hspi, &pRxData[i], 1, 10)!= HAL_OK){};
 	}
 
+	// Read a last throwaway byte to account for errors
+	while(HAL_SPI_Receive(hspi, &read_command[3], 1, 10)!= HAL_OK){};
+		
 	// Chip select high
 	HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_SET);
-
-	// wait while SPI peripheral is still busy
-//	while (HAL_SPI_GetState(hspi) == HAL_SPI_STATE_BUSY){};
-
+		
 	// Free the lock
 	Free_Lock(hspi, huart);
-//	HAL_SPI_DeInit(hspi);
-//	HAL_SPI_Init(hspi);
 }
 /**
   * @brief  Write to the FRAM
@@ -108,7 +115,7 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
 void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	#if (DEBUG) 
-		char *msg1 = "\nWAITING FOR LOCK.....\n"; 
+		char *msg1 = "\nWAITING FOR LOCK....."; 
 		char msg2[100];
 	#endif
 	
@@ -116,11 +123,11 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 	{
 		#if (DEBUG)
 			HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1);
-//			sprintf(msg2, "IN1: %d\nIN2: %d\n",
-//							 HAL_GPIO_ReadPin(SPI_FRAM_IN1_GPIO_Port, SPI_FRAM_IN1_Pin),
-//							 HAL_GPIO_ReadPin(SPI_FRAM_IN2_GPIO_Port, SPI_FRAM_IN2_Pin));
-//			HAL_UART_Transmit(huart, (uint8_t *)msg2, strlen(msg2), 1);
-//			HAL_Delay(10);
+			sprintf(msg2, "IN1: %d     IN2: %d\n",
+							 HAL_GPIO_ReadPin(SPI_FRAM_IN1_GPIO_Port, SPI_FRAM_IN1_Pin),
+							 HAL_GPIO_ReadPin(SPI_FRAM_IN2_GPIO_Port, SPI_FRAM_IN2_Pin));
+			HAL_UART_Transmit(huart, (uint8_t *)msg2, strlen(msg2), 1);
+			HAL_Delay(500);
 		#endif
 	} while (HAL_GPIO_ReadPin(SPI_FRAM_IN1_GPIO_Port, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
 				HAL_GPIO_ReadPin(SPI_FRAM_IN2_GPIO_Port, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET);
@@ -133,7 +140,7 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 			HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1); 
 		#endif
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
-		for(int i = 0; i < M2_DELAY; i++);
+		for(int i = 0; i < M2_DELAY; i++); // Delay for an arbitrary amount to avoid future collisions
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
 	}
 }

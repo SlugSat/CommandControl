@@ -102,7 +102,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	HAL_GPIO_WritePin(GPIOA, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);	
+	SPI_FRAM_Init(&hspi1);
 	char msg[200] = {0};
 	char msgClear[200] = {0};
 	
@@ -193,83 +193,83 @@ int main(void)
 	latitude = bytes_to_float(readVal);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nLatitude: %f\n", latitude); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Longitude
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_LONGITUDE_ADDR, readVal, 4, &huart2);
 	longitude = bytes_to_float(readVal);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nLongitude: %f\n", longitude); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Altitude
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_ALTITUDE_ADDR, readVal, 4, &huart2);
 	altitude = bytes_to_float(readVal);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nAltitude: %f\n", altitude); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Time
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_TIME_ADDR, readDouble, 8, &huart2);
 	julianTime = bytes_to_double(readDouble);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nTime: %lf\n", julianTime); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Battery
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nBattery Level: 0x%02x\n", battLevel); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Power modes state
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_PM_STATE_ADDR, &pmState, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nPModes State: 0x%02X\n", pmState); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Log data at a certain time
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_LOG_DATA_TIME_ADDR, readDouble, 8, &huart2);
 	logTime = bytes_to_double(readDouble);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nLog data time: %lf\n", logTime); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// num data points logged
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_NUM_DATA_ADDR, &numdataPoints, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nNum data points: 0x%02X\n", numdataPoints); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// solar vector
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_SOLAR_VECTOR_ADDR, &solarVector, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nSolar Vector: 0x%02X\n", solarVector); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// LT status
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_LT_STAT_ADDR, &ltStatus, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nLT Status: 0x%02X\n", ltStatus); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Daily users
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_LT_DAILY_USERS_ADDR, &numUsers, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nDaily Users: 0x%02X\n", numUsers); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Power status
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_POWER_STAT_ADDR, &powerStatus, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nPower status: 0x%02X\n", powerStatus); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	// Mech state
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_MECH_STATE_ADDR, &mechState, 1, &huart2);
 	memcpy(msg, msgClear, 200);
 	snprintf(msg, 200, "\nMech state: 0x%02X\n", mechState); 
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 5);
 	
 	HAL_GPIO_WritePin(GPIOA, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
 	
