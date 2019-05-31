@@ -146,7 +146,7 @@ int main(void)
 	char msg2[100] = {0};
 	
 	snprintf((char *)msg1, 100, "\n\n-----Start the test-----\n\n");
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 10);
 	
 	/* Initialization code goes here */
 	//Set CS high
@@ -166,7 +166,7 @@ int main(void)
 	readValue = ReadWriteCommandReg(&hspi1, CC1200_SNOP); // Check the state of the CC1200
 	memcpy(msg1, msg2, 100);
 	snprintf((char *)msg1, 100, "\nState of the CC1200: 0x%02x\n", readValue);
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 10);
 	
 	// Initialize the I2C FRAM
 	//Wipe_Memory(&hi2c1, 0, 1);
@@ -188,7 +188,7 @@ int main(void)
 		HAL_Delay(500);
 		memcpy(msg1, msg2, 100);
 		snprintf((char *)msg1, 100, "\nState of the CC1200: 0x%02x\n", readValue);
-		HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+		HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 10);
 		
 		ReadWriteCommandReg(&hspi1, CC1200_SRX);
 		HAL_Delay(10);
@@ -205,7 +205,7 @@ int main(void)
   {
 		memcpy(msg1, msg2, 100);
 		snprintf((char *)msg1, 100, "\nState: 0x%02x\n", state);
-		HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+		HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 10);
 		switch (state)
 		{
 			/* Fetch a packet, location data, or science events mode */
@@ -240,7 +240,7 @@ int main(void)
 				}
 				memcpy(msg1, msg2, 100);
 				snprintf((char *)msg1, 100, "\nPacket: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", packet[0], packet[1], packet[2], packet[3], packet[4], packet[5]);
-				HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+				HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 10);
 				
 				// Decode the packet and take action based on the packet
 				Decode_Sat_Packet(packet, &hspi1, &huart2, &hspi2, &hi2c1);
@@ -539,7 +539,7 @@ uint8_t Poll_Receive_Packet(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 	readValue = ReadWriteCommandReg(hspi, CC1200_SNOP); 
 	char msg1[100] = {0};
 	snprintf((char *)msg1, 100, "\n\nNumber of bytes in the receive buffer: 0x%02x    State of CC1200: 0x%02x\r\n", rxBytes, readValue);
-	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 1);
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg1, sizeof(msg1), 10);
 	
 	
 	if (rxBytes <= FIXED_PACK_SIZE)
