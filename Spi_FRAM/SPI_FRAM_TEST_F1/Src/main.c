@@ -97,7 +97,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	HAL_GPIO_WritePin(GPIOA, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);	
+	SPI_FRAM_Init(&hspi1);	
 	char msg[200] = {0};
 	char msgClear[200] = {0};
   /* USER CODE END 2 */

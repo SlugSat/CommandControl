@@ -140,7 +140,7 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 			HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1); 
 		#endif
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
-		for(int i = 0; i < M2_DELAY; i++); // Delay for an arbitrary amount to avoid future collisions
+		for(int i = 0; i < M1_DELAY; i++); // Delay for an arbitrary amount to avoid future collisions
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
 	}
 }

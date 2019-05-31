@@ -21,6 +21,9 @@ void Power_Modes_State_Machine_Init(I2C_HandleTypeDef *hi2cTest, SPI_HandleTypeD
 	timer = htim;
 	uartDebug = huart;
 	
+	/* Initialize pins for the shared memory */
+	SPI_FRAM_Init(framSPI);
+	
 	/* Initialize the current controllers */
 	//Initialize_All_Current_Sensors(&hi2c1);
 	
