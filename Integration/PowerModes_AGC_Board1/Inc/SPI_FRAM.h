@@ -35,6 +35,8 @@
 #define SPI_FRAM_POWER_STAT_ADDR     			(900) 
 #define SPI_FRAM_MECH_STATE_ADDR					(1000)
 
+void SPI_FRAM_Init(SPI_HandleTypeDef *hspi);
+
 void SPI_FRAM_Read(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pRxData,uint8_t size, UART_HandleTypeDef *huart);
 
 void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,uint8_t size, UART_HandleTypeDef *huart);

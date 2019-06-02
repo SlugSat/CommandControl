@@ -484,7 +484,7 @@ void Handle_Kill_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTyp
 	CC1200_Transmit_Packet(ackPacket, FIXED_PACK_SIZE, hspi, huart);
 	
 	// Continually send an interrupt to the power modes to kill the system
-	//for (uint32_t i = 0; i < 100; i++)
+	for (uint32_t i = 0; i < 5; i++)
 	{
 		HAL_GPIO_TogglePin(GPIOA, Kill_to_PModes_Int_Pin);
 		HAL_Delay(10);

@@ -7,6 +7,9 @@
 #include "main.h"
 #include <string.h>
 
+// Used for debugging
+#define DEBUG (0)
+
 // Constants
 #define WRITE_CMD_LEN	(4)
 #define READ_CMD_LEN	(3) 
@@ -31,6 +34,8 @@
 #define SPI_FRAM_LT_DAILY_USERS_ADDR 			(800)
 #define SPI_FRAM_POWER_STAT_ADDR     			(900) 
 #define SPI_FRAM_MECH_STATE_ADDR					(1000)
+
+void SPI_FRAM_Init(SPI_HandleTypeDef *hspi);
 
 void SPI_FRAM_Read(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pRxData,uint8_t size, UART_HandleTypeDef *huart);
 

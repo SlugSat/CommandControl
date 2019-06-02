@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc; ../Drivers/STM32F1xx_HAL_Driver/Inc; ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy; ../Drivers/CMSIS/Device/ST/STM32F1xx/Include; ../Drivers/CMSIS/Include; ..\..\..\Spi_FRAM</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -390,11 +390,23 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>::CMSIS</GroupName>
-        </Group>
-        <Group>
           <GroupName>Application/User</GroupName>
           <Files>
+            <File>
+              <FileName>DateConversion.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\DateConversion.h</FilePath>
+            </File>
+            <File>
+              <FileName>DateConversion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\DateConversion.c</FilePath>
+            </File>
+            <File>
+              <FileName>SPI_FRAM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\SPI_FRAM.c</FilePath>
+            </File>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
@@ -409,26 +421,6 @@
               <FileName>stm32f1xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>DateConversion.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Inc\DateConversion.h</FilePath>
-            </File>
-            <File>
-              <FileName>SPI_FRAM.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Inc\SPI_FRAM.h</FilePath>
-            </File>
-            <File>
-              <FileName>DateConversion.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\DateConversion.c</FilePath>
-            </File>
-            <File>
-              <FileName>SPI_FRAM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\SPI_FRAM.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -521,6 +513,9 @@
               <FilePath>../Src/system_stm32f1xx.c</FilePath>
             </File>
           </Files>
+        </Group>
+        <Group>
+          <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
     </Target>

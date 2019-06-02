@@ -68,8 +68,8 @@ void Error_Handler(void);
 #define SPI_FRAM_MISO_GPIO_Port GPIOB
 #define SPI_FRAM_MOSI_Pin GPIO_PIN_15
 #define SPI_FRAM_MOSI_GPIO_Port GPIOB
-#define Update_Location_To_Power_Pin GPIO_PIN_8
-#define Update_Location_To_Power_GPIO_Port GPIOC
+#define Science_Event_Pin GPIO_PIN_8
+#define Science_Event_GPIO_Port GPIOC
 #define SP_CC_RESET_Pin GPIO_PIN_8
 #define SP_CC_RESET_GPIO_Port GPIOA
 #define SPI_CC_CS_Pin GPIO_PIN_9
