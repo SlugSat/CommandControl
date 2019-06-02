@@ -36,14 +36,14 @@ static float AGC_DetectorToRSSI(uint32_t DetectorValue) {
 }
 
 static uint32_t AGC_VGAToDAC(float VgaValue) {
-	float val = (0.011479857 * (VgaValue)) + 1.09158902; // diode drop of transistor included
+	float val = (0.011479857 * (VgaValue)) + 1.09158902;
 	//float val = (0.89924 * VgaValue) - 0.474323;
-	return (4096 * (val + 0.7) / 3.3);
+	return (4096 * (val) / 3.3);
 }
 
 static uint32_t AGC_VAToDAC(float VaValue) {
-	float val = (0.029660982 * VaValue) + 2.543671697; // -50dBm at 1.8Vcc, diode drop of transistor
-	return (4096 * (val + 0.7) / 3.3);
+	float val = (0.029660982 * VaValue) + 2.543671697; // -50dBm at 1.8Vcc
+	return (4096 * (val) / 3.3);
 }
 
 #define AGC_SETPOINT (-30.0) // dBm

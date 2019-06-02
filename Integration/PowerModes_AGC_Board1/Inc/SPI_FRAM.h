@@ -8,7 +8,7 @@
 #include <string.h>
 
 // Used for debugging
-#define DEBUG (0)
+//#define DEBUG (0)
 
 // Constants
 #define WRITE_CMD_LEN	(4)
