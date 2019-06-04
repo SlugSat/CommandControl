@@ -1,8 +1,8 @@
 #include "SPI_FRAM.h"
 
-#define M1_DELAY 341
-#define M2_DELAY 405
-#define M3_DELAY 111
+#define ST_DELAY 341 // Science and telemtry board delay
+#define PM_DELAY 405 // Power modes and AGC board delay
+#define ME_DELAY 111 // Mechanical board delay
 
 /**
   * @brief  Initialize reading from the FRAM
