@@ -145,32 +145,52 @@ int main(void)
 	DAC->CR |= DAC_CR_EN2;
 	AGC_Init();
 	
-	char msg[50] = "\nI'm dead!!! :(\n";
+	// Used for debugging when the satellite is dead or seeing additional AGC data
+	#define debugKill  (0)
+	#define debugAGC   (0)
+	
+	// Track the state of the power modes
+	uint8_t alive = 0;
+	
+	#if (debugKill)
+		char msg[50] = "\nI'm dead!!! :(\n";
+	#endif
+	
+	#if (debugAGC)
+		uint32_t ticks = 0;	
+	#endif
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-		my_printf("test\n");
-		uint32_t ticks = 0;
-		uint8_t alive = 0;
+		my_printf("Begin AGC/PowerModes Operation\n");
+
     while (1)
     {
-			// do power events
+			// Run power modes code
 			if (alive != Kill)
 			{
 				alive = Power_Modes_State_Machine_Run();
 			}
 			else
 			{
-				//HAL_UART_Transmit(&huart2, (uint8_t *)msg, sizeof(msg), 30);
-				//for (int i = 0; i < 100000; i++);
-                //HAL_Delay(10000);
+				#if (debugKill) 
+					HAL_UART_Transmit(&huart2, (uint8_t *)msg, sizeof(msg), 30);
+					for (int i = 0; i < 100000; i++);
+				#endif
 			}
-			// do AGC events
-      //ticks = HAL_GetTick();
-      AGC_DoEvent();
-      //my_printf("XX %d\n", (HAL_GetTick() - ticks)); 
-		
+			
+			// Run AGC code
+			#if (debugAGC)
+				ticks = HAL_GetTick();
+			#endif
+			
+			AGC_DoEvent();
+      
+			#if (debugAGC)
+				my_printf("XX %d\n", (HAL_GetTick() - ticks)); 
+			#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -1,8 +1,8 @@
 #include "SPI_FRAM.h"
 
-#define M1_DELAY 942
-#define M2_DELAY 635
-#define M3_DELAY 1017
+#define ST_DELAY 341 // Science and telemtry board delay
+#define PM_DELAY 405 // Power modes and AGC board delay
+#define ME_DELAY 111 // Mechanical board delay
 
 /**
   * @brief  Initialize reading from the FRAM
@@ -21,10 +21,10 @@ void SPI_FRAM_Init(SPI_HandleTypeDef *hspi)
   * @param  pRxData: pointer to reception data buffer to be
   * @param  size: size of the data you are expecting (# of bytes)
   */
-void SPI_FRAM_Read(SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size, UART_HandleTypeDef *huart)
+void SPI_FRAM_Read(SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, uint8_t size, UART_HandleTypeDef *huart, uint8_t timeoutThreshold)
 {
 	// Acquire the SPI FRAM lock
-	Get_Lock(hspi, huart);
+	Get_Lock(hspi, huart, timeoutThreshold);
 	
 	// Chip select low
 	HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
@@ -58,10 +58,10 @@ void SPI_FRAM_Read(SPI_HandleTypeDef *hspi,uint16_t address, uint8_t *pRxData, u
   * @param  pTxData: pointer to reception data buffer to be
   * @param  size: size of the data you are Transmiting (# of bytes)
   */
-void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData, uint8_t size, UART_HandleTypeDef *huart)
+void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData, uint8_t size, UART_HandleTypeDef *huart, uint8_t timeoutThreshold)
 {
 	// Acquire the SPI FRAM lock
-	Get_Lock(hspi, huart);
+	Get_Lock(hspi, huart, timeoutThreshold);
 	
 	// Chip select low
 	HAL_GPIO_WritePin(SPI_FRAM_CS_GPIO_Port, SPI_FRAM_CS_Pin, GPIO_PIN_RESET);
@@ -112,12 +112,13 @@ void SPI_FRAM_Write(SPI_HandleTypeDef *hspi, uint16_t address, uint8_t *pTxData,
   * @param  The SPI connection to the FRAM
   * @param  The UART used for debugging, set the DEBUG macro in the SPI_FRAM.h file to 1
   */
-void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
+void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, uint8_t timeoutThreshold)
 {
 	#if (DEBUG) 
 		char *msg1 = "\nWAITING FOR LOCK....."; 
 		char msg2[100];
 	#endif
+	uint8_t timeout = 0;
 	
 	do
 	{
@@ -129,6 +130,7 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 			HAL_UART_Transmit(huart, (uint8_t *)msg2, strlen(msg2), 1);
 			HAL_Delay(500);
 		#endif
+		if (timeoutThreshold != 0 && timeout++ > timeoutThreshold) return;
 	} while (HAL_GPIO_ReadPin(SPI_FRAM_IN1_GPIO_Port, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
 				HAL_GPIO_ReadPin(SPI_FRAM_IN2_GPIO_Port, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET);
 	
@@ -140,8 +142,9 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 			HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1); 
 		#endif
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
-		for(int i = 0; i < M1_DELAY; i++); // Delay for an arbitrary amount to avoid future collisions
+		for(int i = 0; i < PM_DELAY; i++); // Delay for an arbitrary amount to avoid future collisions
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
+		if (timeoutThreshold != 0 && timeout++ > timeoutThreshold) return;
 	}
 }
 

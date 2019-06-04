@@ -51,7 +51,7 @@ uint8_t Power_Modes_State_Machine_Run(void)
 		// Write the battery level to the fram
 		uint8_t battBytes[4] = {0};
 		float_to_bytes(battPercentage, battBytes);
-		SPI_FRAM_Write(framSPI, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, uartDebug);
+		SPI_FRAM_Write(framSPI, SPI_FRAM_BATT_LEVEL_ADDR, battBytes, 4, uartDebug, 0);
 		Set_BatteryLevel(battPercentage);
 		
 		// Check the science event pin
@@ -70,7 +70,7 @@ uint8_t Power_Modes_State_Machine_Run(void)
 		
 		// Get whether the craft is detumbling or not
 		uint8_t stable[1] = {0};
-		SPI_FRAM_Read(framSPI, SPI_FRAM_MECH_STATE_ADDR, stable, 1, uartDebug);
+		SPI_FRAM_Read(framSPI, SPI_FRAM_MECH_STATE_ADDR, stable, 1, uartDebug, 0);
 		if (stable[0] != 0x2) // Detumble
 		{
 			change_variables(STABLE, 0);
@@ -78,7 +78,7 @@ uint8_t Power_Modes_State_Machine_Run(void)
 		
 		// Get the solar vector status
 		uint8_t currentSensor[1] = {0};
-		SPI_FRAM_Read(framSPI, SPI_FRAM_SOLAR_VECTOR_ADDR, currentSensor, 1, uartDebug);
+		SPI_FRAM_Read(framSPI, SPI_FRAM_SOLAR_VECTOR_ADDR, currentSensor, 1, uartDebug, 0);
 		change_variables(SOLAR, currentSensor[0]);
 		
 		
@@ -90,7 +90,7 @@ uint8_t Power_Modes_State_Machine_Run(void)
 	if (state != prevState)
 	{
 		firstTransition = 0;
-		SPI_FRAM_Write(framSPI, SPI_FRAM_PM_STATE_ADDR, (uint8_t *) &state, 1, uartDebug);
+		SPI_FRAM_Write(framSPI, SPI_FRAM_PM_STATE_ADDR, (uint8_t *) &state, 1, uartDebug, 0);
 	}
 	prevState = state;
 	switch (state)
