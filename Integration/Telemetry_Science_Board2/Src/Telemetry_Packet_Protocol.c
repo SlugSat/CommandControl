@@ -509,7 +509,7 @@ void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	{
 		double julianDate = bytes_to_double(&packet[1]);
 		
-		SPI_FRAM_Write(fram_hspi, SPI_FRAM_LOG_DATA_TIME_ADDR, &packet[1], 8, huart);
+		SPI_FRAM_Write(fram_hspi, SPI_FRAM_LOG_DATA_TIME_ADDR, &packet[1], 8, huart, 0);
 		
 		char msg1[100] = {0};
 		uint8_t ackPacket[FIXED_PACK_SIZE] = {0};
@@ -537,7 +537,7 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 {
 	// The status that will be used for the flat sat is the battery level
 	uint8_t battLevel;
-	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1, huart);
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1, huart, 0);
 	
 	//battLevel = 50;
 	
@@ -628,15 +628,15 @@ void Handle_ReqLoc_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	uint8_t floatBytes[4] = {0};
 	
 	// Get the latitude
-	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LATITUDE_ADDR, floatBytes, 4, huart);
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LATITUDE_ADDR, floatBytes, 4, huart, 0);
 	latitude = bytes_to_float(floatBytes);
 	
 	// Get the longitude
-	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LONGITUDE_ADDR, floatBytes, 4, huart);
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_LONGITUDE_ADDR, floatBytes, 4, huart, 0);
 	longitude = bytes_to_float(floatBytes);
 	
 	// Get the altitude
-	SPI_FRAM_Read(fram_hspi, SPI_FRAM_ALTITUDE_ADDR, floatBytes, 4, huart);
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_ALTITUDE_ADDR, floatBytes, 4, huart, 0);
 	altitude = bytes_to_float(floatBytes);
 	
 	// Create the packet with the current location

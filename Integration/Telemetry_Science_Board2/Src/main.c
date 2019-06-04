@@ -557,7 +557,7 @@ uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
 	uint8_t longitudeBytes[4] = {0};
-	SPI_FRAM_Read(hspi, SPI_FRAM_LONGITUDE_ADDR, longitudeBytes, 4, huart);
+	SPI_FRAM_Read(hspi, SPI_FRAM_LONGITUDE_ADDR, longitudeBytes, 4, huart, 0);
 	
 	float longitude = bytes_to_float(longitudeBytes);
 	if (longitude < 15.0 && longitude > -15.0)
