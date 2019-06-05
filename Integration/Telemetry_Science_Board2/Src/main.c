@@ -154,12 +154,12 @@ int main(void)
 	SPI_FRAM_Init(&hspi1);
 
 	//Set reset high, low, high to begin
-	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_SET);
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_RESET);
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(GPIOA, SP_CC_RESET_Pin, GPIO_PIN_SET);
-	HAL_Delay(10);
+	HAL_GPIO_WritePin(SP_CC_RESET_GPIO_Port, SP_CC_RESET_Pin, GPIO_PIN_SET);
+	HAL_Delay(100);
+	HAL_GPIO_WritePin(SP_CC_RESET_GPIO_Port, SP_CC_RESET_Pin, GPIO_PIN_RESET);
+	HAL_Delay(100);
+	HAL_GPIO_WritePin(SP_CC_RESET_GPIO_Port, SP_CC_RESET_Pin, GPIO_PIN_SET);
+	HAL_Delay(100);
 	
 	uint8_t readValue;
 	
