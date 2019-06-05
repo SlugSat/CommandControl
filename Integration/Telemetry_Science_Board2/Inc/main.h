@@ -60,8 +60,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define SPI_FRAM_CS_Pin GPIO_PIN_1
 #define SPI_FRAM_CS_GPIO_Port GPIOB
-#define SP_CC_RESET_Pin GPIO_PIN_10
-#define SP_CC_RESET_GPIO_Port GPIOB
 #define SPI_FRAM_LOCK_Pin GPIO_PIN_12
 #define SPI_FRAM_LOCK_GPIO_Port GPIOB
 #define SPI_FRAM_SCK_Pin GPIO_PIN_13
@@ -70,6 +68,8 @@ void Error_Handler(void);
 #define SPI_FRAM_MISO_GPIO_Port GPIOB
 #define SPI_FRAM_MOSI_Pin GPIO_PIN_15
 #define SPI_FRAM_MOSI_GPIO_Port GPIOB
+#define SP_CC_RESET_Pin GPIO_PIN_7
+#define SP_CC_RESET_GPIO_Port GPIOC
 #define Science_Event_Pin GPIO_PIN_8
 #define Science_Event_GPIO_Port GPIOC
 #define SPI_CC_CS_Pin GPIO_PIN_9

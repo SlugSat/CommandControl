@@ -476,27 +476,27 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|SP_CC_RESET_Pin|SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Science_Event_GPIO_Port, Science_Event_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, SP_CC_RESET_Pin|Science_Event_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : SPI_FRAM_CS_Pin SP_CC_RESET_Pin SPI_FRAM_LOCK_Pin */
-  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|SP_CC_RESET_Pin|SPI_FRAM_LOCK_Pin;
+  /*Configure GPIO pins : SPI_FRAM_CS_Pin SPI_FRAM_LOCK_Pin */
+  GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|SPI_FRAM_LOCK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Science_Event_Pin */
-  GPIO_InitStruct.Pin = Science_Event_Pin;
+  /*Configure GPIO pins : SP_CC_RESET_Pin Science_Event_Pin */
+  GPIO_InitStruct.Pin = SP_CC_RESET_Pin|Science_Event_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Science_Event_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SPI_CC_CS_Pin Kill_to_PModes_Int_Pin */
   GPIO_InitStruct.Pin = SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin;
