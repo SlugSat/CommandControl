@@ -227,10 +227,10 @@ int main(void)
 				{
 					state = Fetch;
 				}
-				HAL_Delay(1500); // Poll every 1.5 seconds
+				HAL_Delay(1500); // Poll every 1.5 seconds, implement using sleep mode in the future or add a timer
 				break;
 			/* Decode a packet and respond accordingly mode */
-			case (Decode):; // Semi colon because cant declare right after case statement 
+			case (Decode):
 				
 				// Get the packet in the RX FIFO
 				for (int i = 0; i < FIXED_PACK_SIZE; i++)
@@ -571,6 +571,7 @@ uint8_t Poll_FRAM_Location(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 uint8_t Poll_FRAM_Time(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on time
+	// Needs to be completed by next years team. For now, this will just log data every 90 seconds. 
 	static int i = 0;
 	if ((i++ % 30) == 20) 
 	{
