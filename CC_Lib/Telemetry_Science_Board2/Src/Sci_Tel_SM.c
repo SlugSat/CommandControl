@@ -197,7 +197,7 @@ uint8_t Poll_FRAM_Location(void)
 	float longitude = bytes_to_float(longitudeBytes);
 	if (longitude < 15.0 && longitude > -15.0)
 	{
-		//return SUCCESS;
+		return SUCCESS;
 	}
 	return FAIL;
 }
@@ -210,7 +210,7 @@ uint8_t Poll_FRAM_Time(void)
 	static int i = 0;
 	if ((i++ % 30) == 20) 
 	{
-		//return SUCCESS;
+		return SUCCESS;
 	}
 	return FAIL;
 }
