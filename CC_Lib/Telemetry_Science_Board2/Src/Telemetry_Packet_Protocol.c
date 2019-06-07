@@ -333,6 +333,7 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 			fprintf(stderr, "Invalid packet command received\n");
 			return FAIL; // Packet cold not be decoded	
 	}
+	ReadWriteCommandReg(hspi, CC1200_SIDLE);
 	ReadWriteCommandReg(hspi, CC1200_SFTX);
 	return command;
 }

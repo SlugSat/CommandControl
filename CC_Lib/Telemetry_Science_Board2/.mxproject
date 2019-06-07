@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/sneuschm/Desktop/CommandControl/Integration/Telemetry_Science_Board2/Inc
+HeaderPath=C:/Users/sneuschm/Desktop/CommandControl/CC_Lib/Telemetry_Science_Board2/Inc
 HeaderFiles=stm32l1xx_it.h;stm32l1xx_hal_conf.h;main.h;
-SourcePath=C:/Users/sneuschm/Desktop/CommandControl/Integration/Telemetry_Science_Board2/Src
+SourcePath=C:/Users/sneuschm/Desktop/CommandControl/CC_Lib/Telemetry_Science_Board2/Src
 SourceFiles=stm32l1xx_it.c;stm32l1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]

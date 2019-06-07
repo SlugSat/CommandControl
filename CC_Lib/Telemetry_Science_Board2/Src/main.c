@@ -132,9 +132,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
-    /* USER CODE END WHILE */
 		Sci_Tel_SM_Run();
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -341,10 +341,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, SPI_FRAM_CS_Pin|SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SP_CC_RESET_Pin|Science_Event_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SP_CC_RESET_GPIO_Port, SP_CC_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Science_Event_Pin|SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SPI_FRAM_CS_Pin SPI_FRAM_LOCK_Pin */
   GPIO_InitStruct.Pin = SPI_FRAM_CS_Pin|SPI_FRAM_LOCK_Pin;
@@ -353,15 +353,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SP_CC_RESET_Pin Science_Event_Pin */
-  GPIO_InitStruct.Pin = SP_CC_RESET_Pin|Science_Event_Pin;
+  /*Configure GPIO pin : SP_CC_RESET_Pin */
+  GPIO_InitStruct.Pin = SP_CC_RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(SP_CC_RESET_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI_CC_CS_Pin Kill_to_PModes_Int_Pin */
-  GPIO_InitStruct.Pin = SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin;
+  /*Configure GPIO pins : Science_Event_Pin SPI_CC_CS_Pin Kill_to_PModes_Int_Pin */
+  GPIO_InitStruct.Pin = Science_Event_Pin|SPI_CC_CS_Pin|Kill_to_PModes_Int_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

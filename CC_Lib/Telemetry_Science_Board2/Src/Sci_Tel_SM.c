@@ -38,6 +38,9 @@ void Sci_Tel_SM_Init(I2C_HandleTypeDef *hi2c, SPI_HandleTypeDef *hspiRadio, SPI_
 	
 	uint8_t readValue;
 	
+	// Set a science event to off mode
+	HAL_GPIO_WritePin(Science_Event_GPIO_Port, Science_Event_Pin, GPIO_PIN_RESET);	
+	
 	readValue = ReadWriteCommandReg(hspiCC, CC1200_SNOP); // Check the state of the CC1200
 	memcpy(msg1, msgClear, 100);
 	snprintf((char *)msg1, 100, "\nState of the CC1200: 0x%02x\n", readValue);
@@ -121,6 +124,7 @@ void Sci_Tel_SM_Run(void)
 			Decode_Sat_Packet(packet, hspiCC, debugUART, hspiFRAM, hi2cFRAM);
 			
 			state = Fetch;
+			ReadWriteCommandReg(hspiCC, CC1200_SIDLE);
 			ReadWriteCommandReg(hspiCC, CC1200_SFRX); // Flush RX FIFO
 			ReadWriteCommandReg(hspiCC, CC1200_SRX);
 			break;
@@ -130,6 +134,7 @@ void Sci_Tel_SM_Run(void)
 			HAL_GPIO_WritePin(Science_Event_GPIO_Port, Science_Event_Pin, GPIO_PIN_SET);	
 			// Generate fake data and store it to the I2C FRAM
 			Log_Science_Data();
+			HAL_Delay(5000);
 			HAL_GPIO_WritePin(Science_Event_GPIO_Port, Science_Event_Pin, GPIO_PIN_RESET);	
 			state = Fetch;
 			break;
@@ -139,6 +144,7 @@ void Sci_Tel_SM_Run(void)
 			HAL_GPIO_WritePin(Science_Event_GPIO_Port, Science_Event_Pin, GPIO_PIN_SET);	
 			// Generate fake data and store it to the I2C FRAM 
 			Log_Science_Data();
+			HAL_Delay(5000);
 			HAL_GPIO_WritePin(Science_Event_GPIO_Port, Science_Event_Pin, GPIO_PIN_RESET);
 			state = Fetch;
 			break;
@@ -191,11 +197,11 @@ uint8_t Poll_Receive_Packet(void)
 uint8_t Poll_FRAM_Location(void)
 {
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on location
-	uint8_t longitudeBytes[4] = {0};
-	SPI_FRAM_Read(hspiFRAM, SPI_FRAM_LONGITUDE_ADDR, longitudeBytes, 4, debugUART, 0);
+	uint8_t lattBytes[4] = {0};
+	SPI_FRAM_Read(hspiFRAM, SPI_FRAM_LATITUDE_ADDR, lattBytes, 4, debugUART, 0);
 	
-	float longitude = bytes_to_float(longitudeBytes);
-	if (longitude < 15.0 && longitude > -15.0)
+	float lattitude = bytes_to_float(lattBytes);
+	if (lattitude < 15.0 && lattitude > -15.0)
 	{
 		return SUCCESS;
 	}
@@ -208,7 +214,7 @@ uint8_t Poll_FRAM_Time(void)
 	// Write code here that would access the shared SPI FRAM and get if a science event should be logged based on time
 	// Needs to be completed by next years team. For now, this will just log data every 90 seconds. 
 	static int i = 0;
-	if ((i++ % 30) == 20) 
+	if ((i++ % 40) == 20) 
 	{
 		return SUCCESS;
 	}

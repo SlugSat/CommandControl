@@ -71,7 +71,7 @@ void Error_Handler(void);
 #define SP_CC_RESET_Pin GPIO_PIN_7
 #define SP_CC_RESET_GPIO_Port GPIOC
 #define Science_Event_Pin GPIO_PIN_8
-#define Science_Event_GPIO_Port GPIOC
+#define Science_Event_GPIO_Port GPIOA
 #define SPI_CC_CS_Pin GPIO_PIN_9
 #define SPI_CC_CS_GPIO_Port GPIOA
 #define Kill_to_PModes_Int_Pin GPIO_PIN_10
