@@ -190,16 +190,16 @@ void Output_Power_Pins(uint8_t currState)
 	{
 		if ((shortCheck & 0x16) != 0) // Check if there was a short in the rail
 		{
-			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(Mech_Rail_GPIO_Port, Mech_Rail_Pin, GPIO_PIN_SET);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(Mech_Rail_GPIO_Port, Mech_Rail_Pin, GPIO_PIN_RESET);
 		}
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Mech_Rail_GPIO_Port, Mech_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set the power for CC and Telemetry systems
@@ -207,22 +207,22 @@ void Output_Power_Pins(uint8_t currState)
 	{
 		if ((shortCheck & 0x14) != 0) // Check if there was a short in the rail
 		{
-			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(Memory_Rail_GPIO_Port, Memory_Rail_Pin, GPIO_PIN_SET);
 			if (currState != Detumble)
 			{
-				HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(Telemetry_Rail_GPIO_Port, Telemetry_Rail_Pin, GPIO_PIN_SET);
 			}
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(Telemetry_Rail_GPIO_Port, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(Memory_Rail_GPIO_Port, Memory_Rail_Pin, GPIO_PIN_RESET);
 		}
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Telemetry_Rail_GPIO_Port, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Memory_Rail_GPIO_Port, Memory_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set the power for the Science payload systems
@@ -230,16 +230,16 @@ void Output_Power_Pins(uint8_t currState)
 	{
 		if ((shortCheck & 0x4C) != 0) // Check if there was a short in the rail
 		{
-			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(Scie_Rail_GPIO_Port, Scie_Rail_Pin, GPIO_PIN_SET);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(Scie_Rail_GPIO_Port, Scie_Rail_Pin, GPIO_PIN_RESET);
 		}
 	}
 	else 
 	{
-		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Scie_Rail_GPIO_Port, Scie_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set the LT power rail
@@ -247,32 +247,32 @@ void Output_Power_Pins(uint8_t currState)
 	{
 		if ((shortCheck & 0x3F) != 0) // Check if there was a short in the rail
 		{
-			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(LT_Rail_GPIO_Port, LT_Rail_Pin, GPIO_PIN_SET);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(LT_Rail_GPIO_Port, LT_Rail_Pin, GPIO_PIN_RESET);
 		}
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LT_Rail_GPIO_Port, LT_Rail_Pin, GPIO_PIN_RESET);
 	}
 	
 	// Set a pin when Kill mode is entered, used for debugging or shutting off all rails
 	if (currState == Kill)
 	{
-		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(DEAD_GPIO_Port, DEAD_Pin, GPIO_PIN_SET);
 		
-		HAL_GPIO_WritePin(GPIOB, LT_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, Scie_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, Telemetry_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, Mech_Rail_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, Memory_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LT_Rail_GPIO_Port, LT_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Scie_Rail_GPIO_Port, Scie_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Telemetry_Rail_GPIO_Port, Telemetry_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Mech_Rail_GPIO_Port, Mech_Rail_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(Memory_Rail_GPIO_Port, Memory_Rail_Pin, GPIO_PIN_RESET);
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOB, DEAD_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(DEAD_GPIO_Port, DEAD_Pin, GPIO_PIN_RESET);
 	}
 }
 
