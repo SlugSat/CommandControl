@@ -685,7 +685,7 @@ void HAL_Delay(__IO uint32_t Delay)
     HAL_PWREx_EnableFastWakeUp(); // Fast wake-up for ultra low power mode
     
     // turn off GPIO to save power
-    GPIO_DeInit();
+//    GPIO_DeInit();
     
     HAL_ADC_DeInit(&hadc);
     HAL_UART_DeInit(&huart2);
@@ -704,7 +704,7 @@ void HAL_Delay(__IO uint32_t Delay)
     HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
     
     // Reinit GPIOs
-    MX_GPIO_Init();
+//    MX_GPIO_Init();
     MX_SPI2_Init();
     MX_USART2_UART_Init();
     MX_I2C1_Init();

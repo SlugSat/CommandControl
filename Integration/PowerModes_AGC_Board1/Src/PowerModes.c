@@ -25,7 +25,7 @@ void Power_Modes_State_Machine_Init(I2C_HandleTypeDef *hi2cTest, SPI_HandleTypeD
 	SPI_FRAM_Init(framSPI);
 	
 	/* Initialize the current controllers */
-	//Initialize_All_Current_Sensors(&hi2c1);
+	Initialize_All_Current_Sensors(i2c);
 	
 	/* Initialize the fuel gauge */
 	Fuel_Gauge_Init(i2c);
@@ -66,7 +66,7 @@ uint8_t Power_Modes_State_Machine_Run(void)
 		}
 		
 		// Check if there is a short in any of the rails
-		//Check_for_Shorts(&hi2c1, &shortCheck);
+//		Check_for_Shorts(i2c, &shortCheck);
 		
 		// Get whether the craft is detumbling or not
 		uint8_t stable[1] = {0};
@@ -188,7 +188,7 @@ void Output_Power_Pins(uint8_t currState)
 	// Set the MechanicalSys power mode
 	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse)
 	{
-		if ((shortCheck & 0x16) != 0) // Check if there was a short in the rail
+		if ((shortCheck & 0x16) == 0) // Check if there was a short in the rail
 		{
 			HAL_GPIO_WritePin(Mech_Rail_GPIO_Port, Mech_Rail_Pin, GPIO_PIN_SET);
 		}
@@ -205,7 +205,7 @@ void Output_Power_Pins(uint8_t currState)
 	// Set the power for CC and Telemetry systems
 	if (currState == Detumble || currState == Normal || currState == LowPower || currState == UltraLowPower || currState == Eclipse || currState == ScienceOnly)
 	{
-		if ((shortCheck & 0x14) != 0) // Check if there was a short in the rail
+		if ((shortCheck & 0x14) == 0) // Check if there was a short in the rail
 		{
 			HAL_GPIO_WritePin(Memory_Rail_GPIO_Port, Memory_Rail_Pin, GPIO_PIN_SET);
 			if (currState != Detumble)
@@ -228,7 +228,7 @@ void Output_Power_Pins(uint8_t currState)
 	// Set the power for the Science payload systems
 	if (currState == ScienceOnly)
 	{
-		if ((shortCheck & 0x4C) != 0) // Check if there was a short in the rail
+		if ((shortCheck & 0x4C) == 0) // Check if there was a short in the rail
 		{
 			HAL_GPIO_WritePin(Scie_Rail_GPIO_Port, Scie_Rail_Pin, GPIO_PIN_SET);
 		}
@@ -245,7 +245,7 @@ void Output_Power_Pins(uint8_t currState)
 	// Set the LT power rail
 	if (currState == Normal)
 	{
-		if ((shortCheck & 0x3F) != 0) // Check if there was a short in the rail
+		if ((shortCheck & 0x3F) == 0) // Check if there was a short in the rail
 		{
 			HAL_GPIO_WritePin(LT_Rail_GPIO_Port, LT_Rail_Pin, GPIO_PIN_SET);
 		}
