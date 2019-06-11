@@ -99,7 +99,7 @@ uint8_t Create_Command_UpdateKep(uint8_t *retPacket, uint8_t KepElem1, uint8_t K
 uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi, I2C_HandleTypeDef *hi2c);
 
 /* Create a packet responding to the stats request from ground station */
-uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate);
+uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t *status, double julianDate);
 
 /* Create a packet containing science payload data */
 uint8_t Create_ScienceData(uint8_t *retPacket, ScienceDataPoint *data, uint16_t dataLength, double julianDate);

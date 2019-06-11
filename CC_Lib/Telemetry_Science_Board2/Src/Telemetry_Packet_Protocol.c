@@ -346,12 +346,12 @@ uint8_t Decode_Sat_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 	* @param Current time of the CubeSat in julian date form
   * @retval A success or fail
   */
-uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julianDate)
+uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t *status, double julianDate)
 {
 	// Packet header: TIME(8 bytes) 0000 0XXX
 	
 	//Initialize the packet
-	uint8_t packet[10] = {0};
+	uint8_t packet[13] = {0};
 
 	// Convert the date into bytes
 	double_to_bytes(julianDate, &packet[0]);
@@ -360,10 +360,13 @@ uint8_t Create_Response_Status(uint8_t *retPacket, uint8_t status, double julian
 	packet[8] = 0x02;
 
 	// Store the status 
-	packet[9] = status;
+	packet[9] = status[0];
+	packet[10] = status[1];
+	packet[11] = status[2];
+	packet[12] = status[3];
 	
 	// Return the packet to be used outside this function
-	memcpy(retPacket, packet, 10);
+	memcpy(retPacket, packet, 13);
 	
 	return SUCCESS;
 }
@@ -548,8 +551,8 @@ void Handle_LogSci_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleT
 void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, SPI_HandleTypeDef *fram_hspi)
 {
 	// The status that will be used for the flat sat is the battery level
-	uint8_t battLevel;
-	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, &battLevel, 1, huart, 0);
+	uint8_t batt[4] = {0};
+	SPI_FRAM_Read(fram_hspi, SPI_FRAM_BATT_LEVEL_ADDR, batt, 4, huart, 0);
 	
 	// Get the current time
 	uint8_t currTime[8] = {0};
@@ -557,7 +560,7 @@ void Handle_ReqStatus_Packet(uint8_t *packet, SPI_HandleTypeDef *hspi, UART_Hand
 	double time = bytes_to_double(currTime);
 	
 	uint8_t statusPacket[FIXED_PACK_SIZE] = {0};
-	Create_Response_Status(statusPacket, battLevel, time);
+	Create_Response_Status(statusPacket, batt, time);
 	
 	// Transmit the packet back to the ground station
 	CC1200_Transmit_Packet(statusPacket, FIXED_PACK_SIZE, hspi, huart);
