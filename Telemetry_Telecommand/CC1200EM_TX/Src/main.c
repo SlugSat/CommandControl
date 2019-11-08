@@ -48,8 +48,8 @@
 #define READ_WRITE_TEST
 //#define COMMAND_STROBE_TEST
 
-#define TX_TEST (0)
-#define RX_TEST (1)
+#define TX_TEST (1)
+#define RX_TEST (0)
 
 /* USER CODE END PD */
 
@@ -180,7 +180,7 @@ int main(void)
 		}
 		else if ((readValue & 0xf0) != 0x20)
 		{
-			ReadWriteCommandReg(CC1200_STX);
+			ReadWriteCommandReg(&hspi1, CC1200_STX);
 			count++;
 			HAL_Delay(1);
 		} 
