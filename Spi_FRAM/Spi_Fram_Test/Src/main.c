@@ -140,7 +140,7 @@ int main(void)
 //	snprintf(msg, 200, "\nLongitude: %f\n", longitude); 
 //	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
 	
-	#if 0 // Write to FRAM Test
+	#if 1 // Write to FRAM Test
 	//uint8_t longU[4] = {0};
 	//uint8_t longD[8] = {0};
 	
@@ -205,7 +205,7 @@ int main(void)
 	uint8_t readVal[4] = {1, 2, 3, 4};
 	uint8_t readDouble[8] = {0};
 	
-	
+	#if 0
 	// Latitude
 	SPI_FRAM_Read(&hspi1, SPI_FRAM_LATITUDE_ADDR, readVal, 4, &huart2);
 	latitude = bytes_to_float(readVal);
@@ -290,6 +290,7 @@ int main(void)
 	HAL_UART_Transmit(&huart2, (uint8_t *) msg, 200*sizeof(uint8_t), 5);
 	
 	HAL_GPIO_WritePin(GPIOA, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
+	#endif
 	
   while (1)
   {

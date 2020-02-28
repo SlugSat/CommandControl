@@ -131,18 +131,23 @@ void Get_Lock(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart, uint8_t timeou
 			HAL_Delay(500);
 		#endif
 		if (timeoutThreshold != 0 && timeout++ > timeoutThreshold) return;
+
+		//If M1 & M2 are set
 	} while (HAL_GPIO_ReadPin(SPI_FRAM_IN1_GPIO_Port, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
 				HAL_GPIO_ReadPin(SPI_FRAM_IN2_GPIO_Port, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET);
 	
 	HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
+	
 	while(HAL_GPIO_ReadPin(SPI_FRAM_IN1_GPIO_Port, SPI_FRAM_IN1_Pin) == GPIO_PIN_RESET || 
 					HAL_GPIO_ReadPin(SPI_FRAM_IN2_GPIO_Port, SPI_FRAM_IN2_Pin) == GPIO_PIN_RESET)
 	{
 		# if (DEBUG) 
 			HAL_UART_Transmit(huart, (uint8_t *)msg1, strlen(msg1), 1); 
 		#endif
-		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET);
-		for(int i = 0; i < M1_DELAY; i++); // Delay for an arbitrary amount to avoid future collisions
+
+		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_SET); //let lock go
+		for(int i = 0; i < 50; i++); // Delay for an arbitrary amount to avoid future collisions
+
 		HAL_GPIO_WritePin(SPI_FRAM_LOCK_GPIO_Port, SPI_FRAM_LOCK_Pin, GPIO_PIN_RESET);
 		if (timeoutThreshold != 0 && timeout++ > timeoutThreshold) return;
 	}
